@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Alcance — Sistema de Remitos y Stock · Grupo Barba</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 16mm 16mm; }
+
+  * { box-sizing: border-box; }
+
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  body {
+    margin: 0;
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 10.4pt;
+    line-height: 1.46;
+    color: #22201d;
+  }
+
+  /* ---------- Portada ---------- */
+  .cover {
+    border-bottom: 2.5pt solid #6b1f2a;
+    padding-bottom: 13pt;
+    margin-bottom: 15pt;
+  }
+  .cover .eyebrow {
+    font-size: 8pt;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: #6b1f2a;
+    font-weight: 700;
+    margin: 0 0 6pt;
+  }
+  .cover h1 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 25pt;
+    line-height: 1.12;
+    font-weight: 600;
+    margin: 0 0 4pt;
+    letter-spacing: -.01em;
+  }
+  .cover .client {
+    font-family: Georgia, serif;
+    font-size: 13pt;
+    color: #6b1f2a;
+    margin: 0 0 14pt;
+  }
+  .meta {
+    display: flex;
+    gap: 26pt;
+    font-size: 8.6pt;
+    color: #6d675f;
+  }
+  .meta b { display: block; font-size: 7.4pt; letter-spacing: .1em; text-transform: uppercase; color: #9a938a; font-weight: 700; margin-bottom: 1pt; }
+  .status { color: #8a5a00; font-weight: 600; }
+
+  /* ---------- Estructura ---------- */
+  .part {
+    font-family: Georgia, serif;
+    font-size: 15pt;
+    font-weight: 600;
+    color: #fff;
+    background: #6b1f2a;
+    padding: 7pt 12pt;
+    margin: 0 0 13pt;
+    border-radius: 2pt;
+  }
+  .part span { opacity: .72; font-weight: 400; font-size: 11pt; }
+
+  h2 {
+    font-family: Georgia, serif;
+    font-size: 13.2pt;
+    font-weight: 600;
+    margin: 14pt 0 6pt;
+    padding-bottom: 3pt;
+    border-bottom: .8pt solid #ded8d0;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 10.4pt;
+    font-weight: 700;
+    margin: 10pt 0 3pt;
+    color: #3d3833;
+    page-break-after: avoid;
+  }
+  p { margin: 0 0 6.5pt; }
+  strong { font-weight: 650; color: #191715; }
+
+  ul, ol { margin: 0 0 7pt; padding-left: 16pt; }
+  li { margin-bottom: 3pt; }
+
+  /* ---------- Destacados ---------- */
+  .lead {
+    font-family: Georgia, serif;
+    font-size: 12.4pt;
+    line-height: 1.45;
+    color: #2c2823;
+    border-left: 2.5pt solid #6b1f2a;
+    padding: 2pt 0 2pt 12pt;
+    margin: 10pt 0 11pt;
+  }
+  .callout {
+    background: #f6f2ec;
+    border: .8pt solid #e2d9cd;
+    border-radius: 3pt;
+    padding: 9pt 11pt;
+    margin: 8pt 0 9pt;
+    page-break-inside: avoid;
+  }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout .tag {
+    font-size: 7.4pt; letter-spacing: .12em; text-transform: uppercase;
+    font-weight: 700; color: #6b1f2a; display: block; margin-bottom: 4pt;
+  }
+  .warn { background: #fdf6ec; border-color: #ecd9b4; }
+  .warn .tag { color: #8a5a00; }
+
+  /* ---------- Tablas ---------- */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 7pt 0 10pt;
+    font-size: 9.6pt;
+    page-break-inside: avoid;
+  }
+  th {
+    text-align: left;
+    font-size: 7.6pt;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #857d73;
+    font-weight: 700;
+    border-bottom: 1pt solid #cfc7bc;
+    padding: 0 8pt 4pt 0;
+  }
+  td {
+    border-bottom: .6pt solid #e8e2d9;
+    padding: 5pt 8pt 5pt 0;
+    vertical-align: top;
+  }
+  td:first-child { width: 30%; font-weight: 600; color: #2c2823; }
+  tr:last-child td { border-bottom: none; }
+
+  table.wide td:first-child { width: 26%; }
+
+  /* ---------- Fases ---------- */
+  .fase {
+    border-left: 2pt solid #c9bfb2;
+    padding: 1pt 0 1pt 11pt;
+    margin: 0 0 8pt;
+    page-break-inside: avoid;
+  }
+  .fase.f1 { border-color: #6b1f2a; }
+  .fase h3 { margin-top: 0; }
+  .fase p { margin-bottom: 0; color: #504a43; font-size: 9.8pt; }
+
+  /* ---------- Preguntas ---------- */
+  ol.qs { counter-reset: q; list-style: none; padding-left: 0; }
+  ol.qs li {
+    counter-increment: q;
+    position: relative;
+    padding-left: 20pt;
+    margin-bottom: 5.5pt;
+    page-break-inside: avoid;
+  }
+  ol.qs li::before {
+    content: counter(q);
+    position: absolute; left: 0; top: .5pt;
+    width: 13pt; height: 13pt;
+    background: #6b1f2a; color: #fff;
+    font-size: 7.6pt; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+  }
+  ol.qs li.hot::before { background: #8a5a00; }
+  ol.qs .note { color: #6d675f; font-size: 9pt; font-style: italic; }
+
+  /* ---------- Código ---------- */
+  pre {
+    background: #f7f5f1;
+    border: .8pt solid #e2ddd4;
+    border-radius: 3pt;
+    padding: 9pt 11pt;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 7.9pt;
+    line-height: 1.4;
+    white-space: pre;
+    overflow: hidden;
+    margin: 8pt 0 12pt;
+    page-break-inside: avoid;
+  }
+
+  code {
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 9pt;
+    background: #f2efe9;
+    padding: .5pt 3pt;
+    border-radius: 2pt;
+  }
+
+  .page-break { page-break-before: always; }
+
+  footer {
+    margin-top: 12pt;
+    padding-top: 6pt;
+    border-top: .8pt solid #ded8d0;
+    font-size: 8pt;
+    color: #948d84;
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <p class="eyebrow">Documento de alcance</p>
+  <h1>Sistema de Remitos y Stock</h1>
+  <p class="client">Grupo Barba · Distribuidora</p>
+  <div class="meta">
+    <div><b>Versión</b>v1</div>
+    <div><b>Fecha</b>12 de agosto de 2026</div>
+    <div><b>Estado</b><span class="status">Pendiente de aprobación</span></div>
+  </div>
+</div>
+
+<p style="font-size:9.4pt;color:#6d675f;margin-bottom:14pt;">
+  Este documento define qué se va a construir, en qué orden, y —con el mismo nivel de detalle— qué queda
+  explícitamente afuera. La construcción no empieza hasta que este alcance esté aprobado y respondidas
+  las preguntas de la última sección.
+</p>
+
+<div class="part">Parte 1 <span>· El sistema</span></div>
+
+<h2>El problema</h2>
+<p>
+  Hoy en Grupo Barba <strong>todo pasa por papel</strong>: los remitos se escriben a mano y después esa
+  misma información se vuelve a cargar en planillas de Excel. Eso consume horas todas las semanas.
+</p>
+<p>
+  Además, nadie sabe con certeza qué hay en el depósito: la planilla de stock que se consulta para saber
+  si hay mercadería está siempre un paso atrás de la realidad.
+</p>
+
+<h2>La decisión de fondo</h2>
+<p>
+  <strong>No vamos a construir un sistema de stock. Vamos a construir un sistema de remitos.</strong>
+</p>
+<p>
+  La diferencia no es de nombre. Un sistema de stock le agrega trabajo a todo el mundo: alguien tiene que
+  sentarse aparte a descontar lo que salió. Ese trabajo extra es la razón por la que estos sistemas se
+  abandonan a los tres meses — exactamente lo que ya pasó con la planilla actual.
+</p>
+<p>
+  En cambio, si el remito se arma en el sistema en lugar de en papel, el stock se descuenta solo. Nadie
+  carga movimientos: el descuento es la consecuencia automática de un trabajo que igual hay que hacer, y
+  que además se hace más rápido que a mano.
+</p>
+<p class="lead">
+  El remito es el corazón del sistema.<br>El stock es un subproducto gratis.
+</p>
+
+<h2>Qué van a poder hacer</h2>
+<ul>
+  <li><strong>Armar el remito en pantalla</strong> eligiendo cliente y productos, con el total calculado solo, e <strong>imprimirlo</strong> para que viaje en la camioneta.</li>
+  <li><strong>Saber cuánto hay de cada producto</strong> sin ir a mirar al depósito, actualizado con cada remito emitido.</li>
+  <li><strong>Cargar la mercadería que entra</strong> del proveedor, en una pantalla simple.</li>
+  <li><strong>Corregir el stock a mano</strong> cuando el número no coincide con la realidad.</li>
+  <li><strong>Ver qué hay que pedirle al proveedor</strong>: los productos vendidos de lista que todavía no están en el depósito, agrupados por bodega.</li>
+  <li><strong>Buscar y reimprimir</strong> cualquier remito emitido.</li>
+</ul>
+
+<h2>Cómo se calcula el stock</h2>
+<p>Cada producto tiene <strong>dos números separados, que nunca se suman</strong>:</p>
+<table>
+  <tr><td>Físico</td><td>Lo que está hoy en el estante del depósito.</td></tr>
+  <tr><td>A pedir</td><td>Lo que se vendió de lista y hay que conseguirle al proveedor.</td></tr>
+</table>
+<p>
+  Se mantienen separados a propósito. Si se sumaran, el sistema diría “hay 40” cuando en el depósito hay 4
+  — y a la segunda vez que eso pasa, nadie le cree más al sistema.
+</p>
+
+<h2>Cómo arranca el stock</h2>
+<p>
+  <strong>Todos los productos arrancan en cero.</strong> No hace falta parar el depósito dos días para
+  contar 541 productos.
+</p>
+<p>
+  El número se construye solo: cada mercadería que entra se carga, cada remito descuenta. En tres o cuatro
+  semanas, el 80% de lo que rota tiene un número real. Para lo que rota mucho y se necesita antes, está la
+  corrección manual.
+</p>
+<p>
+  Si en algún momento quieren hacer un inventario formal, hay una pantalla de conteo. Pero
+  <strong>el sistema funciona igual si nunca lo hacen</strong> — esto es a propósito.
+</p>
+
+<h2>Dos reglas que parecen detalles y no lo son</h2>
+
+<div class="callout">
+  <span class="tag">Regla 1</span>
+  <p><strong>El stock negativo no bloquea la venta.</strong> Si el sistema dice que hay −3 botellas, igual
+  deja emitir el remito y lo muestra en rojo. Bloquear una venta porque el sistema cree que no hay
+  mercadería es la forma más rápida de que alguien vuelva al papel. El rojo no es un error: es la lista de
+  lo que falta cargar.</p>
+</div>
+
+<div class="callout">
+  <span class="tag">Regla 2</span>
+  <p><strong>Un remito emitido no se borra: se anula.</strong> Queda registrado, con quién lo anuló y
+  cuándo. Sin eso no hay manera de explicar un faltante dentro de seis meses.</p>
+</div>
+
+<h2>Fases</h2>
+
+<div class="fase f1">
+  <h3>Fase 1 — El remito sale del papel</h3>
+  <p>Usuarios y login · catálogo de 541 productos cargado · clientes · armado e impresión del remito ·
+  descuento automático de stock · carga de mercadería que entra · corrección manual de stock.</p>
+</div>
+
+<div class="fase">
+  <h3>Fase 2 — El sistema empieza a avisar</h3>
+  <p>Pantalla de “hay que pedirle al proveedor” · importación de la lista de precios nueva cada mes ·
+  pantalla de conteo de inventario.</p>
+</div>
+
+<div class="fase">
+  <h3>Fase 3 — A definir más adelante, no comprometida</h3>
+  <p>Alertas de reposición por producto · reportes de lo que más se vende.</p>
+</div>
+
+<h2>Qué NO incluye este sistema</h2>
+<p>Esto es tan importante como lo que sí incluye.</p>
+<table class="wide">
+  <thead><tr><th>Fuera de alcance</th><th>Por qué</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Factura electrónica / ARCA</td>
+      <td>La facturación sigue por afuera, como hoy. Emitir factura electrónica es un proyecto entero
+      aparte, con certificados, punto de venta y condición de IVA por cliente. Se cotiza por separado si
+      alguna vez se quiere.</td>
+    </tr>
+    <tr>
+      <td>Cuenta corriente y cobranzas</td>
+      <td>El sistema no lleva quién debe cuánto ni registra pagos. Exigiría cargar <em>todos</em> los pagos
+      con disciplina desde el día uno; cargado a medias, los saldos quedan mal y el sistema pierde
+      credibilidad.</td>
+    </tr>
+    <tr>
+      <td>Reparto y hojas de ruta</td>
+      <td>La logística de las camionetas la organizan ellos. El sistema imprime el remito; lo que pasa
+      después queda afuera.</td>
+    </tr>
+    <tr>
+      <td>Tienda Nube</td>
+      <td>El stock interno <strong>no</strong> se sincroniza con la tienda online. Consecuencia asumida: la
+      tienda sigue pudiendo vender algo que no hay en el depósito, igual que hoy. Se decidió así porque el
+      volumen online es marginal frente al mayorista.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Costo de funcionamiento</h2>
+<p>
+  El sistema vive en internet —no se instala en ninguna computadora— y requiere un servicio de base de
+  datos: <strong>Supabase, aproximadamente USD 10 por mes</strong>, ya presupuestado. Sin eso el sistema no
+  funciona.
+</p>
+
+<h2>Preguntas abiertas</h2>
+<p>
+  Ninguna frena la aprobación de este documento, pero todas frenan la construcción. Las marcadas en
+  <span style="color:#8a5a00;font-weight:650;">ámbar</span> son las que más bloquean.
+</p>
+<ol class="qs">
+  <li>¿De dónde sale la lista de oferta mensual y quién la arma? ¿La escribe alguien a mano en Excel o la baja de algún sistema?</li>
+  <li>¿Los 541 productos de la lista de junio son todos los que manejan, o venden cosas que no están en esa lista?</li>
+  <li class="hot">Cuando un cliente pide algo que no hay en el depósito, ¿se le hace el remito igual en el momento, o se espera a tener la mercadería?</li>
+  <li class="hot">El precio de la lista, ¿es lo que se le cobra al cliente mayorista, o es el costo al que después se le suma un margen?
+    <span class="note">Crítico: en el proyecto de la tienda online ese mismo número se trató como costo y se le sumó 15%.</span></li>
+  <li>¿Siguen cobrando el 10,5% de recargo por transferencia?</li>
+  <li>¿Cuántos clientes son y dónde están hoy sus datos (dirección de entrega, teléfono)?</li>
+  <li>¿Qué datos van impresos en el remito hoy? ¿Lo firma el que recibe?</li>
+  <li>Foto de un remito completado a mano. <span class="note">Es lo más útil de todo: muestra qué se escribe realmente, en qué orden, y qué campos quedan siempre vacíos.</span></li>
+</ol>
+
+<div class="page-break"></div>
+
+<div class="part">Parte 2 <span>· Detalle técnico</span></div>
+
+<h2>Stack</h2>
+<ul>
+  <li><strong>Next.js + Supabase</strong> (Postgres + Auth), deploy en Vercel.</li>
+  <li>Web responsive: se usa en PC y desde el celular en el depósito.</li>
+  <li><strong>3 usuarios</strong> (2 empleadas + Federico), creados a mano. <strong>Registro público deshabilitado.</strong></li>
+  <li><strong>Sin multi-empresa.</strong> Un cliente, un proyecto Supabase dedicado. Si mañana aparece otra distribuidora, se clona: es más barato que diseñar multi-tenant hoy para un cliente hipotético.</li>
+</ul>
+
+<h2>Permisos</h2>
+<p>
+  Los tres usuarios ven todo, <strong>incluidos costos y márgenes</strong> (decisión explícita de Federico).
+  Lo que sí se registra siempre es <strong>quién</strong> hizo cada cosa: quién emitió el remito, quién lo
+  anuló, quién aplicó un descuento, quién ajustó stock. No es vigilancia: es poder responder “¿por qué este
+  remito salió 12% abajo?”.
+</p>
+
+<h2>Modelo de datos</h2>
+<pre>usuarios         (Supabase Auth)  — 3, alta manual
+
+clientes         id · nombre_razon_social · direccion_entrega · localidad
+                 telefono · notas · activo
+
+productos        id · codigo (identidad estable) · bodega · nombre · seccion
+                 presentacion · unidades_por_bulto · precio_lista
+                 en_lista_actual (bool) · activo
+
+movimientos      id · producto_id · tipo (ingreso|egreso|ajuste)
+                 cantidad_unidades (con signo) · remito_id? · ingreso_id?
+                 usuario_id · fecha · nota
+
+remitos          id · numero (R-0001, correlativo) · cliente_id · fecha
+                 condicion_pago · ajuste_pct · subtotal · total
+                 estado (emitido|anulado) · usuario_id · notas
+                 anulado_por? · anulado_at?
+
+remito_lineas    id · remito_id · producto_id · cantidad_bultos
+                 cantidad_unidades · precio_unitario · entregado (bool)
+                 subtotal
+
+ingresos         id · bodega · fecha · nro_remito_proveedor · usuario_id
+ingreso_lineas   id · ingreso_id · producto_id · cantidad_bultos · cantidad_unidades
+
+importaciones    id · archivo · fecha · usuario_id · resumen_json</pre>
+
+<p>
+  <strong><code>movimientos</code> es la fuente de verdad del stock.</strong> No hay una columna
+  <code>stock</code> que se pisa: el stock actual es la suma de los movimientos, expuesta como vista. Con
+  541 productos y este volumen el costo es despreciable, y a cambio se obtiene trazabilidad completa: se
+  puede reconstruir por qué un producto tiene el número que tiene. También es lo que hace que el ajuste
+  manual sea un movimiento más y no una excepción al modelo.
+</p>
+
+<h3>Unidades</h3>
+<p>
+  La unidad base de todo el sistema es la <strong>unidad (botella)</strong>. La carga y la visualización son
+  en <strong>bultos</strong>, usando la equivalencia de <code>unidades_por_bulto</code> (columna
+  <code>U</code> de la lista). Una sola unidad interna evita el bug clásico de descontar 1 cuando eran 12.
+  Los productos que se venden sueltos (aceites) simplemente tienen <code>unidades_por_bulto = 1</code>.
+</p>
+
+<h3>Precios</h3>
+<p>
+  Precio de lista único para todos los clientes. El remito tiene <strong>un campo de ajuste porcentual
+  sobre el total</strong> (positivo recarga, negativo descuenta) — cubre el 10,5% de transferencia y
+  cualquier descuento puntual sin tocar código. El PDF muestra <code>subtotal → ajuste → total</code>. No
+  hay descuento por línea: multiplica la complejidad de la pantalla que más rápido tiene que ser.
+</p>
+
+<h3>Identidad de producto — el punto delicado</h3>
+<p>
+  La lista grande (541 productos) <strong>no tiene columna <code>CODIGO</code></strong>: arranca en
+  <code>BODEGA</code>, y el nombre es texto libre reescrito cada mes. Solo los 180 que están en Tienda Nube
+  tienen código. Si el sistema identificara productos por nombre, la lista del mes siguiente crearía 541
+  duplicados y partiría el stock en dos.
+</p>
+<p>
+  <strong>Solución:</strong> se importa la lista una vez, se le genera un <code>codigo</code> estable a cada
+  producto (respetando los 180 que ya existen, para que el día que se quiera conectar Tienda Nube el match
+  ya esté hecho), y ese código es la identidad para siempre.
+</p>
+<p>
+  Cada lista nueva entra como <strong>actualización de precios con revisión humana</strong>: el sistema
+  muestra <em>“estos 12 no los reconozco: ¿son nuevos o cambiaron de nombre?”</em> y una persona decide. Es
+  la misma mecánica de “Analizar antes de Actualizar” del <code>.exe</code> de precios que ya se usa.
+</p>
+<div class="callout">
+  <span class="tag">Regla dura</span>
+  <p>Un producto que desaparece de la lista del mes <strong>no se borra</strong>: se marca
+  <code>en_lista_actual = false</code> y conserva su stock físico. En la lista de agosto ya pasó — un
+  producto vino con <code>SIN STOCK</code> como texto en la celda de precio.</p>
+</div>
+
+<h2>Pantallas</h2>
+<table class="wide">
+  <thead><tr><th>Pantalla</th><th>Notas</th></tr></thead>
+  <tbody>
+    <tr><td>Remito nuevo</td><td>La pantalla crítica. Buscador por código y por nombre, navegable con teclado, cantidad en bultos, total en vivo. Alta de cliente al vuelo desde acá — si hay que ir a otra pantalla, van a escribir el nombre en un campo libre y el padrón nace roto. Cada línea puede marcarse <em>pendiente de entrega</em>.</td></tr>
+    <tr><td>Remitos</td><td>Listado, búsqueda, reimpresión, anulación.</td></tr>
+    <tr><td>Clientes</td><td>Alta, baja y modificación simple.</td></tr>
+    <tr><td>Productos / Stock</td><td>541 filas: filtro por sección y bodega, búsqueda. Negativos en rojo.</td></tr>
+    <tr><td>Ingreso de mercadería</td><td>Carga del remito del proveedor. La usa una de las empleadas.</td></tr>
+    <tr><td>Ajuste / conteo</td><td>Corrección manual, siempre con nota y usuario.</td></tr>
+    <tr><td>Pendientes por proveedor <em>(F2)</em></td><td>Líneas no entregadas, agrupadas por bodega.</td></tr>
+    <tr><td>Importar lista <em>(F2)</em></td><td>Analizar → revisar diferencias → aplicar.</td></tr>
+  </tbody>
+</table>
+
+<h2>Comportamiento del remito</h2>
+<ul>
+  <li>Numeración propia correlativa <code>R-0001</code>, sin reutilizar la del talonario de papel.</li>
+  <li><strong>Solo descuenta stock lo efectivamente entregado.</strong> Lo marcado como pendiente no genera movimiento: alimenta la pantalla de pedidos al proveedor.</li>
+  <li>PDF imprimible: viaja en la camioneta. Dos copias si hace falta firma de recepción.</li>
+  <li>No es comprobante fiscal y así debe verse — sin numeración que se confunda con una factura.</li>
+</ul>
+
+<h2>Riesgos identificados</h2>
+<div class="callout warn">
+  <span class="tag">Riesgo principal — no es técnico</span>
+  <p>Si nadie carga los ingresos de mercadería, <strong>todo el stock se va a negativo en un mes</strong> y
+  el sistema pierde credibilidad: el mismo mecanismo que dejó desactualizada la planilla actual. Está
+  mitigado con una pantalla de ingreso simple y con la regla de que el negativo no bloquea, pero depende de
+  una persona del lado de Grupo Barba.</p>
+</div>
+<ol>
+  <li><strong>361 productos sin código y nombres en texto libre.</strong> Mitigado con código generado + revisión humana en cada importación. Es el punto donde más probablemente aparezca trabajo manual imprevisto.</li>
+  <li><strong>Ambigüedad costo / precio de la lista</strong> (pregunta abierta 4). Si se resuelve mal, todos los remitos salen con el precio equivocado.</li>
+  <li><strong>El remito en papel no se vio todavía.</strong> Puede faltar un campo que se escribe siempre. Costo de descubrirlo tarde: rehacer la pantalla más importante.</li>
+</ol>
+
+<footer>
+  <span>Sistema de Remitos y Stock · Grupo Barba</span>
+  <span>v1 · 12/08/2026 · Pendiente de aprobación</span>
+</footer>
+
+</body>
+</html>

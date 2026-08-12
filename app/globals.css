@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #faf8f4;
+  --color-surface: #ffffff;
+  --color-ink: #22201d;
+  --color-muted: #6d675f;
+  --color-faint: #9a938a;
+  --color-line: #e7e0d6;
+  --color-wine: #6b1f2a;
+  --color-wine-ink: #571922;
+  --color-wine-soft: #f6ecec;
+  --color-amber-ink: #8a5a00;
+  --color-amber-soft: #fdf6ec;
+  /* Rojo de alerta: el bordó de marca no se lee como "rojo" en un número chico. */
+  --color-alerta: #c0392b;
+
+  --font-serif: Georgia, "Times New Roman", serif;
+}
+
+html,
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+/* Tipografía de títulos: acompaña al PDF de alcance */
+.serif {
+  font-family: var(--font-serif);
+  letter-spacing: -0.01em;
+}
+
+/* Números tabulares para que las columnas de precios no bailen */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Impresión: solo el remito --- */
+@media print {
+  @page {
+    size: A4;
+    margin: 16mm;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-area {
+    position: static !important;
+    display: block !important;
+    inset: auto !important;
+    padding: 0 !important;
+    background: #fff !important;
+    overflow: visible !important;
+  }
+
+  .print-sheet {
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    max-height: none !important;
+    max-width: none !important;
+    width: 100% !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+}
