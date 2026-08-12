@@ -79,7 +79,6 @@ export type DB = {
 };
 
 export const USUARIOS = [
-  { usuario: "nahiara", nombre: "Nahiara", rol: "Depósito y ventas" },
   { usuario: "carla", nombre: "Carla", rol: "Depósito y ventas" },
   { usuario: "federico", nombre: "Federico Barba", rol: "Dueño" },
 ] as const;

@@ -15,7 +15,7 @@ npm install
 npm run dev
 ```
 
-Usuarios de la demo: `nahiara`, `carla` o `federico`. Contraseña: `demo`.
+Usuarios de la demo: `carla` o `federico`. Contraseña: `demo`.
 El botón **Reiniciar demo** (abajo a la derecha) vuelve todo al estado inicial:
 sirve para repetir la presentación de cero.
 

@@ -158,7 +158,7 @@ Si el sistema identificara productos por nombre, la lista del mes siguiente crea
 
 **Solución:** se importa la lista una vez, se le genera un `codigo` estable a cada producto (respetando los 180 códigos que ya existen, para que el día que se quiera conectar Tienda Nube el match ya esté hecho), y ese código es la identidad para siempre.
 
-Cada lista nueva entra como **actualización de precios con revisión humana**: el sistema muestra *"estos 12 no los reconozco: ¿son nuevos o cambiaron de nombre?"* y una persona decide. Es la misma mecánica de "Analizar antes de Actualizar" del `.exe` de precios que Nahiara ya usa y entiende.
+Cada lista nueva entra como **actualización de precios con revisión humana**: el sistema muestra *"estos 12 no los reconozco: ¿son nuevos o cambiaron de nombre?"* y una persona decide. Es la misma mecánica de "Analizar antes de Actualizar" del `.exe` de precios que ya se usa.
 
 **Regla dura:** un producto que desaparece de la lista del mes **no se borra** — se marca `en_lista_actual = false` y conserva su stock físico. En la lista de agosto ya pasó: un producto vino con `SIN STOCK` como texto en la celda de precio.
 

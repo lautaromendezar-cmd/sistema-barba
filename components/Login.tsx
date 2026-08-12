@@ -48,7 +48,7 @@ export function Login() {
               setError("");
             }}
             className="mb-4 w-full rounded-md border border-line bg-white px-3 py-2 text-[15px] outline-none focus:border-wine"
-            placeholder="nahiara"
+            placeholder="carla"
           />
 
           <label className="mb-1 block text-xs font-semibold tracking-wide text-muted uppercase">
@@ -79,8 +79,7 @@ export function Login() {
 
         <div className="mt-5 rounded-md border border-line bg-amber-soft p-4 text-[13px] leading-relaxed text-muted">
           <p className="mb-1 font-semibold text-amber-ink">Demo</p>
-          Usuarios: <b>nahiara</b>, <b>carla</b> o <b>federico</b>.
-          Contraseña: <b>demo</b>. En el sistema real el acceso lo maneja
+          Usuarios: <b>carla</b> o <b>federico</b>. Contraseña: <b>demo</b>. En el sistema real el acceso lo maneja
           Supabase y las cuentas las crea el administrador; no hay registro
           público.
         </div>

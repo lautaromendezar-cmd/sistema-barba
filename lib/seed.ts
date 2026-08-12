@@ -173,7 +173,7 @@ const ingresos: Ingreso[] = [
     fecha: dia("2026-08-04", "10:15"),
     bodega: "Aguijón de Abeja",
     nroRemitoProveedor: "0001-00042871",
-    usuario: "Nahiara",
+    usuario: "Carla",
     lineas: [
       { productoCodigo: "W1101", bultos: 10, unidades: 60 },
       { productoCodigo: "W1102", bultos: 6, unidades: 36 },
@@ -195,7 +195,7 @@ const ingresos: Ingreso[] = [
     fecha: dia("2026-08-07", "16:05"),
     bodega: "Varios",
     nroRemitoProveedor: "0002-00007733",
-    usuario: "Nahiara",
+    usuario: "Carla",
     lineas: [
       { productoCodigo: "W1120", bultos: 8, unidades: 48 },
       { productoCodigo: "W3700", bultos: 3, unidades: 3 },
@@ -218,7 +218,7 @@ const remitos: Remito[] = [
       { productoCodigo: "W1120", bultos: 2, unidades: 12, precioUnitario: 7815, entregado: true },
     ],
     estado: "emitido",
-    usuario: "Nahiara",
+    usuario: "Carla",
     notas: "",
   },
   {
