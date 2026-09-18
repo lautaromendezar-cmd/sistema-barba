@@ -6,6 +6,10 @@ import { useStore } from "@/lib/store";
 import { Login } from "./Login";
 import { Buscador, EscudoClaro } from "./Buscador";
 
+/** Se prende con NEXT_PUBLIC_MODO_DEMO=1 mientras el sistema se muestra con
+ *  datos inventados. Al cargar los reales se apaga y se vuelve a publicar. */
+const DEMO = process.env.NEXT_PUBLIC_MODO_DEMO === "1";
+
 type IconProps = { className?: string };
 
 /* Iconos de línea, dibujados acá para no arrastrar una librería entera por
@@ -179,6 +183,13 @@ export function Shell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col md:ml-64">
+        {DEMO && (
+          <div className="no-print bg-acento text-ink px-5 py-2 text-center text-[13px] font-medium lg:px-8">
+            Estás viendo <b>datos de ejemplo</b> para probar el sistema. Los
+            productos, clientes y remitos son inventados: nada de esto es
+            información real de Grupo Barba.
+          </div>
+        )}
         <header className="no-print border-line bg-surface/90 sticky top-0 z-20 border-b backdrop-blur">
           <div className="flex items-center gap-4 px-5 py-3 lg:px-8">
             <h1 className="titulo hidden shrink-0 truncate text-[17px] lg:block">

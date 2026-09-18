@@ -70,6 +70,10 @@ def main() -> None:
         limpiar(con)
         rnd = random.Random(SEMILLA)
         hoy = datetime.now(timezone.utc)
+        # Se lleva la cuenta de lo que hay para no vender lo que no existe: un
+        # deposito con numeros en rojo en una demo se lee como un error del
+        # sistema, no como una decision de diseño.
+        disponible: dict[str, int] = {}
 
         # --- Mercadería que entra, hace un año, para tener con qué vender ---
         arranque = hoy - timedelta(days=MESES * 30 + 5)
@@ -88,6 +92,7 @@ def main() -> None:
                    values (%s, %s, %s, %s)""",
                 (ingreso_id, pid, bultos, upb),
             )
+            disponible[pid] = bultos * upb
         con.execute(
             "update movimientos set fecha = %s where ingreso_id = %s",
             (arranque, ingreso_id),
@@ -128,22 +133,19 @@ def main() -> None:
                 for orden, (pid, _cod, upb, precio) in enumerate(
                     rnd.sample(productos, rnd.randint(1, min(5, len(productos))))
                 ):
-                    # Una de cada ocho líneas queda pendiente de entrega.
-                    entregado = rnd.random() > 0.12
+                    bultos = rnd.randint(1, 6)
+                    hay = disponible.get(pid, 0)
+                    # Si no alcanza la mercaderia, la linea sale PENDIENTE: es
+                    # exactamente lo que hacen cuando venden algo que no tienen.
+                    entregado = hay >= bultos * upb and rnd.random() > 0.1
+                    if entregado:
+                        disponible[pid] = hay - bultos * upb
                     con.execute(
                         """insert into remito_lineas
                              (remito_id, producto_id, cantidad_bultos,
                               unidades_por_bulto, precio_unitario, entregado, orden)
                            values (%s, %s, %s, %s, %s, %s, %s)""",
-                        (
-                            remito_id,
-                            pid,
-                            rnd.randint(1, 6),
-                            upb,
-                            precio,
-                            entregado,
-                            orden,
-                        ),
+                        (remito_id, pid, bultos, upb, precio, entregado, orden),
                     )
 
                 con.execute("select emitir_remito(%s)", (remito_id,))
@@ -163,13 +165,26 @@ def main() -> None:
         print(f"Remitos emitidos: {total}, repartidos en {MESES} meses.")
 
         # --- Que las alertas del panel tengan de qué hablar ---
+        # Una rotura chica y un producto que se agota: las dos cosas que el
+        # panel tiene que saber mostrar.
         con.execute(
             """insert into movimientos (producto_id, tipo, unidades, usuario_id, nota, fecha)
-               select id, 'rotura', -greatest(1, floor(random() * 4))::int, %s,
-                      'Rotura de ejemplo', now() - interval '3 days'
-                 from productos order by codigo limit 2""",
+               select id, 'rotura', -2, %s, 'Se cayó una caja', now() - interval '3 days'
+                 from productos order by codigo limit 1""",
             (usuarios[0],),
         )
+        agotar = con.execute(
+            """select p.id, coalesce(sum(m.unidades), 0)::int
+                 from productos p left join movimientos m on m.producto_id = p.id
+                group by p.id having coalesce(sum(m.unidades), 0) > 0
+                order by 2 asc limit 1"""
+        ).fetchone()
+        if agotar:
+            con.execute(
+                """insert into movimientos (producto_id, tipo, unidades, usuario_id, nota, fecha)
+                   values (%s, %s, %s, %s, %s, now() - interval '1 day')""",
+                (agotar[0], "egreso", -agotar[1], usuarios[0], "Venta de mostrador"),
+            )
         con.commit()
 
         fila = con.execute(
