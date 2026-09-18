@@ -8,7 +8,7 @@ import { Shell } from "@/components/Shell";
 
 export const metadata: Metadata = {
   title: "Grupo Barba · Remitos y Stock",
-  description: "Sistema interno de remitos y control de stock — demo",
+  description: "Sistema interno de remitos y control de stock.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
