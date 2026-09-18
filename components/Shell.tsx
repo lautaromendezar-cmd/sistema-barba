@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useStore } from "@/lib/store";
@@ -62,12 +63,40 @@ const Ico = {
       />
     </svg>
   ),
+  clientes: (p: IconProps) => (
+    <svg viewBox="0 0 20 20" fill="none" strokeWidth="1.6" {...p}>
+      <circle cx="7.5" cy="7" r="2.75" stroke="currentColor" />
+      <path
+        d="M3 16.5c0-2.2 2-3.75 4.5-3.75s4.5 1.55 4.5 3.75"
+        stroke="currentColor"
+        strokeLinecap="round"
+      />
+      <path
+        d="M13.5 5.5a2.5 2.5 0 0 1 0 4.5M15 16.5c0-1.6-.7-2.8-1.9-3.4"
+        stroke="currentColor"
+        strokeLinecap="round"
+      />
+    </svg>
+  ),
+  proveedores: (p: IconProps) => (
+    <svg viewBox="0 0 20 20" fill="none" strokeWidth="1.6" {...p}>
+      <path
+        d="M2.5 7.5h9v7h-9v-7Zm9 2.5h3l2 2.5v2h-5v-4.5Z"
+        stroke="currentColor"
+        strokeLinejoin="round"
+      />
+      <circle cx="5.5" cy="15.5" r="1.4" stroke="currentColor" />
+      <circle cx="14" cy="15.5" r="1.4" stroke="currentColor" />
+    </svg>
+  ),
 };
 
 const LINKS = [
   { href: "/", label: "Inicio", icono: Ico.inicio },
   { href: "/remitos", label: "Remitos", icono: Ico.remitos },
   { href: "/productos", label: "Productos y stock", icono: Ico.productos },
+  { href: "/clientes", label: "Clientes", icono: Ico.clientes },
+  { href: "/proveedores", label: "Proveedores", icono: Ico.proveedores },
   { href: "/ingresos", label: "Ingreso de mercadería", icono: Ico.ingresos },
 ] as const;
 
@@ -98,9 +127,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
           href="/"
           className="border-line flex items-center gap-2.5 border-b px-5 py-4 md:border-b-0"
         >
-          <span className="bg-acento text-ink flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold">
-            B
-          </span>
+          <Image
+            src="/marca/escudo.png"
+            alt=""
+            width={310}
+            height={350}
+            className="h-9 w-auto"
+            priority
+          />
           <span className="titulo text-[15px] leading-tight">Grupo Barba</span>
         </Link>
 

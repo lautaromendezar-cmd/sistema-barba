@@ -21,6 +21,8 @@ export default function Productos() {
     [db.productos],
   );
 
+  const [editandoProd, setEditandoProd] = useState<Producto | null>(null);
+
   const filtrados = useMemo(() => {
     const q = normalizar(busqueda);
     return db.productos.filter((p) => {
@@ -143,6 +145,12 @@ export default function Productos() {
                     >
                       Ajustar
                     </button>
+                    <button
+                      onClick={() => setEditandoProd(p)}
+                      className="ml-1.5 rounded border border-line px-2 py-1 text-xs text-muted transition hover:border-ink hover:text-acento-ink"
+                    >
+                      Editar
+                    </button>
                   </td>
                 </tr>
               );
@@ -162,6 +170,18 @@ export default function Productos() {
         El stock en <span className="font-semibold text-alerta">rojo</span> es
         cero o negativo. No bloquea la venta: es la lista de lo que falta cargar.
       </p>
+
+      {editandoProd && (
+        <Modal
+          titulo={`Editar · ${editandoProd.nombre}`}
+          onCerrar={() => setEditandoProd(null)}
+        >
+          <FormEditarProducto
+            producto={editandoProd}
+            onCerrar={() => setEditandoProd(null)}
+          />
+        </Modal>
+      )}
 
       {ajustando && (
         <Modal titulo={`Ajustar stock · ${ajustando.nombre}`} onCerrar={() => setAjustando(null)}>
@@ -374,5 +394,174 @@ function Campo({
         className="w-full rounded-md border border-line bg-white px-3 py-2 text-sm outline-none focus:border-ink"
       />
     </div>
+  );
+}
+
+/**
+ * Edición de un producto ya cargado. Cambiar el precio acá deja el nuevo valor
+ * para los remitos que se emitan de ahora en más: los ya emitidos guardan el
+ * precio con el que salieron y no se tocan.
+ */
+function FormEditarProducto({
+  producto,
+  onCerrar,
+}: {
+  producto: Producto;
+  onCerrar: () => void;
+}) {
+  const { db, editarProducto } = useStore();
+  const [f, setF] = useState({
+    codigo: producto.codigo,
+    nombre: producto.nombre,
+    bodega: producto.bodega,
+    seccion: producto.seccion,
+    presentacion: producto.presentacion,
+    unidadesPorBulto: producto.unidadesPorBulto,
+    precioLista: producto.precioLista,
+    seVendeSuelto: producto.seVendeSuelto ?? false,
+    enListaActual: producto.enListaActual,
+    proveedorId: producto.proveedorId ?? "",
+  });
+  const [guardando, setGuardando] = useState(false);
+
+  const campo =
+    "w-full rounded-md border border-line bg-white px-3 py-2 text-sm outline-none focus:border-ink";
+  const etiqueta =
+    "mb-1 block text-xs font-semibold tracking-wide text-muted uppercase";
+
+  return (
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
+        if (guardando) return;
+        setGuardando(true);
+        await editarProducto(producto.id!, f);
+        setGuardando(false);
+        onCerrar();
+      }}
+    >
+      <div className="mb-4 grid gap-4 sm:grid-cols-[140px_1fr]">
+        <div>
+          <label className={etiqueta}>Código</label>
+          <input
+            value={f.codigo}
+            onChange={(e) => setF({ ...f, codigo: e.target.value })}
+            className={`${campo} tnum font-mono`}
+          />
+        </div>
+        <div>
+          <label className={etiqueta}>Nombre</label>
+          <input
+            autoFocus
+            value={f.nombre}
+            onChange={(e) => setF({ ...f, nombre: e.target.value })}
+            className={campo}
+          />
+        </div>
+      </div>
+
+      <div className="mb-4 grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className={etiqueta}>Bodega (quién lo produce)</label>
+          <input
+            value={f.bodega}
+            onChange={(e) => setF({ ...f, bodega: e.target.value })}
+            className={campo}
+          />
+        </div>
+        <div>
+          <label className={etiqueta}>Proveedor (a quién se le compra)</label>
+          <select
+            value={f.proveedorId}
+            onChange={(e) => setF({ ...f, proveedorId: e.target.value })}
+            className={campo}
+          >
+            <option value="">Sin asignar</option>
+            {db.proveedores
+              .filter((v) => v.activo)
+              .map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.nombre}
+                </option>
+              ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="mb-4 grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className={etiqueta}>Sección</label>
+          <input
+            value={f.seccion}
+            onChange={(e) => setF({ ...f, seccion: e.target.value })}
+            className={campo}
+          />
+        </div>
+        <div>
+          <label className={etiqueta}>Presentación</label>
+          <input
+            value={f.presentacion}
+            onChange={(e) => setF({ ...f, presentacion: e.target.value })}
+            className={campo}
+            placeholder="Caja x 6 botellas"
+          />
+        </div>
+      </div>
+
+      <div className="mb-4 grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className={etiqueta}>Unidades por bulto</label>
+          <input
+            type="number"
+            min={1}
+            value={f.unidadesPorBulto}
+            onChange={(e) =>
+              setF({ ...f, unidadesPorBulto: Number(e.target.value) })
+            }
+            className={`${campo} tnum`}
+          />
+        </div>
+        <div>
+          <label className={etiqueta}>Precio por unidad</label>
+          <input
+            type="number"
+            step="0.01"
+            value={f.precioLista}
+            onChange={(e) => setF({ ...f, precioLista: Number(e.target.value) })}
+            className={`${campo} tnum`}
+          />
+          <p className="mt-1 text-xs text-faint">
+            El bulto sale {money(f.precioLista * f.unidadesPorBulto)}.
+          </p>
+        </div>
+      </div>
+
+      <div className="mb-5 space-y-2 text-sm text-muted">
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={f.seVendeSuelto}
+            onChange={(e) => setF({ ...f, seVendeSuelto: e.target.checked })}
+          />
+          Se vende también por unidad suelta
+        </label>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={f.enListaActual}
+            onChange={(e) => setF({ ...f, enListaActual: e.target.checked })}
+          />
+          Está en la lista de precios vigente
+        </label>
+      </div>
+
+      <button
+        type="submit"
+        disabled={guardando || !f.nombre.trim() || !f.codigo.trim()}
+        className="w-full rounded-md bg-ink px-4 py-2.5 text-sm font-medium text-white transition hover:bg-ink-hover disabled:opacity-40"
+      >
+        {guardando ? "Guardando…" : "Guardar cambios"}
+      </button>
+    </form>
   );
 }

@@ -10,9 +10,31 @@ export type Producto = {
   unidadesPorBulto: number;
   /** Whisky, gin, vodka, aperitivos, pastas y aceites tambien se venden sueltos. */
   seVendeSuelto?: boolean;
+  proveedorId?: string | null;
+  activo?: boolean;
   /** Siempre POR UNIDAD. El precio del bulto se calcula. */
   precioLista: number;
   enListaActual: boolean;
+};
+
+/** A quien se le compra. Distinto de la bodega, que es quien produce. */
+export type Proveedor = {
+  id: string;
+  nombre: string;
+  contacto: string;
+  telefono: string;
+  email: string;
+  notas: string;
+  activo: boolean;
+};
+
+export type Direccion = {
+  id: string;
+  direccion: string;
+  localidad: string;
+  contacto: string;
+  telefono: string;
+  esPrincipal: boolean;
 };
 
 export type Cliente = {
@@ -26,6 +48,9 @@ export type Cliente = {
   /** Descuento fijo del cliente. Se copia al remito al armarlo. */
   descuentoPct?: number;
   notas: string;
+  activo?: boolean;
+  /** Sucursales. La principal es la que sale impresa en el remito. */
+  direcciones?: Direccion[];
 };
 
 /**
@@ -90,6 +115,7 @@ export type Ingreso = {
 
 export type DB = {
   productos: Producto[];
+  proveedores: Proveedor[];
   clientes: Cliente[];
   movimientos: Movimiento[];
   remitos: Remito[];

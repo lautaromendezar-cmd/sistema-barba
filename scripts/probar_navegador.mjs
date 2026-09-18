@@ -147,6 +147,41 @@ try {
   );
   await captura("5d-stock-despues");
 
+  console.log("\nClientes y proveedores");
+  await pagina.goto(`${BASE}/clientes`, { waitUntil: "networkidle0" });
+  await new Promise((r) => setTimeout(r, 2500));
+  const textoClientes = await pagina.evaluate(() => document.body.innerText);
+  chequear(
+    "la lista de clientes trae datos",
+    textoClientes.includes("Vinoteca") || textoClientes.includes("Almacén"),
+    "no aparece ningún cliente conocido",
+  );
+  await captura("7-clientes");
+
+  await pagina.goto(`${BASE}/proveedores`, { waitUntil: "networkidle0" });
+  await new Promise((r) => setTimeout(r, 2500));
+  const textoProv = await pagina.evaluate(() => document.body.innerText);
+  chequear(
+    "la lista de proveedores trae datos",
+    textoProv.includes("Alfa Crux") || textoProv.includes("Alta Vista"),
+    "no aparece ningún proveedor",
+  );
+  await captura("8-proveedores");
+
+  console.log("\nEl logo carga en todas partes");
+  const logos = await pagina.evaluate(() =>
+    [...document.querySelectorAll("img")].map((i) => ({
+      src: i.currentSrc || i.src,
+      ok: i.complete && i.naturalWidth > 0,
+    })),
+  );
+  const rotos = logos.filter((l) => !l.ok);
+  chequear(
+    `${logos.length} imagen(es), ninguna rota`,
+    logos.length > 0 && rotos.length === 0,
+    rotos.map((r) => r.src).join(", ") || "no hay ninguna imagen en la página",
+  );
+
   console.log("\nIngresos");
   await pagina.goto(`${BASE}/ingresos`, { waitUntil: "networkidle0" });
   await new Promise((r) => setTimeout(r, 2000));

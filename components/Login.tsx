@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { useStore } from "@/lib/store";
 
@@ -27,11 +28,15 @@ export function Login() {
     <div className="bg-canvas flex min-h-screen items-center justify-center px-5 py-10">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <div className="bg-acento mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl">
-            <span className="titulo text-ink text-xl font-bold">B</span>
-          </div>
-          <h1 className="titulo text-2xl">Grupo Barba</h1>
-          <p className="text-muted mt-1 text-sm">Remitos y stock</p>
+          <Image
+            src="/marca/grupo-barba.png"
+            alt="Grupo Barba · Distribuidora de vinos"
+            width={834}
+            height={508}
+            className="mx-auto mb-5 h-auto w-52"
+            priority
+          />
+          <p className="text-muted text-sm">Remitos y stock</p>
         </div>
 
         <form

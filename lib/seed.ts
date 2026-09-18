@@ -291,6 +291,7 @@ function movimientosDesde(ingresos: Ingreso[], remitos: Remito[]): Movimiento[] 
 export function seedDB(): DB {
   return {
     productos,
+    proveedores: [],
     clientes,
     movimientos: movimientosDesde(ingresos, remitos),
     remitos,

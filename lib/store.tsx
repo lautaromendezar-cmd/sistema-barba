@@ -11,6 +11,8 @@ import {
 import type {
   Cliente,
   DB,
+  Direccion,
+  Proveedor,
   Ingreso,
   Movimiento,
   Producto,
@@ -50,7 +52,16 @@ type Store = {
   movimientosDe: (codigo: string) => Movimiento[];
 
   agregarProducto: (p: Producto) => Promise<void>;
+  editarProducto: (id: string, cambios: Partial<Producto>) => Promise<void>;
   agregarCliente: (c: Omit<Cliente, "id">) => Promise<Cliente>;
+  editarCliente: (id: string, cambios: Partial<Cliente>) => Promise<void>;
+  guardarDireccion: (
+    clienteId: string,
+    d: Partial<Direccion> & { id?: string },
+  ) => Promise<void>;
+  borrarDireccion: (id: string) => Promise<void>;
+  agregarProveedor: (p: Omit<Proveedor, "id">) => Promise<void>;
+  editarProveedor: (id: string, cambios: Partial<Proveedor>) => Promise<void>;
   registrarIngreso: (
     datos: Omit<Ingreso, "id" | "fecha" | "usuario">,
   ) => Promise<void>;
@@ -73,6 +84,7 @@ const Ctx = createContext<Store | null>(null);
 
 const DB_VACIA: DB = {
   productos: [],
+  proveedores: [],
   clientes: [],
   movimientos: [],
   remitos: [],
@@ -92,6 +104,18 @@ type FilaProducto = {
   se_vende_suelto: boolean;
   precio_lista: string | number;
   en_lista_actual: boolean;
+  proveedor_id: string | null;
+  activo: boolean;
+};
+
+type FilaProveedor = {
+  id: string;
+  nombre: string;
+  contacto: string | null;
+  telefono: string | null;
+  email: string | null;
+  notas: string | null;
+  activo: boolean;
 };
 
 const num = (v: string | number | null | undefined) => Number(v ?? 0);
@@ -119,6 +143,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       stockFisico,
       stockAPedir,
       perfiles,
+      proveedores,
     ] = await Promise.all([
       supabase.from("productos").select("*").order("nombre"),
       supabase
@@ -146,6 +171,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       supabase.from("stock_fisico").select("*"),
       supabase.from("stock_a_pedir").select("*"),
       supabase.from("perfiles").select("id, nombre"),
+      supabase.from("proveedores").select("*").order("nombre"),
     ]);
 
     // Si la carga falla, NO se pisa lo que ya estaba: mostrar todo en cero
@@ -197,14 +223,29 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         seVendeSuelto: p.se_vende_suelto,
         precioLista: num(p.precio_lista),
         enListaActual: p.en_lista_actual,
+        proveedorId: p.proveedor_id ?? null,
+        activo: p.activo,
+      })),
+
+      proveedores: ((proveedores.data ?? []) as FilaProveedor[]).map((v) => ({
+        id: v.id,
+        nombre: v.nombre,
+        contacto: v.contacto ?? "",
+        telefono: v.telefono ?? "",
+        email: v.email ?? "",
+        notas: v.notas ?? "",
+        activo: v.activo,
       })),
 
       clientes: (clientes.data ?? []).map((c) => {
         // Un cliente puede tener varias sucursales. La principal es la que sale
         // impresa en el remito mientras no se elija otra.
         const direcciones = (c.cliente_direcciones ?? []) as Array<{
+          id: string;
           direccion: string;
           localidad: string | null;
+          contacto: string | null;
+          telefono: string | null;
           es_principal: boolean;
         }>;
         const principal =
@@ -218,6 +259,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           vendedor: c.vendedor ?? "",
           descuentoPct: num(c.descuento_pct),
           notas: c.notas ?? "",
+          activo: c.activo,
+          direcciones: direcciones.map((d) => ({
+            id: d.id,
+            direccion: d.direccion,
+            localidad: d.localidad ?? "",
+            contacto: d.contacto ?? "",
+            telefono: d.telefono ?? "",
+            esPrincipal: d.es_principal,
+          })),
         };
       }),
 
@@ -396,6 +446,144 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
         await cargarTodo();
         return { ...datos, id: data.id };
+      },
+
+      editarProducto: async (id, cambios) => {
+        const fila: Record<string, unknown> = {};
+        if (cambios.codigo !== undefined) fila.codigo = cambios.codigo;
+        if (cambios.nombre !== undefined) fila.nombre = cambios.nombre;
+        if (cambios.bodega !== undefined) fila.bodega = cambios.bodega;
+        if (cambios.seccion !== undefined) fila.seccion = cambios.seccion;
+        if (cambios.presentacion !== undefined)
+          fila.presentacion = cambios.presentacion;
+        if (cambios.unidadesPorBulto !== undefined)
+          fila.unidades_por_bulto = cambios.unidadesPorBulto;
+        if (cambios.seVendeSuelto !== undefined)
+          fila.se_vende_suelto = cambios.seVendeSuelto;
+        if (cambios.precioLista !== undefined)
+          fila.precio_lista = cambios.precioLista;
+        if (cambios.enListaActual !== undefined)
+          fila.en_lista_actual = cambios.enListaActual;
+        if (cambios.proveedorId !== undefined)
+          fila.proveedor_id = cambios.proveedorId || null;
+        if (cambios.activo !== undefined) fila.activo = cambios.activo;
+
+        const { error } = await supabase
+          .from("productos")
+          .update(fila)
+          .eq("id", id);
+        if (error) {
+          setAviso(`No se pudo guardar el producto: ${error.message}`);
+          return;
+        }
+        await cargarTodo();
+      },
+
+      editarCliente: async (id, cambios) => {
+        const fila: Record<string, unknown> = {};
+        if (cambios.nombre !== undefined) fila.nombre = cambios.nombre;
+        if (cambios.telefono !== undefined) fila.telefono = cambios.telefono;
+        if (cambios.vendedor !== undefined)
+          fila.vendedor = cambios.vendedor || null;
+        if (cambios.descuentoPct !== undefined)
+          fila.descuento_pct = cambios.descuentoPct;
+        if (cambios.notas !== undefined) fila.notas = cambios.notas;
+        if (cambios.activo !== undefined) fila.activo = cambios.activo;
+
+        const { error } = await supabase
+          .from("clientes")
+          .update(fila)
+          .eq("id", id);
+        if (error) {
+          setAviso(`No se pudo guardar el cliente: ${error.message}`);
+          return;
+        }
+        await cargarTodo();
+      },
+
+      guardarDireccion: async (clienteId, d) => {
+        const fila = {
+          cliente_id: clienteId,
+          direccion: d.direccion ?? "",
+          localidad: d.localidad ?? "",
+          contacto: d.contacto ?? "",
+          telefono: d.telefono ?? "",
+          es_principal: d.esPrincipal ?? false,
+        };
+
+        // Una sola principal por cliente: la nueva desplaza a la anterior.
+        if (fila.es_principal) {
+          await supabase
+            .from("cliente_direcciones")
+            .update({ es_principal: false })
+            .eq("cliente_id", clienteId);
+        }
+
+        const { error } = d.id
+          ? await supabase
+              .from("cliente_direcciones")
+              .update(fila)
+              .eq("id", d.id)
+          : await supabase.from("cliente_direcciones").insert(fila);
+
+        if (error) {
+          setAviso(`No se pudo guardar la dirección: ${error.message}`);
+          return;
+        }
+        await cargarTodo();
+      },
+
+      borrarDireccion: async (id) => {
+        const { error } = await supabase
+          .from("cliente_direcciones")
+          .delete()
+          .eq("id", id);
+        if (error) {
+          setAviso(`No se pudo borrar la dirección: ${error.message}`);
+          return;
+        }
+        await cargarTodo();
+      },
+
+      agregarProveedor: async (p) => {
+        const { error } = await supabase.from("proveedores").insert({
+          nombre: p.nombre,
+          contacto: p.contacto || null,
+          telefono: p.telefono || null,
+          email: p.email || null,
+          notas: p.notas,
+        });
+        if (error) {
+          setAviso(
+            error.code === "23505"
+              ? `Ya existe un proveedor que se llama "${p.nombre}".`
+              : `No se pudo guardar el proveedor: ${error.message}`,
+          );
+          return;
+        }
+        await cargarTodo();
+      },
+
+      editarProveedor: async (id, cambios) => {
+        const fila: Record<string, unknown> = {};
+        if (cambios.nombre !== undefined) fila.nombre = cambios.nombre;
+        if (cambios.contacto !== undefined)
+          fila.contacto = cambios.contacto || null;
+        if (cambios.telefono !== undefined)
+          fila.telefono = cambios.telefono || null;
+        if (cambios.email !== undefined) fila.email = cambios.email || null;
+        if (cambios.notas !== undefined) fila.notas = cambios.notas;
+        if (cambios.activo !== undefined) fila.activo = cambios.activo;
+
+        const { error } = await supabase
+          .from("proveedores")
+          .update(fila)
+          .eq("id", id);
+        if (error) {
+          setAviso(`No se pudo guardar el proveedor: ${error.message}`);
+          return;
+        }
+        await cargarTodo();
       },
 
       registrarIngreso: async (datos) => {

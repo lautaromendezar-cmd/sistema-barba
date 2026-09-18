@@ -15,11 +15,16 @@ export function RemitoDoc({ remito }: { remito: Remito }) {
   return (
     <div className="print-sheet bg-white text-[13px] text-ink">
       <div className="flex flex-wrap items-start justify-between gap-6 border-b-2 border-ink pb-4">
-        <div>
-          <div className="titulo text-2xl font-semibold">GRUPO BARBA</div>
+        <div className="flex items-center gap-5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/marca/grupo-barba.png"
+            alt="Grupo Barba · Distribuidora de vinos"
+            width={834}
+            height={508}
+            className="h-24 w-auto"
+          />
           <div className="mt-1 text-xs leading-relaxed text-muted">
-            Distribuidora de vinos y bebidas
-            <br />
             1165047011 / 1172399523
             <br />
             barbavinos@gmail.com
