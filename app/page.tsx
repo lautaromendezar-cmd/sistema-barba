@@ -19,7 +19,7 @@ export default function Inicio() {
 
   return (
     <div>
-      <h1 className="serif text-3xl font-semibold">
+      <h1 className="titulo text-3xl font-semibold">
         Hola, {usuario?.nombre.split(" ")[0]}
       </h1>
       <p className="mt-1 text-muted">
@@ -46,25 +46,25 @@ export default function Inicio() {
       <div className="mt-4 flex flex-wrap gap-2">
         <Link
           href="/remitos/nuevo"
-          className="rounded-md bg-wine px-4 py-2.5 text-sm font-medium text-white transition hover:bg-wine-ink"
+          className="rounded-md bg-ink px-4 py-2.5 text-sm font-medium text-white transition hover:bg-ink-hover"
         >
           Nuevo remito
         </Link>
         <Link
           href="/ingresos"
-          className="rounded-md border border-line bg-surface px-4 py-2.5 text-sm transition hover:border-wine hover:text-wine"
+          className="rounded-md border border-line bg-surface px-4 py-2.5 text-sm transition hover:border-ink hover:text-acento-ink"
         >
           Cargar mercadería que entró
         </Link>
         <Link
           href="/productos"
-          className="rounded-md border border-line bg-surface px-4 py-2.5 text-sm transition hover:border-wine hover:text-wine"
+          className="rounded-md border border-line bg-surface px-4 py-2.5 text-sm transition hover:border-ink hover:text-acento-ink"
         >
           Ver stock
         </Link>
       </div>
 
-      <h2 className="serif mt-10 mb-3 border-b border-line pb-2 text-xl font-semibold">
+      <h2 className="titulo mt-10 mb-3 border-b border-line pb-2 text-xl font-semibold">
         Últimos remitos
       </h2>
 
@@ -84,17 +84,17 @@ export default function Inicio() {
               return (
                 <tr
                   key={r.id}
-                  className="border-b border-line last:border-0 hover:bg-paper"
+                  className="border-b border-line last:border-0 hover:bg-canvas"
                 >
                   <td className="px-4 py-2.5">
                     <Link
                       href="/remitos"
-                      className="font-medium text-wine hover:underline"
+                      className="font-medium text-acento-ink hover:underline"
                     >
                       {r.numero}
                     </Link>
                     {r.estado === "anulado" && (
-                      <span className="ml-2 rounded bg-wine-soft px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-wine uppercase">
+                      <span className="ml-2 rounded bg-acento-soft px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-acento-ink uppercase">
                         Anulado
                       </span>
                     )}
@@ -135,7 +135,7 @@ function Tarjeta({
   return (
     <div className="rounded-lg border border-line bg-surface p-4">
       <div
-        className={`tnum serif text-3xl font-semibold ${alerta ? "text-wine" : ""}`}
+        className={`tnum titulo text-3xl font-semibold ${alerta ? "text-acento-ink" : ""}`}
       >
         {valor}
       </div>

@@ -56,7 +56,7 @@ export function BuscadorProducto({
           if (e.key === "Escape") setQ("");
         }}
         placeholder={placeholder}
-        className="w-full rounded-md border border-line bg-white px-3 py-2.5 text-sm outline-none focus:border-wine"
+        className="w-full rounded-md border border-line bg-white px-3 py-2.5 text-sm outline-none focus:border-ink"
       />
 
       {resultados.length > 0 && (
@@ -68,7 +68,7 @@ export function BuscadorProducto({
                 <button
                   type="button"
                   onClick={() => elegir(p)}
-                  className="flex w-full items-center gap-3 border-b border-line px-3 py-2 text-left last:border-0 hover:bg-wine-soft"
+                  className="flex w-full items-center gap-3 border-b border-line px-3 py-2 text-left last:border-0 hover:bg-acento-soft"
                 >
                   <span className="tnum w-14 shrink-0 font-mono text-xs text-muted">
                     {p.codigo}

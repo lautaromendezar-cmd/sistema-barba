@@ -38,7 +38,7 @@ export default function Productos() {
     <div>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="serif text-3xl font-semibold">Productos y stock</h1>
+          <h1 className="titulo text-3xl font-semibold">Productos y stock</h1>
           <p className="mt-1 text-muted">
             {db.productos.length} productos · el stock se calcula sumando los
             movimientos, no se escribe a mano.
@@ -46,7 +46,7 @@ export default function Productos() {
         </div>
         <button
           onClick={() => setAlta((v) => !v)}
-          className="rounded-md bg-wine px-4 py-2.5 text-sm font-medium text-white transition hover:bg-wine-ink"
+          className="rounded-md bg-ink px-4 py-2.5 text-sm font-medium text-white transition hover:bg-ink-hover"
         >
           {alta ? "Cancelar" : "Nuevo producto"}
         </button>
@@ -66,12 +66,12 @@ export default function Productos() {
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
           placeholder="Buscar por código, producto o bodega…"
-          className="min-w-[240px] flex-1 rounded-md border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-wine"
+          className="min-w-[240px] flex-1 rounded-md border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-ink"
         />
         <select
           value={seccion}
           onChange={(e) => setSeccion(e.target.value)}
-          className="rounded-md border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-wine"
+          className="rounded-md border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-ink"
         >
           <option value="todas">Todas las secciones</option>
           {secciones.map((s) => (
@@ -104,7 +104,7 @@ export default function Productos() {
               return (
                 <tr
                   key={p.codigo}
-                  className="border-b border-line last:border-0 hover:bg-paper"
+                  className="border-b border-line last:border-0 hover:bg-canvas"
                 >
                   <td className="tnum px-4 py-3 font-mono text-xs text-muted">
                     {p.codigo}
@@ -133,13 +133,13 @@ export default function Productos() {
                   <td className="px-4 py-3 text-right whitespace-nowrap">
                     <button
                       onClick={() => setDetalle(p)}
-                      className="rounded border border-line px-2 py-1 text-xs text-muted transition hover:border-wine hover:text-wine"
+                      className="rounded border border-line px-2 py-1 text-xs text-muted transition hover:border-ink hover:text-acento-ink"
                     >
                       Movimientos
                     </button>
                     <button
                       onClick={() => setAjustando(p)}
-                      className="ml-1.5 rounded border border-line px-2 py-1 text-xs text-muted transition hover:border-wine hover:text-wine"
+                      className="ml-1.5 rounded border border-line px-2 py-1 text-xs text-muted transition hover:border-ink hover:text-acento-ink"
                     >
                       Ajustar
                     </button>
@@ -200,7 +200,7 @@ export default function Productos() {
                   <td className="py-2 text-muted">{m.usuario}</td>
                   <td
                     className={`tnum py-2 text-right font-medium ${
-                      m.unidades < 0 ? "text-wine" : ""
+                      m.unidades < 0 ? "text-acento-ink" : ""
                     }`}
                   >
                     {m.unidades > 0 ? `+${m.unidades}` : m.unidades}
@@ -257,7 +257,7 @@ function FormAjuste({
         type="number"
         value={valor}
         onChange={(e) => setValor(e.target.value)}
-        className="tnum mb-1 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-wine"
+        className="tnum mb-1 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-ink"
       />
       <p className="mb-4 text-xs text-muted">
         {delta === 0
@@ -272,13 +272,13 @@ function FormAjuste({
         value={nota}
         onChange={(e) => setNota(e.target.value)}
         placeholder="Rotura, conteo, error de carga…"
-        className="mb-5 w-full rounded-md border border-line px-3 py-2 text-sm outline-none focus:border-wine"
+        className="mb-5 w-full rounded-md border border-line px-3 py-2 text-sm outline-none focus:border-ink"
       />
 
       <button
         type="submit"
         disabled={delta === 0}
-        className="w-full rounded-md bg-wine px-4 py-2.5 text-sm font-medium text-white transition hover:bg-wine-ink disabled:opacity-40"
+        className="w-full rounded-md bg-ink px-4 py-2.5 text-sm font-medium text-white transition hover:bg-ink-hover disabled:opacity-40"
       >
         Guardar ajuste
       </button>
@@ -317,7 +317,7 @@ function FormAlta({ onGuardar }: { onGuardar: (p: Producto) => void }) {
       }}
       className="mt-5 rounded-lg border border-line bg-surface p-5"
     >
-      <h2 className="serif mb-4 text-lg font-semibold">Nuevo producto</h2>
+      <h2 className="titulo mb-4 text-lg font-semibold">Nuevo producto</h2>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Campo label="Código" required value={f.codigo} onChange={set("codigo")} placeholder="W1234" />
         <Campo label="Producto" required value={f.nombre} onChange={set("nombre")} placeholder="Alfa Crux Malbec" />
@@ -329,7 +329,7 @@ function FormAlta({ onGuardar }: { onGuardar: (p: Producto) => void }) {
           <select
             value={f.seccion}
             onChange={(e) => setF({ ...f, seccion: e.target.value })}
-            className="w-full rounded-md border border-line bg-white px-3 py-2 text-sm outline-none focus:border-wine"
+            className="w-full rounded-md border border-line bg-white px-3 py-2 text-sm outline-none focus:border-ink"
           >
             {[
               "Media Gama",
@@ -348,7 +348,7 @@ function FormAlta({ onGuardar }: { onGuardar: (p: Producto) => void }) {
       </div>
       <button
         type="submit"
-        className="mt-5 rounded-md bg-wine px-4 py-2.5 text-sm font-medium text-white transition hover:bg-wine-ink"
+        className="mt-5 rounded-md bg-ink px-4 py-2.5 text-sm font-medium text-white transition hover:bg-ink-hover"
       >
         Guardar producto
       </button>
@@ -371,7 +371,7 @@ function Campo({
       </label>
       <input
         {...props}
-        className="w-full rounded-md border border-line bg-white px-3 py-2 text-sm outline-none focus:border-wine"
+        className="w-full rounded-md border border-line bg-white px-3 py-2 text-sm outline-none focus:border-ink"
       />
     </div>
   );

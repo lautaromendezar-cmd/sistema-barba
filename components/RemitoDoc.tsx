@@ -14,9 +14,9 @@ export function RemitoDoc({ remito }: { remito: Remito }) {
 
   return (
     <div className="print-sheet bg-white text-[13px] text-ink">
-      <div className="flex flex-wrap items-start justify-between gap-6 border-b-2 border-wine pb-4">
+      <div className="flex flex-wrap items-start justify-between gap-6 border-b-2 border-ink pb-4">
         <div>
-          <div className="serif text-2xl font-semibold">GRUPO BARBA</div>
+          <div className="titulo text-2xl font-semibold">GRUPO BARBA</div>
           <div className="mt-1 text-xs leading-relaxed text-muted">
             Distribuidora de vinos y bebidas
             <br />
@@ -29,14 +29,14 @@ export function RemitoDoc({ remito }: { remito: Remito }) {
           <div className="text-[10px] font-semibold tracking-[0.18em] text-muted uppercase">
             Remito
           </div>
-          <div className="serif tnum text-2xl font-semibold text-wine">
+          <div className="titulo tnum text-2xl font-semibold text-acento-ink">
             {remito.numero}
           </div>
           <div className="tnum mt-1 text-xs text-muted">
             {fecha(remito.fecha)}
           </div>
           {remito.estado === "anulado" && (
-            <div className="mt-2 inline-block border border-wine px-2 py-0.5 text-[10px] font-bold tracking-widest text-wine uppercase">
+            <div className="mt-2 inline-block border border-ink px-2 py-0.5 text-[10px] font-bold tracking-widest text-acento-ink uppercase">
               Anulado
             </div>
           )}
@@ -106,8 +106,8 @@ export function RemitoDoc({ remito }: { remito: Remito }) {
       )}
 
       {pendientes.length > 0 && (
-        <div className="mt-4 border border-line bg-amber-soft p-3">
-          <div className="text-[10px] font-semibold tracking-[0.14em] text-amber-ink uppercase">
+        <div className="mt-4 border border-line bg-acento-soft p-3">
+          <div className="text-[10px] font-semibold tracking-[0.14em] text-acento-ink uppercase">
             Pendiente de entrega — se pide al proveedor
           </div>
           <ul className="mt-1.5 space-y-0.5 text-xs">
@@ -153,10 +153,10 @@ export function RemitoDoc({ remito }: { remito: Remito }) {
               </tr>
             )}
             <tr className="border-t border-ink/30">
-              <td className="serif py-1.5 pr-8 text-base font-semibold">
+              <td className="titulo py-1.5 pr-8 text-base font-semibold">
                 Total
               </td>
-              <td className="serif py-1.5 text-right text-base font-semibold">
+              <td className="titulo py-1.5 text-right text-base font-semibold">
                 {money(total)}
               </td>
             </tr>

@@ -23,6 +23,8 @@ export default function NuevoRemito() {
   const [ajustePct, setAjustePct] = useState(0);
   const [notas, setNotas] = useState("");
   const [emitido, setEmitido] = useState<Remito | null>(null);
+  const [emitiendo, setEmitiendo] = useState(false);
+  const [error, setError] = useState("");
 
   const unidadesDe = (f: Fila) =>
     f.bultos * (producto(f.codigo)?.unidadesPorBulto ?? 1);
@@ -38,10 +40,17 @@ export default function NuevoRemito() {
   const { subtotal, ajuste, total } = totalRemito(lineas, ajustePct);
   const puedeEmitir = clienteId !== "" && filas.length > 0;
 
-  function emitir() {
-    if (!puedeEmitir) return;
-    const r = emitirRemito({ clienteId, lineas, ajustePct, notas });
-    setEmitido(r);
+  async function emitir() {
+    if (!puedeEmitir || emitiendo) return;
+    setEmitiendo(true);
+    setError("");
+    try {
+      setEmitido(await emitirRemito({ clienteId, lineas, ajustePct, notas }));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo emitir el remito.");
+    } finally {
+      setEmitiendo(false);
+    }
   }
 
   function empezarOtro() {
@@ -57,7 +66,7 @@ export default function NuevoRemito() {
       <div className="print-area">
         <div className="no-print mb-5 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="serif text-2xl font-semibold">
+            <h1 className="titulo text-2xl font-semibold">
               Remito {emitido.numero} emitido
             </h1>
             <p className="mt-1 text-sm text-muted">
@@ -67,19 +76,19 @@ export default function NuevoRemito() {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => window.print()}
-              className="rounded-md bg-wine px-4 py-2.5 text-sm font-medium text-white transition hover:bg-wine-ink"
+              className="rounded-md bg-ink px-4 py-2.5 text-sm font-medium text-white transition hover:bg-ink-hover"
             >
               Imprimir
             </button>
             <button
               onClick={empezarOtro}
-              className="rounded-md border border-line bg-surface px-4 py-2.5 text-sm transition hover:border-wine hover:text-wine"
+              className="rounded-md border border-line bg-surface px-4 py-2.5 text-sm transition hover:border-ink hover:text-acento-ink"
             >
               Hacer otro
             </button>
             <Link
               href="/remitos"
-              className="rounded-md border border-line bg-surface px-4 py-2.5 text-sm transition hover:border-wine hover:text-wine"
+              className="rounded-md border border-line bg-surface px-4 py-2.5 text-sm transition hover:border-ink hover:text-acento-ink"
             >
               Ver todos
             </Link>
@@ -94,7 +103,7 @@ export default function NuevoRemito() {
 
   return (
     <div>
-      <h1 className="serif text-3xl font-semibold">Nuevo remito</h1>
+      <h1 className="titulo text-3xl font-semibold">Nuevo remito</h1>
       <p className="mt-1 text-muted">
         Lo que se entrega descuenta stock. Lo que queda pendiente, no.
       </p>
@@ -109,7 +118,7 @@ export default function NuevoRemito() {
             <select
               value={clienteId}
               onChange={(e) => setClienteId(e.target.value)}
-              className="w-full rounded-md border border-line bg-white px-3 py-2 text-sm outline-none focus:border-wine"
+              className="w-full rounded-md border border-line bg-white px-3 py-2 text-sm outline-none focus:border-ink"
             >
               <option value="">Elegir cliente…</option>
               {db.clientes.map((c) => (
@@ -121,7 +130,7 @@ export default function NuevoRemito() {
           </div>
           <button
             onClick={() => setNuevoCliente((v) => !v)}
-            className="rounded-md border border-line px-3 py-2 text-sm text-muted transition hover:border-wine hover:text-wine"
+            className="rounded-md border border-line px-3 py-2 text-sm text-muted transition hover:border-ink hover:text-acento-ink"
           >
             {nuevoCliente ? "Cancelar" : "+ Cliente nuevo"}
           </button>
@@ -129,8 +138,8 @@ export default function NuevoRemito() {
 
         {nuevoCliente && (
           <FormCliente
-            onGuardar={(datos) => {
-              const c = agregarCliente(datos);
+            onGuardar={async (datos) => {
+              const c = await agregarCliente(datos);
               setClienteId(c.id);
               setNuevoCliente(false);
             }}
@@ -215,7 +224,7 @@ export default function NuevoRemito() {
                               ),
                             )
                           }
-                          className="tnum w-20 rounded-md border border-line px-2 py-1.5 text-right outline-none focus:border-wine"
+                          className="tnum w-20 rounded-md border border-line px-2 py-1.5 text-right outline-none focus:border-ink"
                         />
                       </td>
                       <td className="tnum py-2.5 text-right text-muted">{u}</td>
@@ -235,10 +244,10 @@ export default function NuevoRemito() {
                               ),
                             )
                           }
-                          className="tnum w-28 rounded-md border border-line px-2 py-1.5 text-right outline-none focus:border-wine"
+                          className="tnum w-28 rounded-md border border-line px-2 py-1.5 text-right outline-none focus:border-ink"
                         />
                         {p && f.precioUnitario !== p.precioLista && (
-                          <div className="mt-0.5 text-[11px] text-wine">
+                          <div className="mt-0.5 text-[11px] text-acento-ink">
                             lista {money(p.precioLista)}
                           </div>
                         )}
@@ -257,8 +266,8 @@ export default function NuevoRemito() {
                           }
                           className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition ${
                             f.entregado
-                              ? "bg-wine-soft text-wine"
-                              : "bg-amber-soft text-amber-ink"
+                              ? "bg-acento-soft text-acento-ink"
+                              : "bg-acento-soft text-acento-ink"
                           }`}
                         >
                           {f.entregado ? "Se entrega" : "Pendiente"}
@@ -269,7 +278,7 @@ export default function NuevoRemito() {
                           onClick={() =>
                             setFilas((prev) => prev.filter((_, j) => j !== i))
                           }
-                          className="px-1 text-faint hover:text-wine"
+                          className="px-1 text-faint hover:text-acento-ink"
                           aria-label="Quitar"
                         >
                           ×
@@ -295,8 +304,8 @@ export default function NuevoRemito() {
               onClick={() => setAjustePct(0)}
               className={`rounded-md border px-3 py-1.5 text-sm transition ${
                 ajustePct === 0
-                  ? "border-wine bg-wine-soft text-wine"
-                  : "border-line text-muted hover:border-wine"
+                  ? "border-ink bg-acento-soft text-acento-ink"
+                  : "border-line text-muted hover:border-ink"
               }`}
             >
               Contado · 0%
@@ -305,8 +314,8 @@ export default function NuevoRemito() {
               onClick={() => setAjustePct(10.5)}
               className={`rounded-md border px-3 py-1.5 text-sm transition ${
                 ajustePct === 10.5
-                  ? "border-wine bg-wine-soft text-wine"
-                  : "border-line text-muted hover:border-wine"
+                  ? "border-ink bg-acento-soft text-acento-ink"
+                  : "border-line text-muted hover:border-ink"
               }`}
             >
               Transferencia · +10,5%
@@ -317,7 +326,7 @@ export default function NuevoRemito() {
                 step="0.5"
                 value={ajustePct}
                 onChange={(e) => setAjustePct(Number(e.target.value) || 0)}
-                className="tnum w-24 rounded-md border border-line px-2 py-1.5 text-right text-sm outline-none focus:border-wine"
+                className="tnum w-24 rounded-md border border-line px-2 py-1.5 text-right text-sm outline-none focus:border-ink"
               />
               <span className="text-sm text-muted">%</span>
             </div>
@@ -334,7 +343,7 @@ export default function NuevoRemito() {
             value={notas}
             onChange={(e) => setNotas(e.target.value)}
             placeholder="Opcional"
-            className="w-full rounded-md border border-line px-3 py-2 text-sm outline-none focus:border-wine"
+            className="w-full rounded-md border border-line px-3 py-2 text-sm outline-none focus:border-ink"
           />
         </div>
 
@@ -353,8 +362,8 @@ export default function NuevoRemito() {
                 <td className="py-1 text-right">{money(ajuste)}</td>
               </tr>
               <tr className="border-t border-line">
-                <td className="serif py-2 text-lg font-semibold">Total</td>
-                <td className="serif py-2 text-right text-lg font-semibold">
+                <td className="titulo py-2 text-lg font-semibold">Total</td>
+                <td className="titulo py-2 text-right text-lg font-semibold">
                   {money(total)}
                 </td>
               </tr>
@@ -362,12 +371,15 @@ export default function NuevoRemito() {
           </table>
 
           <button
-            onClick={emitir}
-            disabled={!puedeEmitir}
-            className="mt-4 w-full rounded-md bg-wine px-4 py-3 text-sm font-medium text-white transition hover:bg-wine-ink disabled:opacity-40"
+            onClick={() => void emitir()}
+            disabled={!puedeEmitir || emitiendo}
+            className="mt-4 w-full rounded-md bg-ink px-4 py-3 text-sm font-medium text-white transition hover:bg-ink-hover disabled:opacity-40"
           >
-            Emitir remito
+            {emitiendo ? "Emitiendo…" : "Emitir remito"}
           </button>
+          {error && (
+            <p className="text-alerta mt-2 text-center text-xs">{error}</p>
+          )}
           {!puedeEmitir && (
             <p className="mt-2 text-center text-xs text-muted">
               Falta elegir cliente y cargar al menos un producto.
@@ -424,14 +436,14 @@ function FormCliente({
             value={f[k]}
             onChange={(e) => setF({ ...f, [k]: e.target.value })}
             placeholder={ph}
-            className="w-full rounded-md border border-line bg-white px-3 py-2 text-sm outline-none focus:border-wine"
+            className="w-full rounded-md border border-line bg-white px-3 py-2 text-sm outline-none focus:border-ink"
           />
         </div>
       ))}
       <div className="sm:col-span-2">
         <button
           type="submit"
-          className="rounded-md bg-wine px-4 py-2 text-sm font-medium text-white transition hover:bg-wine-ink"
+          className="rounded-md bg-ink px-4 py-2 text-sm font-medium text-white transition hover:bg-ink-hover"
         >
           Guardar y usar
         </button>

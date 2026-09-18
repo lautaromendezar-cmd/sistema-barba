@@ -19,7 +19,7 @@ export function Modal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-start justify-between gap-4">
-          <h2 className="serif text-xl font-semibold">{titulo}</h2>
+          <h2 className="titulo text-xl font-semibold">{titulo}</h2>
           <button
             onClick={onCerrar}
             className="rounded px-2 text-xl leading-none text-faint hover:text-ink"

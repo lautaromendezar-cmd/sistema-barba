@@ -1,33 +1,50 @@
 @import "tailwindcss";
 
 @theme {
-  --color-paper: #faf8f4;
+  /* Fondo de la aplicación y superficie de las tarjetas. El contraste entre
+     estos dos grises es lo que separa una tarjeta del fondo: no hacen falta
+     sombras pesadas. */
+  --color-canvas: #f5f6f8;
   --color-surface: #ffffff;
-  --color-ink: #22201d;
-  --color-muted: #6d675f;
-  --color-faint: #9a938a;
-  --color-line: #e7e0d6;
-  --color-wine: #6b1f2a;
-  --color-wine-ink: #571922;
-  --color-wine-soft: #f6ecec;
-  --color-amber-ink: #8a5a00;
-  --color-amber-soft: #fdf6ec;
-  /* Rojo de alerta: el bordó de marca no se lee como "rojo" en un número chico. */
-  --color-alerta: #c0392b;
 
-  --font-serif: Georgia, "Times New Roman", serif;
+  --color-ink: #14161a;
+  --color-ink-hover: #2c3038;
+  --color-muted: #646b76;
+  --color-faint: #9aa1ac;
+  --color-line: #e6e8ec;
+  --color-line-soft: #f0f1f4;
+
+  /* El amarillo es un detalle, no un color de fondo grande: estado activo,
+     barras de gráfico, el badge de lo pendiente. */
+  --color-acento: #f5c518;
+  --color-acento-fuerte: #e0ae00;
+  --color-acento-soft: #fdf6da;
+  /* Sobre blanco, el amarillo no se lee: para TEXTO se usa este ámbar oscuro.
+     Nunca poner texto en --color-acento sobre fondo claro. */
+  --color-acento-ink: #8a6300;
+
+  --color-alerta: #d13b34;
+  --color-alerta-soft: #fdeceb;
+  --color-ok: #197a4b;
+  --color-ok-soft: #e9f6ef;
+
+  --font-sans:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
 }
 
 html,
 body {
-  background: var(--color-paper);
+  background: var(--color-canvas);
   color: var(--color-ink);
+  font-family: var(--font-sans);
 }
 
-/* Tipografía de títulos: acompaña al PDF de alcance */
-.serif {
-  font-family: var(--font-serif);
-  letter-spacing: -0.01em;
+/* Títulos: la misma familia que el resto, apretada. El contraste lo da el
+   peso y el tamaño, no una segunda tipografía. */
+.titulo {
+  letter-spacing: -0.02em;
+  font-weight: 600;
 }
 
 /* Números tabulares para que las columnas de precios no bailen */
@@ -35,11 +52,18 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Tarjeta: el patrón que se repite en todas las pantallas. */
+.tarjeta {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 0.875rem;
+}
+
 /* --- Impresión: solo el remito --- */
 @media print {
   @page {
     size: A4;
-    margin: 16mm;
+    margin: 14mm;
   }
 
   body {

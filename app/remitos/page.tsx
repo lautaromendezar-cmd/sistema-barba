@@ -50,14 +50,14 @@ export default function Remitos() {
       <div className={ver ? "no-print" : ""}>
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="serif text-3xl font-semibold">Remitos</h1>
+            <h1 className="titulo text-3xl font-semibold">Remitos</h1>
             <p className="mt-1 text-muted">
               Emitidos desde el sistema. Se anulan, nunca se borran.
             </p>
           </div>
           <Link
             href="/remitos/nuevo"
-            className="rounded-md bg-wine px-4 py-2.5 text-sm font-medium text-white transition hover:bg-wine-ink"
+            className="rounded-md bg-ink px-4 py-2.5 text-sm font-medium text-white transition hover:bg-ink-hover"
           >
             Nuevo remito
           </Link>
@@ -67,7 +67,7 @@ export default function Remitos() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Buscar por número o cliente…"
-          className="mt-6 w-full rounded-md border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-wine sm:max-w-sm"
+          className="mt-6 w-full rounded-md border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-ink sm:max-w-sm"
         />
 
         <div className="mt-4 overflow-x-auto rounded-lg border border-line bg-surface">
@@ -89,12 +89,12 @@ export default function Remitos() {
                 return (
                   <tr
                     key={r.id}
-                    className="border-b border-line last:border-0 hover:bg-paper"
+                    className="border-b border-line last:border-0 hover:bg-canvas"
                   >
                     <td className="tnum px-4 py-3 font-medium">
                       {r.numero}
                       {anulado && (
-                        <span className="ml-2 rounded bg-wine-soft px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-wine uppercase">
+                        <span className="ml-2 rounded bg-acento-soft px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-acento-ink uppercase">
                           Anulado
                         </span>
                       )}
@@ -114,7 +114,7 @@ export default function Remitos() {
                     <td className="px-4 py-3 text-right whitespace-nowrap">
                       <button
                         onClick={() => setVerId(r.id)}
-                        className="rounded border border-line px-2 py-1 text-xs text-muted transition hover:border-wine hover:text-wine"
+                        className="rounded border border-line px-2 py-1 text-xs text-muted transition hover:border-ink hover:text-acento-ink"
                       >
                         Ver / imprimir
                       </button>
@@ -128,7 +128,7 @@ export default function Remitos() {
                             )
                               anularRemito(r.id);
                           }}
-                          className="ml-1.5 rounded border border-line px-2 py-1 text-xs text-muted transition hover:border-wine hover:text-wine"
+                          className="ml-1.5 rounded border border-line px-2 py-1 text-xs text-muted transition hover:border-ink hover:text-acento-ink"
                         >
                           Anular
                         </button>
@@ -148,7 +148,7 @@ export default function Remitos() {
           </table>
         </div>
 
-        <h2 className="serif mt-10 mb-1 border-b border-line pb-2 text-xl font-semibold">
+        <h2 className="titulo mt-10 mb-1 border-b border-line pb-2 text-xl font-semibold">
           Falta pedirle al proveedor
         </h2>
         <p className="mb-3 text-sm text-muted">
@@ -187,13 +187,13 @@ export default function Remitos() {
             <div className="no-print mb-3 flex flex-wrap justify-end gap-2">
               <button
                 onClick={() => window.print()}
-                className="rounded-md bg-wine px-4 py-2 text-sm font-medium text-white transition hover:bg-wine-ink"
+                className="rounded-md bg-ink px-4 py-2 text-sm font-medium text-white transition hover:bg-ink-hover"
               >
                 Imprimir
               </button>
               <button
                 onClick={() => setVerId(null)}
-                className="rounded-md border border-line bg-surface px-4 py-2 text-sm transition hover:border-wine hover:text-wine"
+                className="rounded-md border border-line bg-surface px-4 py-2 text-sm transition hover:border-ink hover:text-acento-ink"
               >
                 Cerrar
               </button>

@@ -173,7 +173,7 @@ const ingresos: Ingreso[] = [
     fecha: dia("2026-08-04", "10:15"),
     bodega: "Aguijón de Abeja",
     nroRemitoProveedor: "0001-00042871",
-    usuario: "Carla",
+    usuario: "Claudia",
     lineas: [
       { productoCodigo: "W1101", bultos: 10, unidades: 60 },
       { productoCodigo: "W1102", bultos: 6, unidades: 36 },
@@ -184,7 +184,7 @@ const ingresos: Ingreso[] = [
     fecha: dia("2026-08-06", "11:40"),
     bodega: "Alfa Crux",
     nroRemitoProveedor: "0003-00011204",
-    usuario: "Carla",
+    usuario: "Claudia",
     lineas: [
       { productoCodigo: "W2201", bultos: 4, unidades: 24 },
       { productoCodigo: "W2202", bultos: 5, unidades: 30 },
@@ -195,7 +195,7 @@ const ingresos: Ingreso[] = [
     fecha: dia("2026-08-07", "16:05"),
     bodega: "Varios",
     nroRemitoProveedor: "0002-00007733",
-    usuario: "Carla",
+    usuario: "Claudia",
     lineas: [
       { productoCodigo: "W1120", bultos: 8, unidades: 48 },
       { productoCodigo: "W3700", bultos: 3, unidades: 3 },
@@ -218,7 +218,7 @@ const remitos: Remito[] = [
       { productoCodigo: "W1120", bultos: 2, unidades: 12, precioUnitario: 7815, entregado: true },
     ],
     estado: "emitido",
-    usuario: "Carla",
+    usuario: "Claudia",
     notas: "",
   },
   {
@@ -234,7 +234,7 @@ const remitos: Remito[] = [
       { productoCodigo: "W3010", bultos: 2, unidades: 2, precioUnitario: 462000, entregado: false },
     ],
     estado: "emitido",
-    usuario: "Carla",
+    usuario: "Claudia",
     notas: "Paga por transferencia.",
   },
 ];

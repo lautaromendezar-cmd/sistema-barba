@@ -38,14 +38,14 @@ export default function Ingresos() {
 
   return (
     <div>
-      <h1 className="serif text-3xl font-semibold">Ingreso de mercadería</h1>
+      <h1 className="titulo text-3xl font-semibold">Ingreso de mercadería</h1>
       <p className="mt-1 text-muted">
         Lo que entra al depósito. Es la contracara del remito: sin esto, el
         stock se va a negativo.
       </p>
 
       {ok && (
-        <div className="mt-5 rounded-md border border-line bg-amber-soft px-4 py-3 text-sm text-amber-ink">
+        <div className="mt-5 rounded-md border border-line bg-acento-soft px-4 py-3 text-sm text-acento-ink">
           {ok}
         </div>
       )}
@@ -60,7 +60,7 @@ export default function Ingresos() {
               value={bodega}
               onChange={(e) => setBodega(e.target.value)}
               placeholder="Alfa Crux"
-              className="w-full rounded-md border border-line px-3 py-2 text-sm outline-none focus:border-wine"
+              className="w-full rounded-md border border-line px-3 py-2 text-sm outline-none focus:border-ink"
             />
           </div>
           <div>
@@ -71,7 +71,7 @@ export default function Ingresos() {
               value={nro}
               onChange={(e) => setNro(e.target.value)}
               placeholder="0001-00042871"
-              className="tnum w-full rounded-md border border-line px-3 py-2 text-sm outline-none focus:border-wine"
+              className="tnum w-full rounded-md border border-line px-3 py-2 text-sm outline-none focus:border-ink"
             />
           </div>
         </div>
@@ -123,7 +123,7 @@ export default function Ingresos() {
                             ),
                           )
                         }
-                        className="tnum w-20 rounded-md border border-line px-2 py-1.5 text-right outline-none focus:border-wine"
+                        className="tnum w-20 rounded-md border border-line px-2 py-1.5 text-right outline-none focus:border-ink"
                       />
                     </td>
                     <td className="tnum py-2.5 text-right text-muted">
@@ -134,7 +134,7 @@ export default function Ingresos() {
                         onClick={() =>
                           setLineas((prev) => prev.filter((_, j) => j !== i))
                         }
-                        className="px-1 text-faint hover:text-wine"
+                        className="px-1 text-faint hover:text-acento-ink"
                         aria-label="Quitar"
                       >
                         ×
@@ -156,14 +156,14 @@ export default function Ingresos() {
           <button
             onClick={guardar}
             disabled={lineas.length === 0}
-            className="rounded-md bg-wine px-4 py-2.5 text-sm font-medium text-white transition hover:bg-wine-ink disabled:opacity-40"
+            className="rounded-md bg-ink px-4 py-2.5 text-sm font-medium text-white transition hover:bg-ink-hover disabled:opacity-40"
           >
             Guardar ingreso
           </button>
         </div>
       </div>
 
-      <h2 className="serif mt-10 mb-3 border-b border-line pb-2 text-xl font-semibold">
+      <h2 className="titulo mt-10 mb-3 border-b border-line pb-2 text-xl font-semibold">
         Ingresos anteriores
       </h2>
 

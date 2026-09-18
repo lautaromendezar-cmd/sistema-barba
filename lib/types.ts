@@ -1,4 +1,6 @@
 export type Producto = {
+  /** uuid en la base. Las pantallas siguen usando el codigo como clave. */
+  id?: string;
   codigo: string;
   nombre: string;
   bodega: string;
@@ -6,6 +8,8 @@ export type Producto = {
   presentacion: string;
   /** Cuántas unidades (botellas) trae un bulto. Los sueltos tienen 1. */
   unidadesPorBulto: number;
+  /** Whisky, gin, vodka, aperitivos, pastas y aceites tambien se venden sueltos. */
+  seVendeSuelto?: boolean;
   /** Siempre POR UNIDAD. El precio del bulto se calcula. */
   precioLista: number;
   enListaActual: boolean;
@@ -17,6 +21,10 @@ export type Cliente = {
   direccion: string;
   localidad: string;
   telefono: string;
+  /** Fede atiende los habituales, Claudia los nuevos, Roxana las entregas. */
+  vendedor?: string;
+  /** Descuento fijo del cliente. Se copia al remito al armarlo. */
+  descuentoPct?: number;
   notas: string;
 };
 
@@ -28,7 +36,15 @@ export type Movimiento = {
   id: string;
   fecha: string;
   productoCodigo: string;
-  tipo: "ingreso" | "egreso" | "ajuste";
+  tipo:
+    | "inventario_inicial"
+    | "ingreso"
+    | "egreso"
+    | "devolucion"
+    | "anulacion"
+    | "ajuste"
+    | "rotura"
+    | "vencimiento";
   /** Unidades con signo: + entra, - sale. */
   unidades: number;
   usuario: string;
@@ -53,7 +69,10 @@ export type Remito = {
   /** Positivo recarga (ej. 10.5 por transferencia), negativo descuenta. */
   ajustePct: number;
   lineas: RemitoLinea[];
-  estado: "emitido" | "anulado";
+  /** Nace borrador: se arma antes de ir a juntar el pedido al deposito. */
+  estado: "borrador" | "emitido" | "anulado";
+  /** Descuento del cliente, copiado al crear el remito. */
+  descuentoPct?: number;
   usuario: string;
   notas: string;
   anuladoPor?: string;
@@ -78,9 +97,20 @@ export type DB = {
   proximoRemito: number;
 };
 
-export const USUARIOS = [
-  { usuario: "carla", nombre: "Carla", rol: "Depósito y ventas" },
-  { usuario: "federico", nombre: "Federico Barba", rol: "Dueño" },
-] as const;
+/**
+ * Quien esta usando el sistema, tal como sale de la tabla `perfiles`.
+ * `usuario` es el uuid de auth.users: el nombre con el que se entra
+ * ("claudia") solo existe en la pantalla de login.
+ */
+export type Usuario = {
+  usuario: string;
+  nombre: string;
+  rol: string;
+};
 
-export type Usuario = (typeof USUARIOS)[number];
+/** Las tres personas que van a usar el sistema (confirmado por Federico). */
+export const USUARIOS = [
+  { usuario: "federico", nombre: "Federico Barba", rol: "Dueño y ventas" },
+  { usuario: "claudia", nombre: "Claudia", rol: "Ventas e ingresos" },
+  { usuario: "roxana", nombre: "Roxana", rol: "Entregas" },
+] as const;
