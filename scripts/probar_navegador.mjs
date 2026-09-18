@@ -110,7 +110,9 @@ try {
   await pagina.select("select", valorCliente);
   chequear("elige un cliente", valorCliente !== "", "no había clientes en el combo");
 
-  const buscador = await pagina.$('input[placeholder*="Buscar"]');
+  // El de la línea del remito, NO el buscador global del encabezado: los dos
+  // dicen "Buscar" y el primero del DOM es el de arriba.
+  const buscador = await pagina.$('input[placeholder*="Enter agrega"]');
   await buscador.type("Aguij");
   await new Promise((r) => setTimeout(r, 900));
   await pagina.keyboard.press("Enter");
@@ -126,7 +128,7 @@ try {
     ),
   );
   await botonEmitir.asElement().click();
-  await new Promise((r) => setTimeout(r, 4000));
+  await new Promise((r) => setTimeout(r, 9000));
 
   const emitido = await pagina.evaluate(() => document.body.innerText);
   chequear(

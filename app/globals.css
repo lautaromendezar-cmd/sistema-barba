@@ -9,6 +9,14 @@
 
   --color-ink: #14161a;
   --color-ink-hover: #2c3038;
+
+  /* El panel lateral es oscuro: sus propios tonos, para no andar con opacidades
+     sueltas por todo el marcado. */
+  --color-panel: #0c0d10;
+  --color-panel-item: #16181d;
+  --color-panel-text: #9ea3ad;
+  --color-panel-text-fuerte: #f2f3f5;
+  --color-panel-linea: #1f2229;
   --color-muted: #646b76;
   --color-faint: #9aa1ac;
   --color-line: #e6e8ec;

@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { Login } from "./Login";
+import { Buscador, EscudoClaro } from "./Buscador";
 
 type IconProps = { className?: string };
 
@@ -122,21 +122,23 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen md:flex">
-      <aside className="no-print border-line bg-surface md:fixed md:inset-y-0 md:flex md:w-60 md:flex-col md:border-r">
-        <Link
-          href="/"
-          className="border-line flex items-center gap-2.5 border-b px-5 py-4 md:border-b-0"
-        >
-          <Image
-            src="/marca/escudo.png"
-            alt=""
-            width={310}
-            height={350}
-            className="h-9 w-auto"
-            priority
-          />
-          <span className="titulo text-[15px] leading-tight">Grupo Barba</span>
+      <aside className="no-print bg-panel md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col">
+        <Link href="/" className="flex items-center gap-2.5 px-5 pt-5 pb-4">
+          <EscudoClaro className="h-9 w-auto" />
+          <span className="titulo text-panel-text-fuerte text-[15px] leading-tight">
+            Grupo Barba
+          </span>
         </Link>
+
+        <div className="px-4 pb-4">
+          <Link
+            href="/remitos/nuevo"
+            className="bg-acento text-ink hover:bg-acento-fuerte flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition"
+          >
+            <span className="text-base leading-none">+</span>
+            Nuevo remito
+          </Link>
+        </div>
 
         <nav className="flex gap-1 overflow-x-auto px-3 pb-3 md:mt-2 md:flex-col md:overflow-visible md:pb-0">
           {LINKS.map((l) => {
@@ -148,19 +150,19 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 key={l.href}
                 href={l.href}
                 aria-current={activo ? "page" : undefined}
-                className={`relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm whitespace-nowrap transition ${
+                className={`relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm whitespace-nowrap transition ${
                   activo
-                    ? "bg-canvas text-ink font-medium"
-                    : "text-muted hover:bg-canvas hover:text-ink"
+                    ? "bg-panel-item text-panel-text-fuerte font-medium"
+                    : "text-panel-text hover:bg-panel-item/60 hover:text-panel-text-fuerte"
                 }`}
               >
                 {/* El amarillo marca dónde estás parado: es el único lugar
                     donde aparece en la navegación. */}
                 {activo && (
-                  <span className="bg-acento absolute top-1/2 -left-3 hidden h-5 w-1 -translate-y-1/2 rounded-r md:block" />
+                  <span className="bg-acento absolute top-1/2 -left-4 hidden h-5 w-1 -translate-y-1/2 rounded-r md:block" />
                 )}
                 <Icono
-                  className={`h-[18px] w-[18px] shrink-0 ${activo ? "text-ink" : "text-faint"}`}
+                  className={`h-[18px] w-[18px] shrink-0 ${activo ? "text-acento" : "text-panel-text"}`}
                 />
                 {l.label}
               </Link>
@@ -168,20 +170,26 @@ export function Shell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="border-line mt-auto hidden border-t px-5 py-4 md:block">
-          <p className="text-faint text-xs leading-relaxed">
+        <div className="border-panel-linea mt-auto hidden border-t px-5 py-4 md:block">
+          <p className="text-panel-text text-xs leading-relaxed">
             Grupo Barba · sistema interno
           </p>
         </div>
 
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col md:ml-60">
+      <div className="flex min-w-0 flex-1 flex-col md:ml-64">
         <header className="no-print border-line bg-surface/90 sticky top-0 z-20 border-b backdrop-blur">
-          <div className="flex items-center gap-4 px-5 py-3.5 lg:px-8">
-            <h1 className="titulo truncate text-[17px]">{seccion}</h1>
+          <div className="flex items-center gap-4 px-5 py-3 lg:px-8">
+            <h1 className="titulo hidden shrink-0 truncate text-[17px] lg:block">
+              {seccion}
+            </h1>
 
-            <div className="ml-auto flex items-center gap-3">
+            <div className="min-w-0 flex-1 lg:pl-6">
+              <Buscador />
+            </div>
+
+            <div className="flex shrink-0 items-center gap-3">
               <div className="hidden text-right leading-tight sm:block">
                 <div className="text-[13px] font-medium">{usuario.nombre}</div>
                 <div className="text-faint text-[11px]">{usuario.rol}</div>
