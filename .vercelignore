@@ -1,0 +1,4 @@
+# Herramientas de mantenimiento y pruebas: no forman parte del sitio
+scripts/
+docs/
+supabase/

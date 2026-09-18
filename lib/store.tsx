@@ -33,6 +33,11 @@ type Store = {
   db: DB;
   usuario: Usuario | null;
   cargando: boolean;
+  /** Si la carga falló, esto tiene el aviso y los datos de pantalla son viejos. */
+  errorCarga: string | null;
+  /** Lo último que salió mal al guardar. `descartarAviso` lo limpia. */
+  aviso: string | null;
+  descartarAviso: () => void;
 
   entrar: (usuario: string, clave: string) => Promise<string | null>;
   salir: () => Promise<void>;
@@ -95,34 +100,90 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [db, setDb] = useState<DB>(DB_VACIA);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [cargando, setCargando] = useState(true);
+  const [errorCarga, setErrorCarga] = useState<string | null>(null);
+  /** Lo último que salió mal en una operación. El Shell lo muestra arriba. */
+  const [aviso, setAviso] = useState<string | null>(null);
+  /** Viene de las vistas de la base, que suman sobre todos los movimientos. */
+  const [stockCalculado, setStockCalculado] = useState<{
+    fisico: Map<string, number>;
+    aPedir: Map<string, number>;
+  }>({ fisico: new Map(), aPedir: new Map() });
 
   const cargarTodo = useCallback(async () => {
-    const [productos, clientes, movimientos, remitos, ingresos] =
-      await Promise.all([
-        supabase.from("productos").select("*").order("nombre"),
-        supabase
-          .from("clientes")
-          .select("*, cliente_direcciones(*)")
-          .order("nombre"),
-        supabase
-          .from("movimientos")
-          .select("*")
-          .order("fecha", { ascending: false })
-          .limit(5000),
-        supabase
-          .from("remitos")
-          .select("*, remito_lineas(*)")
-          .order("creado_at", { ascending: false })
-          .limit(500),
-        supabase
-          .from("ingresos")
-          .select("*, ingreso_lineas(*)")
-          .order("creado_at", { ascending: false })
-          .limit(500),
-      ]);
+    const [
+      productos,
+      clientes,
+      movimientos,
+      remitos,
+      ingresos,
+      stockFisico,
+      stockAPedir,
+      perfiles,
+    ] = await Promise.all([
+      supabase.from("productos").select("*").order("nombre"),
+      supabase
+        .from("clientes")
+        .select("*, cliente_direcciones(*)")
+        .order("nombre"),
+      // Ojo: esto es el HISTORIAL, no la fuente del stock. Viene recortado a
+      // propósito. El stock sale de la vista de abajo, que lo suma en la base
+      // sin traerse un solo movimiento.
+      supabase
+        .from("movimientos")
+        .select("*")
+        .order("fecha", { ascending: false })
+        .limit(5000),
+      supabase
+        .from("remitos")
+        .select("*, remito_lineas(*)")
+        .order("creado_at", { ascending: false })
+        .limit(500),
+      supabase
+        .from("ingresos")
+        .select("*, ingreso_lineas(*)")
+        .order("creado_at", { ascending: false })
+        .limit(500),
+      supabase.from("stock_fisico").select("*"),
+      supabase.from("stock_a_pedir").select("*"),
+      supabase.from("perfiles").select("id, nombre"),
+    ]);
+
+    // Si la carga falla, NO se pisa lo que ya estaba: mostrar todo en cero
+    // como si fuera un dato real es peor que no mostrar nada. En un sistema de
+    // stock, un cero inventado se parece demasiado a un cero de verdad.
+    const problema =
+      productos.error ?? stockFisico.error ?? clientes.error ?? remitos.error;
+    if (problema) {
+      setErrorCarga(
+        "No se pudieron traer los datos. Revisá la conexión y volvé a intentar.",
+      );
+      return;
+    }
+    setErrorCarga(null);
 
     const filasProducto = (productos.data ?? []) as FilaProducto[];
     const porId = new Map(filasProducto.map((p) => [p.id, p.codigo]));
+    const nombrePorPerfil = new Map(
+      (perfiles.data ?? []).map((p) => [p.id, p.nombre as string]),
+    );
+
+    // El stock lo suma Postgres sobre TODOS los movimientos. Calcularlo acá
+    // sumando los que se trajeron daria un numero falso apenas el historial
+    // pase del limite de la consulta.
+    setStockCalculado({
+      fisico: new Map(
+        (stockFisico.data ?? []).map((f) => [
+          porId.get(f.producto_id) ?? "",
+          f.unidades as number,
+        ]),
+      ),
+      aPedir: new Map(
+        (stockAPedir.data ?? []).map((f) => [
+          porId.get(f.producto_id) ?? "",
+          f.unidades as number,
+        ]),
+      ),
+    });
 
     setDb({
       productos: filasProducto.map((p) => ({
@@ -166,7 +227,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         productoCodigo: porId.get(m.producto_id) ?? "",
         tipo: m.tipo,
         unidades: m.unidades,
-        usuario: "",
+        usuario: nombrePorPerfil.get(m.usuario_id) ?? "",
         nota: m.nota ?? "",
         refId: m.remito_id ?? m.ingreso_id ?? m.devolucion_id ?? undefined,
       })),
@@ -181,7 +242,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         ajustePct: num(r.ajuste_pct),
         descuentoPct: num(r.descuento_pct),
         estado: r.estado,
-        usuario: "",
+        usuario: nombrePorPerfil.get(r.usuario_id) ?? "",
+        anuladoPor: nombrePorPerfil.get(r.anulado_por) ?? undefined,
         notas: r.notas ?? "",
         anuladoAt: r.anulado_at ?? undefined,
         lineas: (r.remito_lineas ?? []).map((l: Record<string, unknown>) => ({
@@ -198,7 +260,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         fecha: i.creado_at,
         bodega: i.bodega ?? "",
         nroRemitoProveedor: i.nro_remito_proveedor ?? "",
-        usuario: "",
+        usuario: nombrePorPerfil.get(i.usuario_id) ?? "",
         lineas: (i.ingreso_lineas ?? []).map((l: Record<string, unknown>) => ({
           productoCodigo: porId.get(l.producto_id as string) ?? "",
           bultos: l.cantidad_bultos as number,
@@ -253,32 +315,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     };
   }, [cargarPerfil, cargarTodo]);
 
-  /** Stock = suma de movimientos. No hay columna que se pise. */
-  const stockPorCodigo = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const p of db.productos) m.set(p.codigo, 0);
-    for (const mov of db.movimientos) {
-      m.set(
-        mov.productoCodigo,
-        (m.get(mov.productoCodigo) ?? 0) + mov.unidades,
-      );
-    }
-    return m;
-  }, [db]);
-
-  /** Lo vendido que todavia no se entrego: se le pide al proveedor. */
-  const aPedirPorCodigo = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const r of db.remitos) {
-      if (r.estado !== "emitido") continue;
-      for (const l of r.lineas) {
-        if (l.entregado) continue;
-        m.set(l.productoCodigo, (m.get(l.productoCodigo) ?? 0) + l.unidades);
-      }
-    }
-    return m;
-  }, [db]);
-
   const idDe = useCallback(
     (codigo: string) => db.productos.find((p) => p.codigo === codigo)?.id ?? "",
     [db.productos],
@@ -289,6 +325,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       db,
       usuario,
       cargando,
+      errorCarga,
+      aviso,
+      descartarAviso: () => setAviso(null),
 
       entrar: async (nombreUsuario, clave) => {
         const { error } = await supabase.auth.signInWithPassword({
@@ -304,8 +343,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
       recargar: cargarTodo,
 
-      stock: (codigo) => stockPorCodigo.get(codigo) ?? 0,
-      aPedir: (codigo) => aPedirPorCodigo.get(codigo) ?? 0,
+      stock: (codigo) => stockCalculado.fisico.get(codigo) ?? 0,
+      aPedir: (codigo) => stockCalculado.aPedir.get(codigo) ?? 0,
       producto: (codigo) => db.productos.find((p) => p.codigo === codigo),
       cliente: (cid) => db.clientes.find((c) => c.id === cid),
       movimientosDe: (codigo) =>
@@ -325,7 +364,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           precio_lista: p.precioLista,
           en_lista_actual: p.enListaActual,
         });
-        if (error) throw new Error(error.message);
+        if (error) {
+          setAviso(`No se pudo guardar el producto: ${error.message}`);
+          return;
+        }
         await cargarTodo();
       },
 
@@ -366,7 +408,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           })
           .select()
           .single();
-        if (error) throw new Error(error.message);
+        if (error) {
+          setAviso(`No se pudo guardar el ingreso: ${error.message}`);
+          return;
+        }
 
         // El trigger de la base genera los movimientos de stock.
         const lineas = datos.lineas.map((l) => {
@@ -381,7 +426,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           };
         });
         const res = await supabase.from("ingreso_lineas").insert(lineas);
-        if (res.error) throw new Error(res.error.message);
+        if (res.error) {
+          setAviso(`El ingreso quedó incompleto: ${res.error.message}`);
+        }
 
         await cargarTodo();
       },
@@ -393,7 +440,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           p_nota: nota,
           p_tipo: tipo,
         });
-        if (error) throw new Error(error.message);
+        if (error) {
+          setAviso(`No se pudo ajustar el stock: ${error.message}`);
+          return;
+        }
         await cargarTodo();
       },
 
@@ -454,19 +504,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           p_remito_id: rid,
           p_motivo: "",
         });
-        if (error) throw new Error(error.message);
+        if (error) {
+          setAviso(`No se pudo anular el remito: ${error.message}`);
+          return;
+        }
         await cargarTodo();
       },
     };
-  }, [
-    db,
-    usuario,
-    cargando,
-    cargarTodo,
-    stockPorCodigo,
-    aPedirPorCodigo,
-    idDe,
-  ]);
+  }, [db, usuario, cargando, cargarTodo, stockCalculado, errorCarga, idDe]);
 
   return <Ctx.Provider value={valor}>{children}</Ctx.Provider>;
 }

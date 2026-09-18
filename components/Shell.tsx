@@ -72,7 +72,8 @@ const LINKS = [
 ] as const;
 
 export function Shell({ children }: { children: React.ReactNode }) {
-  const { usuario, salir, cargando } = useStore();
+  const { usuario, salir, cargando, errorCarga, aviso, descartarAviso } =
+    useStore();
   const pathname = usePathname();
 
   if (cargando) {
@@ -163,6 +164,23 @@ export function Shell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </header>
+
+        {(aviso || errorCarga) && (
+          <div
+            role="alert"
+            className="no-print border-alerta/30 bg-alerta-soft text-alerta mx-auto mt-5 flex w-full max-w-6xl items-start gap-3 rounded-lg border px-4 py-3 text-sm lg:px-5"
+          >
+            <span className="flex-1">{aviso ?? errorCarga}</span>
+            {aviso && (
+              <button
+                onClick={descartarAviso}
+                className="shrink-0 font-medium underline underline-offset-2"
+              >
+                Cerrar
+              </button>
+            )}
+          </div>
+        )}
 
         <main className="mx-auto w-full max-w-6xl flex-1 px-5 py-7 lg:px-8">
           {children}

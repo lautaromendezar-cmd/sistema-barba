@@ -162,6 +162,34 @@ async function main() {
   });
   chequear("deja el stock en lo contado", await stockDe(prod.id), 100);
 
+  console.log("\nEl historial no se puede tocar");
+  const { data: movs } = await supabase
+    .from("movimientos")
+    .select("id")
+    .eq("producto_id", prod.id)
+    .limit(1);
+  const movId = movs![0].id;
+
+  const borrado = await supabase.from("movimientos").delete().eq("id", movId);
+  const { count: sigueAhi } = await supabase
+    .from("movimientos")
+    .select("id", { count: "exact", head: true })
+    .eq("id", movId);
+  chequear("un movimiento no se puede borrar", sigueAhi, 1);
+
+  const editado = await supabase
+    .from("movimientos")
+    .update({ unidades: 99999 })
+    .eq("id", movId);
+  const { data: intacto } = await supabase
+    .from("movimientos")
+    .select("unidades")
+    .eq("id", movId)
+    .single();
+  chequear("un movimiento no se puede editar", intacto?.unidades !== 99999, true);
+  void borrado;
+  void editado;
+
   console.log("\nLimpieza");
   await supabase.rpc("ajustar_stock", {
     p_producto_id: prod.id,

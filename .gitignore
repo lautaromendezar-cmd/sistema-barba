@@ -44,3 +44,6 @@ next-env.d.ts
 scripts/capturas/
 __pycache__/
 *.pyc
+
+.vercel
+.env*
