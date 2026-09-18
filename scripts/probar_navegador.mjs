@@ -7,12 +7,22 @@
  * Las capturas quedan en scripts/capturas/. Sirve para ver que la pantalla
  * muestre lo que la base tiene, que es distinto de que las consultas anden.
  */
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import puppeteer from "puppeteer-core";
 
 const BASE = process.argv[2] ?? "http://localhost:3007";
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const SALIDA = new URL("./capturas/", import.meta.url);
+
+// La clave no se escribe acá: sale de .env.local, que no se commitea.
+const CLAVE = (() => {
+  const texto = readFileSync(new URL("../.env.local", import.meta.url), "utf8");
+  const linea = texto
+    .split(String.fromCharCode(10))
+    .find((l) => l.startsWith("CLAVE_DEV="));
+  if (!linea) throw new Error("Falta CLAVE_DEV en .env.local");
+  return linea.slice("CLAVE_DEV=".length).trim();
+})();
 
 mkdirSync(SALIDA, { recursive: true });
 
@@ -48,7 +58,7 @@ try {
   await captura("1-login");
 
   await pagina.type("#usuario", "claudia");
-  await pagina.type("#clave", "barba2026");
+  await pagina.type("#clave", CLAVE);
   await Promise.all([
     pagina.click('button[type="submit"]'),
     pagina.waitForSelector("nav a", { timeout: 30000 }),

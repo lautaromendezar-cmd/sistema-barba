@@ -48,7 +48,7 @@ async function main() {
   console.log("\nLogin");
   const login = await supabase.auth.signInWithPassword({
     email: "claudia@barba.local",
-    password: "barba2026",
+    password: env("CLAVE_DEV"),
   });
   chequear("claudia entra con su clave", login.error, null);
 

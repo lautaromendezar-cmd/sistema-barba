@@ -9,6 +9,7 @@ Supabase Auth lo pide y nunca recibe correo.
 Para cambiarle la clave a alguien, se corre esto de nuevo con la clave nueva.
 """
 
+import secrets
 import sys
 
 import psycopg
@@ -17,8 +18,8 @@ from migrar import leer_env, url_conexion
 
 DOMINIO = "barba.local"
 
-# Clave de arranque. Cada uno la cambia despues; para eso esta este script.
-CLAVE_INICIAL = "barba2026"
+# Sin clave escrita en el codigo: sale de CLAVE_DEV en .env.local, del
+# argumento, o se genera una al azar y se imprime una sola vez.
 
 # El rol es el texto que se ve arriba a la derecha. Los tres ven todo: no es
 # un permiso, es saber quien esta usando el sistema.
@@ -30,9 +31,14 @@ PERSONAS = [
 
 
 def main() -> None:
-    clave = sys.argv[1] if len(sys.argv) > 1 else CLAVE_INICIAL
+    env = leer_env()
+    clave = (
+        sys.argv[1]
+        if len(sys.argv) > 1
+        else env.get("CLAVE_DEV") or secrets.token_urlsafe(12)
+    )
 
-    with psycopg.connect(url_conexion(leer_env()), connect_timeout=20) as con:
+    with psycopg.connect(url_conexion(env), connect_timeout=20) as con:
         for usuario, nombre, rol in PERSONAS:
             email = f"{usuario}@{DOMINIO}"
 
