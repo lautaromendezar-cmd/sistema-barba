@@ -1,4 +1,4 @@
-import type { DB, Producto, Cliente, Movimiento, Ingreso, Remito } from "./types";
+import type { DB, Producto, Cliente, Ingreso, Remito } from "./types";
 
 /**
  * DEMO. Productos reales tomados de "Oferta GRUPO BARBA (Válida hasta 14 de Junio)".
@@ -239,61 +239,12 @@ const remitos: Remito[] = [
   },
 ];
 
-function movimientosDesde(ingresos: Ingreso[], remitos: Remito[]): Movimiento[] {
-  const movs: Movimiento[] = [];
-  let n = 0;
-
-  for (const ing of ingresos) {
-    for (const l of ing.lineas) {
-      movs.push({
-        id: `m${++n}`,
-        fecha: ing.fecha,
-        productoCodigo: l.productoCodigo,
-        tipo: "ingreso",
-        unidades: l.unidades,
-        usuario: ing.usuario,
-        nota: `Ingreso ${ing.nroRemitoProveedor} · ${ing.bodega}`,
-        refId: ing.id,
-      });
-    }
-  }
-
-  for (const rem of remitos) {
-    for (const l of rem.lineas) {
-      if (!l.entregado) continue;
-      movs.push({
-        id: `m${++n}`,
-        fecha: rem.fecha,
-        productoCodigo: l.productoCodigo,
-        tipo: "egreso",
-        unidades: -l.unidades,
-        usuario: rem.usuario,
-        nota: `Remito ${rem.numero}`,
-        refId: rem.id,
-      });
-    }
-  }
-
-  // Un ajuste manual, para mostrar que la corrección es un movimiento más.
-  movs.push({
-    id: `m${++n}`,
-    fecha: dia("2026-08-11", "17:30"),
-    productoCodigo: "W1102",
-    tipo: "ajuste",
-    unidades: -2,
-    usuario: "Federico Barba",
-    nota: "Rotura en el depósito (2 botellas)",
-  });
-
-  return movs.sort((a, b) => a.fecha.localeCompare(b.fecha));
-}
 
 export function seedDB(): DB {
   return {
     productos,
     proveedores: [],
     clientes,
-    movimientos: movimientosDesde(ingresos, remitos),
     remitos,
     ingresos,
     proximoRemito: 3,

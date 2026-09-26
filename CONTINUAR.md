@@ -1,6 +1,6 @@
 # Para retomar esto en otra computadora
 
-Última actualización: **18 de septiembre de 2026**.
+Última actualización: **26 de septiembre de 2026**.
 
 ## Lo primero, siempre
 
@@ -72,6 +72,7 @@ npx tsx scripts/probar_app.ts             # integración con sesión real
 npx tsx scripts/probar_seguridad.ts       # ataca el sistema desde afuera
 python scripts/probar_intruso_con_cuenta.py   # cuenta sin perfil: no ve nada
 node scripts/probar_navegador.mjs         # la app en Chrome, de punta a punta
+npx tsx scripts/medir_carga.ts            # cuánto pesa y tarda cada consulta
 ```
 
 La de navegador acepta una URL para probar contra producción:
@@ -127,23 +128,35 @@ movimientos, ingresos de mercadería, ajustes, ABM de clientes con varias
 direcciones, ABM de proveedores, edición de productos, buscador global y
 dashboard.
 
+**26-sep: la carga de datos dejó de traerse todo.** Cada operación recarga
+solo lo que tocó (emitir un remito pide remitos y stock, no los 4.400
+productos), el stock viene filtrado a los productos que se movieron y el
+historial de un producto se consulta a la base al abrirlo en vez de salir de
+los últimos 5.000 movimientos. Medido con `npx tsx scripts/medir_carga.ts`:
+proyectado al catálogo real, **2.888 KB por operación pasaron a 94 KB**.
+
 **Falta:**
 
-1. **Importar los datos reales.** ⚠️ El último Excel tiene el precio **por
-   bulto** y el anterior lo tenía **por unidad**: importarlo sin mirar
-   multiplica todos los precios por el tamaño del bulto. En la base el precio se
-   guarda siempre por unidad.
-2. **Performance.** `cargarTodo()` se trae todo después de cada operación. Con
-   63 remitos de ejemplo ya se nota; con 5.000 productos y 1.000 clientes desde
-   Oregon va a arrastrar. Hay que pasar a consultas puntuales.
+1. **Importar los datos reales.** La planilla del cliente está en `datos/`
+   (fuera del repo: son datos reales). ⚠️ **El precio de esa planilla es POR
+   UNIDAD**, que es como lo guarda la base: se importa sin dividir. Lo que
+   estaba por bulto era la lista vieja de Tienda Nube, aunque su encabezado
+   dijera "X UNIDAD". Se comprobó cruzando 177 códigos: el cociente entre las
+   dos listas da exactamente 1/6 en los de caja de 6 y 1/24 en los de 24.
+   Antes de importar hay que resolver: **50 códigos duplicados**, **1.264
+   productos que dicen "Consultar" en vez de precio**, y que la columna bodega
+   mezcla productores con rubros (ACEITES, WHISKY, GIN, APERITIVO).
+2. **El dashboard miente cuando crecen los remitos.** Suma las ventas de 12
+   meses sobre `db.remitos`, que viene recortado a los últimos 500 con sus
+   líneas. A 10 remitos por día eso es mes y medio de historia: a partir de ahí
+   los totales salen incompletos **sin avisar**. Es el mismo problema que tenía
+   el stock antes de la auditoría, y se arregla igual: que sume Postgres.
+   Además los 500 remitos con líneas son hoy lo más pesado de cada recarga.
 3. **El combo de clientes del remito** es un `<select>` con todos adentro:
    inusable con mil. Necesita el mismo buscador que ya tienen los productos.
 4. **Informes.** No están hechos y **no se los debemos**: en el alcance figuran
    en Fase 3, "no comprometida".
 5. **Devoluciones**: el esquema las soporta, falta la pantalla.
-6. `movimientosDe()` filtra sobre los 5.000 movimientos traídos, así que el
-   historial de un producto viejo puede salir incompleto. El stock no depende de
-   eso: sale de las vistas.
 
 ## Pendientes que no son de código
 

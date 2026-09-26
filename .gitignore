@@ -47,3 +47,6 @@ __pycache__/
 
 .vercel
 .env*
+
+# Planillas reales del cliente: no van al repo
+/datos/

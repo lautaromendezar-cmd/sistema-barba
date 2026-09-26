@@ -113,11 +113,16 @@ export type Ingreso = {
   lineas: { productoCodigo: string; bultos: number; unidades: number }[];
 };
 
+/**
+ * Lo que la app tiene cargado en memoria. Los movimientos NO estan aca a
+ * proposito: son la tabla que mas crece (cada linea de cada remito deja uno) y
+ * se consultan por producto cuando alguien abre el historial. El stock tampoco
+ * se calcula sumandolos: sale de las vistas de la base.
+ */
 export type DB = {
   productos: Producto[];
   proveedores: Proveedor[];
   clientes: Cliente[];
-  movimientos: Movimiento[];
   remitos: Remito[];
   ingresos: Ingreso[];
   proximoRemito: number;

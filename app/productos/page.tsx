@@ -1,15 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useStore } from "@/lib/store";
 import { money, enBultos, fechaHora } from "@/lib/formato";
-import type { Producto } from "@/lib/types";
+import type { Movimiento, Producto } from "@/lib/types";
 import { coincide, normalizar } from "@/lib/texto";
 import { Modal } from "@/components/Modal";
 
 export default function Productos() {
-  const { db, stock, agregarProducto, ajustarStock, movimientosDe } =
-    useStore();
+  const { db, stock, agregarProducto, ajustarStock } = useStore();
   const [busqueda, setBusqueda] = useState("");
   const [seccion, setSeccion] = useState("todas");
   const [alta, setAlta] = useState(false);
@@ -201,44 +200,72 @@ export default function Productos() {
           titulo={`Movimientos · ${detalle.nombre}`}
           onCerrar={() => setDetalle(null)}
         >
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-line text-left text-[11px] tracking-wider text-faint uppercase">
-                <th className="py-2 font-semibold">Fecha</th>
-                <th className="py-2 font-semibold">Detalle</th>
-                <th className="py-2 font-semibold">Usuario</th>
-                <th className="py-2 text-right font-semibold">Unidades</th>
-              </tr>
-            </thead>
-            <tbody>
-              {movimientosDe(detalle.codigo).map((m) => (
-                <tr key={m.id} className="border-b border-line last:border-0">
-                  <td className="py-2 whitespace-nowrap text-muted">
-                    {fechaHora(m.fecha)}
-                  </td>
-                  <td className="py-2">{m.nota}</td>
-                  <td className="py-2 text-muted">{m.usuario}</td>
-                  <td
-                    className={`tnum py-2 text-right font-medium ${
-                      m.unidades < 0 ? "text-acento-ink" : ""
-                    }`}
-                  >
-                    {m.unidades > 0 ? `+${m.unidades}` : m.unidades}
-                  </td>
-                </tr>
-              ))}
-              {movimientosDe(detalle.codigo).length === 0 && (
-                <tr>
-                  <td colSpan={4} className="py-6 text-center text-muted">
-                    Sin movimientos: este producto nunca entró ni salió.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+          <Historial key={detalle.codigo} codigo={detalle.codigo} />
         </Modal>
       )}
     </div>
+  );
+}
+
+/**
+ * El historial de un producto se pide a la base al abrirlo, no sale de lo que
+ * la app tenga cargado: son la tabla que mas crece y no hace falta tenerla en
+ * memoria para mostrar una tabla que se abre de a un producto por vez.
+ */
+function Historial({ codigo }: { codigo: string }) {
+  const { movimientosDe } = useStore();
+  const [movs, setMovs] = useState<Movimiento[] | null>(null);
+
+  useEffect(() => {
+    let vivo = true;
+    movimientosDe(codigo).then((m) => {
+      if (vivo) setMovs(m);
+    });
+    return () => {
+      vivo = false;
+    };
+  }, [codigo, movimientosDe]);
+
+  if (movs === null) {
+    return <p className="py-6 text-center text-muted">Buscando los movimientos...</p>;
+  }
+
+  return (
+    <table className="w-full text-sm">
+      <thead>
+        <tr className="border-b border-line text-left text-[11px] tracking-wider text-faint uppercase">
+          <th className="py-2 font-semibold">Fecha</th>
+          <th className="py-2 font-semibold">Detalle</th>
+          <th className="py-2 font-semibold">Usuario</th>
+          <th className="py-2 text-right font-semibold">Unidades</th>
+        </tr>
+      </thead>
+      <tbody>
+        {movs.map((m) => (
+          <tr key={m.id} className="border-b border-line last:border-0">
+            <td className="py-2 whitespace-nowrap text-muted">
+              {fechaHora(m.fecha)}
+            </td>
+            <td className="py-2">{m.nota}</td>
+            <td className="py-2 text-muted">{m.usuario}</td>
+            <td
+              className={`tnum py-2 text-right font-medium ${
+                m.unidades < 0 ? "text-acento-ink" : ""
+              }`}
+            >
+              {m.unidades > 0 ? `+${m.unidades}` : m.unidades}
+            </td>
+          </tr>
+        ))}
+        {movs.length === 0 && (
+          <tr>
+            <td colSpan={4} className="py-6 text-center text-muted">
+              Sin movimientos: este producto nunca entró ni salió.
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </table>
   );
 }
 
