@@ -14,6 +14,8 @@ export type Producto = {
   activo?: boolean;
   /** Siempre POR UNIDAD. El precio del bulto se calcula. */
   precioLista: number;
+  /** La lista decia "Consultar": no se puede emitir un remito con el en cero. */
+  precioAConsultar?: boolean;
   enListaActual: boolean;
 };
 

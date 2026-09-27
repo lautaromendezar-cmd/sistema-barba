@@ -105,6 +105,7 @@ type FilaProducto = {
   unidades_por_bulto: number;
   se_vende_suelto: boolean;
   precio_lista: string | number;
+  precio_a_consultar: boolean;
   en_lista_actual: boolean;
   proveedor_id: string | null;
   activo: boolean;
@@ -136,6 +137,34 @@ type Parte =
   | "ingresos"
   | "stock"
   | "perfiles";
+
+/**
+ * Supabase devuelve como mucho 1.000 filas por consulta y NO avisa de que
+ * recorto: con los 4.323 productos reales, la app mostraba mil y se comportaba
+ * como si el resto no existiera. Un producto que no esta en la lista no se
+ * puede poner en un remito, asi que esto no era lentitud, era catalogo perdido.
+ *
+ * Recibe una funcion que arma la consulta con el rango puesto, y la llama hasta
+ * que una pagina vuelve incompleta. La consulta tiene que traer un orden TOTAL
+ * (con desempate unico), o dos paginas pueden repetir una fila y saltearse otra.
+ */
+const PAGINA = 1000;
+
+async function porPaginas<T>(
+  consulta: (
+    desde: number,
+    hasta: number,
+  ) => PromiseLike<{ data: T[] | null; error: unknown }>,
+): Promise<{ data: T[] | null; error: unknown }> {
+  const filas: T[] = [];
+  for (let desde = 0; ; desde += PAGINA) {
+    const pagina = await consulta(desde, desde + PAGINA - 1);
+    if (pagina.error) return { data: null, error: pagina.error };
+    const lote = pagina.data ?? [];
+    filas.push(...lote);
+    if (lote.length < PAGINA) return { data: filas, error: null };
+  }
+}
 
 const TODAS: Parte[] = [
   "productos",
@@ -182,13 +211,26 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       proveedores,
     ] = await Promise.all([
       pide("productos")
-        ? supabase.from("productos").select("*").order("nombre")
+        ? porPaginas((desde, hasta) =>
+            supabase
+              .from("productos")
+              .select("*")
+              // El código desempata: sin un orden total, dos páginas pueden
+              // repetir una fila y saltearse otra.
+              .order("nombre")
+              .order("codigo")
+              .range(desde, hasta),
+          )
         : null,
       pide("clientes")
-        ? supabase
-            .from("clientes")
-            .select("*, cliente_direcciones(*)")
-            .order("nombre")
+        ? porPaginas((desde, hasta) =>
+            supabase
+              .from("clientes")
+              .select("*, cliente_direcciones(*)")
+              .order("nombre")
+              .order("id")
+              .range(desde, hasta),
+          )
         : null,
       pide("remitos")
         ? supabase
@@ -208,10 +250,24 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       // catálogo real serían 4.400 filas para leer un puñado de numeros. Los
       // que no aparecen valen cero, que es lo que ya devuelve `stock()`.
       pide("stock")
-        ? supabase.from("stock_fisico").select("*").neq("unidades", 0)
+        ? porPaginas((desde, hasta) =>
+            supabase
+              .from("stock_fisico")
+              .select("*")
+              .neq("unidades", 0)
+              .order("producto_id")
+              .range(desde, hasta),
+          )
         : null,
       pide("stock")
-        ? supabase.from("stock_a_pedir").select("*").neq("unidades", 0)
+        ? porPaginas((desde, hasta) =>
+            supabase
+              .from("stock_a_pedir")
+              .select("*")
+              .neq("unidades", 0)
+              .order("producto_id")
+              .range(desde, hasta),
+          )
         : null,
       pide("perfiles") ? supabase.from("perfiles").select("id, nombre") : null,
       pide("proveedores")
@@ -289,6 +345,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           unidadesPorBulto: p.unidades_por_bulto,
           seVendeSuelto: p.se_vende_suelto,
           precioLista: num(p.precio_lista),
+          precioAConsultar: p.precio_a_consultar === true,
           enListaActual: p.en_lista_actual,
           proveedorId: p.proveedor_id ?? null,
           activo: p.activo,

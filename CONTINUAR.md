@@ -109,6 +109,43 @@ la tabla `_migraciones`, así que se pueden correr las veces que haga falta.
 **La conexión directa (`db.<ref>.supabase.co`) es IPv6 y no resuelve desde
 cualquier red.** Los scripts van solos por el pooler; no hace falta hacer nada.
 
+## Los datos reales ya están cargados
+
+**26 de septiembre de 2026: la base tiene el catálogo real**, no los datos de
+ejemplo. 4.323 productos, 587 clientes con 599 direcciones y 30 proveedores,
+importados de la planilla que mandó Federico por WhatsApp.
+
+```bash
+python scripts/importar_planilla.py            # en seco: informe, no toca nada
+python scripts/importar_planilla.py --aplicar  # carga (pide la base sin remitos)
+```
+
+Lo que hay que saber de esa importación:
+
+- **El precio de la planilla es POR UNIDAD y se guardó tal cual.** Confirmado
+  por dos cruces independientes: contra la lista de Tienda Nube (5-ago) da 1/6
+  en los de caja de 6 y 1/24 en los de 24, o sea que **esa** era la que estaba
+  por bulto; y contra la oferta de junio da ~1,06 parejo en todas las
+  presentaciones, o sea misma base y solo aumento de precio.
+- **1.239 productos dicen "Consultar"**: entraron con precio 0 y marcados
+  (`precio_a_consultar`). La base no deja emitir un remito con ellos en cero
+  (migración 0007) y en pantalla sale el cartel «a consultar». Cuando alguien
+  les escribe un precio, la marca se cae sola.
+- **50 códigos apuntaban a dos productos distintos cada uno** (121 filas). No
+  entró ninguno: quedaron en `datos/conflictos-codigos.csv` para que Federico
+  diga cuál es cuál. Si entraran, uno pisaría al otro y se emitirían remitos de
+  una bodega con el precio de otra.
+- **La sección no viene en la planilla.** La deduje de la columna bodega cuando
+  ahí hay un rubro (ACEITES, WHISKY, GIN...) y el resto quedó como «Vinos». Es
+  una decisión mía y se cambia en masa con un update.
+- Un nombre de cliente repetido se tomó como **una persona con varias
+  direcciones de entrega**, no como dos clientes. Varios de los repetidos son
+  el mismo domicilio escrito distinto («CRAMER 1266» y «CREAMER 1266»).
+
+⚠️ **`NEXT_PUBLIC_MODO_DEMO` sigue prendido en Vercel.** Ahora los datos son
+reales, así que esa franja amarilla miente: hay que apagarla antes del próximo
+deploy.
+
 ## Datos de ejemplo
 
 Lo que hoy se ve en el sistema **es inventado**: un año de movimiento para poder
@@ -151,26 +188,16 @@ proyectado al catálogo real, **2.888 KB por operación pasaron a 94 KB**.
 
 **Falta:**
 
-1. **Importar los datos reales.** La planilla del cliente está en `datos/`
-   (fuera del repo: son datos reales). ⚠️ **El precio de esa planilla es POR
-   UNIDAD**, que es como lo guarda la base: se importa sin dividir. Lo que
-   estaba por bulto era la lista vieja de Tienda Nube, aunque su encabezado
-   dijera "X UNIDAD". Se comprobó cruzando 177 códigos: el cociente entre las
-   dos listas da exactamente 1/6 en los de caja de 6 y 1/24 en los de 24.
-   Antes de importar hay que resolver: **50 códigos duplicados**, **1.264
-   productos que dicen "Consultar" en vez de precio**, y que la columna bodega
-   mezcla productores con rubros (ACEITES, WHISKY, GIN, APERITIVO).
-2. **El dashboard miente cuando crecen los remitos.** Suma las ventas de 12
+1. **El dashboard miente cuando crecen los remitos.** Suma las ventas de 12
    meses sobre `db.remitos`, que viene recortado a los últimos 500 con sus
    líneas. A 10 remitos por día eso es mes y medio de historia: a partir de ahí
    los totales salen incompletos **sin avisar**. Es el mismo problema que tenía
    el stock antes de la auditoría, y se arregla igual: que sume Postgres.
-   Además los 500 remitos con líneas son hoy lo más pesado de cada recarga.
-3. **El combo de clientes del remito** es un `<select>` con todos adentro:
+2. **El combo de clientes del remito** es un `<select>` con todos adentro:
    inusable con mil. Necesita el mismo buscador que ya tienen los productos.
-4. **Informes.** No están hechos y **no se los debemos**: en el alcance figuran
+3. **Informes.** No están hechos y **no se los debemos**: en el alcance figuran
    en Fase 3, "no comprometida".
-5. **Devoluciones**: el esquema las soporta, falta la pantalla.
+4. **Devoluciones**: el esquema las soporta, falta la pantalla.
 
 ## Pendientes que no son de código
 

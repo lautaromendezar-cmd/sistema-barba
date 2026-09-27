@@ -35,6 +35,14 @@ export default function Productos() {
     });
   }, [db.productos, busqueda, seccion]);
 
+  // Pintar 4.300 filas son 53.000 nodos en el DOM: la pantalla tarda 3,5 s en
+  // abrir y 5 s en reaccionar a cada letra del buscador. Se muestran las
+  // primeras y el resto aparece afinando la busqueda, que es lo que uno hace
+  // igual cuando el catalogo es asi de grande.
+  const A_LA_VISTA = 200;
+  const visibles = filtrados.slice(0, A_LA_VISTA);
+  const ocultos = filtrados.length - visibles.length;
+
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -100,7 +108,7 @@ export default function Productos() {
             </tr>
           </thead>
           <tbody>
-            {filtrados.map((p) => {
+            {visibles.map((p) => {
               const s = stock(p.codigo);
               return (
                 <tr
@@ -117,12 +125,18 @@ export default function Productos() {
                     </div>
                   </td>
                   <td className="tnum px-4 py-3 text-right">
-                    {money(p.precioLista)}
+                    {p.precioAConsultar ? (
+                      <span className="bg-acento-soft text-acento-ink rounded-full px-2 py-0.5 text-[11px] font-semibold">
+                        a consultar
+                      </span>
+                    ) : (
+                      money(p.precioLista)
+                    )}
                   </td>
                   <td className="tnum px-4 py-3 text-right text-muted">
-                    {p.unidadesPorBulto > 1
-                      ? money(p.precioLista * p.unidadesPorBulto)
-                      : "—"}
+                    {p.precioAConsultar || p.unidadesPorBulto <= 1
+                      ? "—"
+                      : money(p.precioLista * p.unidadesPorBulto)}
                   </td>
                   <td
                     className={`tnum px-4 py-3 text-right ${
@@ -163,6 +177,12 @@ export default function Productos() {
             )}
           </tbody>
         </table>
+        {ocultos > 0 && (
+          <p className="border-line text-muted border-t px-4 py-3 text-center text-sm">
+            Se muestran {A_LA_VISTA} de {filtrados.length}. Escribí en el
+            buscador para llegar al que falta.
+          </p>
+        )}
       </div>
 
       <p className="mt-3 text-xs text-muted">

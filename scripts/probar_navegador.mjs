@@ -77,11 +77,13 @@ try {
   console.log("\nProductos");
   await pagina.click('a[href="/productos"]');
   await new Promise((r) => setTimeout(r, 2500));
-  const textoProductos = await pagina.evaluate(() => document.body.innerText);
+  const filasProductos = await pagina.evaluate(
+    () => document.querySelectorAll("tbody tr").length,
+  );
   chequear(
     "la lista trae productos de la base",
-    textoProductos.includes("Aguijón") || textoProductos.includes("Aguij"),
-    "no encontré ningún producto conocido",
+    filasProductos > 0,
+    "la tabla de productos salió vacía",
   );
   await captura("3-productos");
 
@@ -118,8 +120,9 @@ try {
   await pagina.keyboard.press("Enter");
   await new Promise((r) => setTimeout(r, 900));
 
-  const conLinea = await pagina.evaluate(() => document.body.innerText);
-  chequear("el producto entra al remito", conLinea.includes("Aguij"), "no apareció ninguna línea");
+  // Sin nombres a dedo: el catálogo real cambia y el de ejemplo ya no está.
+  const conLinea = await pagina.evaluate(() => document.body.innerText.toUpperCase());
+  chequear("el producto entra al remito", conLinea.includes("AGUIJ"), "no apareció ninguna línea");
   await captura("5b-remito-cargado");
 
   const botonEmitir = await pagina.evaluateHandle(() =>
@@ -152,21 +155,25 @@ try {
   console.log("\nClientes y proveedores");
   await pagina.goto(`${BASE}/clientes`, { waitUntil: "networkidle0" });
   await new Promise((r) => setTimeout(r, 2500));
-  const textoClientes = await pagina.evaluate(() => document.body.innerText);
+  const filasClientes = await pagina.evaluate(
+    () => document.querySelectorAll("tbody tr").length,
+  );
   chequear(
     "la lista de clientes trae datos",
-    textoClientes.includes("Vinoteca") || textoClientes.includes("Almacén"),
-    "no aparece ningún cliente conocido",
+    filasClientes > 0,
+    "la tabla de clientes salió vacía",
   );
   await captura("7-clientes");
 
   await pagina.goto(`${BASE}/proveedores`, { waitUntil: "networkidle0" });
   await new Promise((r) => setTimeout(r, 2500));
-  const textoProv = await pagina.evaluate(() => document.body.innerText);
+  const filasProv = await pagina.evaluate(
+    () => document.querySelectorAll("tbody tr").length,
+  );
   chequear(
     "la lista de proveedores trae datos",
-    textoProv.includes("Alfa Crux") || textoProv.includes("Alta Vista"),
-    "no aparece ningún proveedor",
+    filasProv > 0,
+    "la tabla de proveedores salió vacía",
   );
   await captura("8-proveedores");
 

@@ -246,10 +246,17 @@ export default function NuevoRemito() {
                           }
                           className="tnum w-28 rounded-md border border-line px-2 py-1.5 text-right outline-none focus:border-ink"
                         />
-                        {p && f.precioUnitario !== p.precioLista && (
-                          <div className="mt-0.5 text-[11px] text-acento-ink">
-                            lista {money(p.precioLista)}
+                        {p?.precioAConsultar && f.precioUnitario === 0 ? (
+                          <div className="text-alerta mt-0.5 text-[11px] font-semibold">
+                            falta el precio
                           </div>
+                        ) : (
+                          p &&
+                          f.precioUnitario !== p.precioLista && (
+                            <div className="text-acento-ink mt-0.5 text-[11px]">
+                              lista {money(p.precioLista)}
+                            </div>
+                          )
                         )}
                       </td>
                       <td className="tnum py-2.5 text-right">

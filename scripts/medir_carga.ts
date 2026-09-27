@@ -23,14 +23,25 @@ const supabase = createClient(
   env("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
 );
 
+// Igual que el store: Supabase corta en 1.000 filas sin avisar.
+async function porPaginas(hacer: (d: number, h: number) => PromiseLike<{ data: unknown[] | null }>) {
+  const filas: unknown[] = [];
+  for (let d = 0; ; d += 1000) {
+    const { data } = await hacer(d, d + 999);
+    const lote = data ?? [];
+    filas.push(...lote);
+    if (lote.length < 1000) return { data: filas };
+  }
+}
+
 const consultas: Array<[string, () => PromiseLike<{ data: unknown }>]> = [
-  ["productos", () => supabase.from("productos").select("*").order("nombre")],
-  ["clientes", () => supabase.from("clientes").select("*, cliente_direcciones(*)").order("nombre")],
+  ["productos", () => porPaginas((d, h) => supabase.from("productos").select("*").order("nombre").order("codigo").range(d, h))],
+  ["clientes", () => porPaginas((d, h) => supabase.from("clientes").select("*, cliente_direcciones(*)").order("nombre").order("id").range(d, h))],
   ["movimientos", () => supabase.from("movimientos").select("*").order("fecha", { ascending: false }).limit(5000)],
   ["remitos", () => supabase.from("remitos").select("*, remito_lineas(*)").order("creado_at", { ascending: false }).limit(500)],
   ["ingresos", () => supabase.from("ingresos").select("*, ingreso_lineas(*)").order("creado_at", { ascending: false }).limit(500)],
-  ["stock_fisico", () => supabase.from("stock_fisico").select("*")],
-  ["stock_a_pedir", () => supabase.from("stock_a_pedir").select("*")],
+  ["stock_fisico", () => porPaginas((d, h) => supabase.from("stock_fisico").select("*").neq("unidades", 0).order("producto_id").range(d, h))],
+  ["stock_a_pedir", () => porPaginas((d, h) => supabase.from("stock_a_pedir").select("*").neq("unidades", 0).order("producto_id").range(d, h))],
   ["perfiles", () => supabase.from("perfiles").select("id, nombre")],
   ["proveedores", () => supabase.from("proveedores").select("*").order("nombre")],
 ];
@@ -58,10 +69,6 @@ async function main() {
   }
 
   const kb = (n: string) => medido.get(n)?.kb ?? 0;
-  const porFila = (n: string) => {
-    const m = medido.get(n);
-    return m && m.filas ? (m.kb * 1024) / m.filas : 0;
-  };
 
   const todas = [...medido.keys()];
   const soloRemito = ["remitos", "stock_fisico", "stock_a_pedir"];
@@ -71,21 +78,12 @@ async function main() {
   console.log(`  antes:  ${todas.length} consultas, ${suma(todas).toFixed(0)} KB`);
   console.log(`  ahora:  ${soloRemito.length} consultas, ${suma(soloRemito).toFixed(0)} KB`);
 
-  // Lo que se ve hoy son datos de ejemplo. La planilla que mandó el cliente
-  // tiene 4.444 productos y 600 clientes: con el peso por fila ya medido se
-  // puede estimar cuánto va a pesar cada recarga con el catálogo de verdad.
-  const PRODUCTOS_REALES = 4444;
-  const CLIENTES_REALES = 600;
-  const productosKB = (porFila("productos") * PRODUCTOS_REALES) / 1024;
-  const clientesKB = (porFila("clientes") * CLIENTES_REALES) / 1024;
-  const stockKB = (porFila("stock_fisico") * PRODUCTOS_REALES) / 1024;
-
-  console.log("\nProyección con el catálogo real (4.444 productos, 600 clientes):");
-  console.log(`  antes:  ${(productosKB + clientesKB + stockKB * 2 + kb("remitos") + kb("ingresos") + kb("movimientos") + kb("perfiles") + kb("proveedores")).toFixed(0)} KB por operación`);
-  // El stock ya no se pide entero: solo las filas distintas de cero, que son
-  // los productos que se movieron, no los 4.444 del catálogo.
-  console.log(`  ahora:  ${(kb("remitos") + kb("stock_fisico") + kb("stock_a_pedir")).toFixed(0)} KB por operación, de los cuales ${kb("remitos").toFixed(0)} son los remitos`);
-  console.log(`          (el stock crece con los productos que se movieron, no con el catálogo)`);
+  console.log(
+    "\nEl stock se pide filtrado a los productos que se movieron, así que esa",
+  );
+  console.log(
+    "consulta crece con el uso, no con el tamaño del catálogo.",
+  );
 }
 
 main();
