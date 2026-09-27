@@ -136,7 +136,10 @@ export type DB = {
 export type Usuario = {
   usuario: string;
   nombre: string;
+  /** El texto que se ve abajo del nombre en el menu. Es una etiqueta, no un permiso. */
   rol: string;
+  /** Ve el panel con la facturacion. Sale de `perfiles.es_admin`. */
+  esAdmin: boolean;
 };
 
 /** Las tres personas que van a usar el sistema (confirmado por Federico). */

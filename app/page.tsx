@@ -9,7 +9,18 @@ import { money, enBultos, fecha, totalRemito } from "@/lib/formato";
 const estaBajo = (unidades: number, porBulto: number) =>
   unidades > 0 && unidades < Math.max(porBulto, 1);
 
+/**
+ * Quien entra ve una pantalla u otra segun su perfil. Mientras el perfil no
+ * llego todavia no se muestra nada: por las dudas, nunca el panel.
+ */
 export default function Inicio() {
+  const { usuario } = useStore();
+  if (!usuario) return null;
+  return usuario.esAdmin ? <Panel /> : <Operativo />;
+}
+
+/** El panel con la plata del negocio. Solo Federico. */
+function Panel() {
   const { db, usuario, stock, aPedir } = useStore();
 
   const datos = useMemo(() => {
@@ -86,10 +97,11 @@ export default function Inicio() {
         porProducto.set(l.productoCodigo, act);
       }
     }
+    const porCodigo = new Map(db.productos.map((p) => [p.codigo, p]));
     const masVendidos = [...porProducto.entries()]
       .map(([codigo, v]) => ({
         codigo,
-        producto: db.productos.find((p) => p.codigo === codigo),
+        producto: porCodigo.get(codigo),
         ...v,
       }))
       .sort((a, b) => b.unidades - a.unidades)
@@ -358,6 +370,190 @@ export default function Inicio() {
           medida que se carguen ingresos y se emitan remitos.
         </p>
       )}
+    </div>
+  );
+}
+
+/**
+ * La pantalla de inicio de las dos empleadas.
+ *
+ * Federico pidió que la parte de plata del negocio (lo vendido en el mes, el
+ * stock valorizado, las ventas del año, lo que más factura) sea solo suya. Acá
+ * queda lo que hace falta para trabajar: qué falta entregar, qué hay que
+ * reponer y los últimos remitos.
+ *
+ * Importante: esto es la pantalla, no un candado. Los remitos con sus precios
+ * las empleadas los necesitan para emitir, así que siguen llegando al
+ * navegador. Ver la nota en supabase/migrations/0006_admin_y_operadores.sql.
+ */
+function Operativo() {
+  const { db, usuario, stock, aPedir } = useStore();
+
+  const datos = useMemo(() => {
+    const alertas = db.productos
+      .map((p) => ({ p, u: stock(p.codigo), pedir: aPedir(p.codigo) }))
+      .filter((x) => x.u <= 0 || estaBajo(x.u, x.p.unidadesPorBulto))
+      .sort((a, b) => a.u - b.u);
+
+    const hoy = new Date().toDateString();
+    const emitidos = db.remitos.filter((r) => r.estado === "emitido");
+
+    return {
+      alertas: alertas.slice(0, 8),
+      aReponer: alertas.length,
+      pendientes: db.productos.reduce((a, p) => a + aPedir(p.codigo), 0),
+      remitosHoy: emitidos.filter(
+        (r) => new Date(r.fecha).toDateString() === hoy,
+      ).length,
+      ultimos: emitidos.slice(0, 8),
+    };
+  }, [db, stock, aPedir]);
+
+  const porIdCliente = useMemo(
+    () => new Map(db.clientes.map((c) => [c.id, c.nombre])),
+    [db.clientes],
+  );
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="titulo text-2xl">
+            Hola, {usuario?.nombre?.split(" ")[0]}
+          </h1>
+          <p className="text-muted mt-1 text-sm">
+            {new Date().toLocaleDateString("es-AR", {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Link
+            href="/ingresos"
+            className="border-line bg-surface hover:border-ink rounded-lg border px-4 py-2.5 text-sm font-medium transition"
+          >
+            Cargar mercadería
+          </Link>
+          <Link
+            href="/remitos/nuevo"
+            className="bg-ink hover:bg-ink-hover rounded-lg px-4 py-2.5 text-sm font-medium text-white transition"
+          >
+            Nuevo remito
+          </Link>
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Kpi
+          titulo="Falta entregar"
+          valor={`${datos.pendientes} u`}
+          pie="vendido y todavía no entregado"
+          alerta={datos.pendientes > 0}
+        />
+        <Kpi
+          titulo="Hay que reponer"
+          valor={String(datos.aReponer)}
+          pie="productos en cero o por debajo de un bulto"
+          alerta={datos.aReponer > 0}
+        />
+        <Kpi
+          titulo="Remitos de hoy"
+          valor={String(datos.remitosHoy)}
+          pie="emitidos en el día"
+        />
+      </div>
+
+      <section className="tarjeta overflow-hidden">
+        <div className="border-line flex items-center justify-between border-b px-5 py-4">
+          <h2 className="titulo text-[15px]">Hay que reponer</h2>
+          <Link
+            href="/productos"
+            className="text-muted hover:text-ink text-xs underline underline-offset-2"
+          >
+            ver todo
+          </Link>
+        </div>
+        {datos.alertas.length === 0 ? (
+          <p className="text-faint px-5 py-8 text-center text-sm">
+            Ningún producto en cero ni por debajo de un bulto.
+          </p>
+        ) : (
+          <ul>
+            {datos.alertas.map(({ p, u, pedir }) => (
+              <li
+                key={p.codigo}
+                className="border-line flex items-center gap-3 border-b px-5 py-3 last:border-0"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium">{p.nombre}</div>
+                  <div className="text-faint truncate text-xs">
+                    {p.bodega}
+                    {pedir > 0 && ` · ${pedir} u comprometidas`}
+                  </div>
+                </div>
+                <span
+                  className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                    u <= 0
+                      ? "bg-alerta-soft text-alerta"
+                      : "bg-acento-soft text-acento-ink"
+                  }`}
+                >
+                  {u <= 0 ? (u === 0 ? "Sin stock" : `${u} u`) : "Queda poco"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="tarjeta overflow-hidden">
+        <div className="border-line flex items-center justify-between border-b px-5 py-4">
+          <h2 className="titulo text-[15px]">Últimos remitos</h2>
+          <Link
+            href="/remitos"
+            className="text-muted hover:text-ink text-xs underline underline-offset-2"
+          >
+            ver todos
+          </Link>
+        </div>
+        {datos.ultimos.length === 0 ? (
+          <p className="text-faint px-5 py-8 text-center text-sm">
+            Cuando emitas el primero, aparece acá.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-line text-faint border-b text-left text-[10px] tracking-wide uppercase">
+                  <th className="px-5 py-2.5 font-semibold">Número</th>
+                  <th className="px-3 py-2.5 font-semibold">Fecha</th>
+                  <th className="px-3 py-2.5 font-semibold">Cliente</th>
+                  <th className="px-5 py-2.5 font-semibold">Emitió</th>
+                </tr>
+              </thead>
+              <tbody>
+                {datos.ultimos.map((r) => (
+                  <tr key={r.id} className="border-line border-b last:border-0">
+                    <td className="tnum text-acento-ink px-5 py-3 font-medium">
+                      {r.numero}
+                    </td>
+                    <td className="tnum text-muted px-3 py-3">
+                      {fecha(r.fecha)}
+                    </td>
+                    <td className="px-3 py-3">
+                      {porIdCliente.get(r.clienteId) ?? "—"}
+                    </td>
+                    <td className="text-muted px-5 py-3">{r.usuario}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </div>
   );
 }

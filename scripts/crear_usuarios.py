@@ -21,12 +21,14 @@ DOMINIO = "barba.local"
 # Sin clave escrita en el codigo: sale de CLAVE_DEV en .env.local, del
 # argumento, o se genera una al azar y se imprime una sola vez.
 
-# El rol es el texto que se ve arriba a la derecha. Los tres ven todo: no es
-# un permiso, es saber quien esta usando el sistema.
+# El rol es el texto que se ve abajo del nombre en el menu: es una etiqueta,
+# no un permiso. El permiso es la ultima columna, `es_admin`, que decide quien
+# ve el panel con la facturacion (migracion 0006). Federico pidio que lo vea
+# solo el; las dos empleadas entran a la pantalla operativa.
 PERSONAS = [
-    ("federico", "Federico Barba", "Dueño y ventas"),
-    ("claudia", "Claudia", "Ventas e ingresos"),
-    ("roxana", "Roxana", "Entregas"),
+    ("federico", "Federico Barba", "Dueño y ventas", True),
+    ("claudia", "Claudia", "Ventas e ingresos", False),
+    ("roxana", "Roxana", "Entregas", False),
 ]
 
 
@@ -39,7 +41,7 @@ def main() -> None:
     )
 
     with psycopg.connect(url_conexion(env), connect_timeout=20) as con:
-        for usuario, nombre, rol in PERSONAS:
+        for usuario, nombre, rol, es_admin in PERSONAS:
             email = f"{usuario}@{DOMINIO}"
 
             existente = con.execute(
@@ -97,11 +99,13 @@ def main() -> None:
                 accion = "creado"
 
             con.execute(
-                """insert into perfiles (id, nombre, rol)
-                   values (%s, %s, %s)
+                """insert into perfiles (id, nombre, rol, es_admin)
+                   values (%s, %s, %s, %s)
                    on conflict (id) do update
-                     set nombre = excluded.nombre, rol = excluded.rol""",
-                (uid, nombre, rol),
+                     set nombre = excluded.nombre,
+                         rol = excluded.rol,
+                         es_admin = excluded.es_admin""",
+                (uid, nombre, rol, es_admin),
             )
             print(f"  {usuario:10s} {accion}")
 

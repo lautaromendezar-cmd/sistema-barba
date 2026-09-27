@@ -102,12 +102,18 @@ Ninguna de estas frena la aprobación del documento, pero todas frenan la constr
 
 - **Next.js + Supabase** (Postgres + Auth), deploy en Vercel.
 - Web responsive: se usa en PC y desde el celular en el depósito.
-- **3 usuarios** (2 empleadas + Federico), creados a mano. **Registro público deshabilitado** — no hay ninguna razón para que exista.
+- **3 usuarios** (2 empleadas + Federico), creados a mano, con dos niveles de permiso (ver *Permisos*). **Registro público deshabilitado** — no hay ninguna razón para que exista.
 - **Sin multi-empresa.** Un cliente, un proyecto Supabase dedicado. Si mañana aparece otra distribuidora, se clona: es más barato que diseñar multi-tenant hoy para un cliente hipotético.
 
 ## Permisos
 
-Los tres usuarios ven todo, **incluidos costos y márgenes** (decisión explícita de Federico). Lo que sí se registra siempre es **quién** hizo cada cosa: quién emitió el remito, quién lo anuló, quién aplicó un descuento, quién ajustó stock. No es vigilancia: es poder responder "¿por qué este remito salió 12% abajo?".
+> ⚠️ **Corregido el 26 de septiembre de 2026.** El PDF que ya tiene Federico dice que los tres usuarios ven todo. Él pidió lo contrario después, y es lo que está hecho.
+
+Hay dos niveles: **Federico administra** y **las dos empleadas operan**. La diferencia es el panel de inicio: lo vendido en el mes, el stock valorizado, las ventas de los últimos doce meses y qué producto factura más son solo de él. Ellas entran a una pantalla operativa con lo que falta entregar, lo que hay que reponer y los últimos remitos. Todo lo demás lo siguen haciendo igual: emiten remitos, los anulan, cargan mercadería y corrigen stock.
+
+**Hasta dónde llega esa separación, dicho sin vueltas.** Un remito lleva precios y totales impresos, así que quien emite remitos ve precios: eso no se puede evitar sin cambiarle el trabajo. Y como el panel se calcula con los remitos y el stock, que ellas necesitan, esconderlo es sacarlo de la pantalla y no ponerlo fuera de alcance: alguien que sepa abrir la consola del navegador podría volver a sumarlo. Si hace falta que sea una pared y no una cortina, hay que recortarles el historial de remitos a una ventana de tiempo, y eso sí les cambia el día a día. Está para decidir.
+
+Lo que sí se registra siempre es **quién** hizo cada cosa: quién emitió el remito, quién lo anuló, quién aplicó un descuento, quién ajustó stock. No es vigilancia: es poder responder "¿por qué este remito salió 12% abajo?".
 
 ## Modelo de datos
 

@@ -52,6 +52,20 @@ npm run dev        # http://localhost:3000
 Se entra con **nombre de usuario**, no con mail: `federico`, `claudia` o
 `roxana`.
 
+**Federico es administrador y las dos empleadas no** (migración 0006). La
+diferencia es la pantalla de inicio: él ve el panel con la facturación, el
+stock valorizado y las ventas del año; ellas ven una pantalla operativa con lo
+que falta entregar, lo que hay que reponer y los últimos remitos. Todo lo demás
+lo hacen igual. **Los nombres Claudia y Roxana salieron de lo que contestó
+Federico en la reunión, pero no están confirmados por escrito:** si están mal se
+renombran con `python scripts/crear_usuarios.py`.
+
+⚠️ **Eso es una cortina, no una pared.** El panel se calcula con los remitos y
+el stock, que las empleadas necesitan para trabajar, así que siguen llegando al
+navegador: quien sepa abrir la consola puede volver a sumarlos. Para que fuera
+una pared habría que recortarles el historial de remitos a una ventana de
+tiempo, y eso les cambia el trabajo. Sin decidir.
+
 ## Publicar
 
 No hay despliegue automático: **el push a GitHub no dispara nada** (la cuenta

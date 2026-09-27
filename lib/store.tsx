@@ -400,7 +400,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         usuario: data.id,
         nombre: data.nombre,
         rol: data.rol,
-      } as Usuario);
+        esAdmin: data.es_admin === true,
+      });
     }
   }, []);
 

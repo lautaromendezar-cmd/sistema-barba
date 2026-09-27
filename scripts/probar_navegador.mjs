@@ -190,6 +190,56 @@ try {
   await captura("6-ingresos");
   chequear("la pantalla de ingresos abre", true);
 
+  console.log("\nQuién ve la plata del negocio");
+  // Sigue con la sesión de Claudia, que es empleada.
+  await pagina.goto(BASE, { waitUntil: "networkidle0", timeout: 60000 });
+  await new Promise((r) => setTimeout(r, 2500));
+  const inicioEmpleada = await pagina.evaluate(() => document.body.innerText);
+  for (const prohibido of [
+    "Vendido este mes",
+    "Stock valorizado",
+    "Ventas de los últimos 12 meses",
+    "Lo que más sale",
+  ]) {
+    chequear(
+      `la empleada no ve "${prohibido}"`,
+      !inicioEmpleada.includes(prohibido),
+      "aparece en su pantalla de inicio",
+    );
+  }
+  chequear(
+    "pero sí ve lo operativo",
+    inicioEmpleada.includes("Hay que reponer") &&
+      inicioEmpleada.includes("Falta entregar"),
+    "no aparece ni 'Hay que reponer' ni 'Falta entregar'",
+  );
+  await captura("9-inicio-empleada");
+
+  const botones = await pagina.$$("button");
+  for (const b of botones) {
+    const texto = await pagina.evaluate((el) => el.innerText, b);
+    if (texto.trim() === "Salir") {
+      await b.click();
+      break;
+    }
+  }
+  await pagina.waitForSelector("#usuario", { timeout: 30000 });
+  await pagina.type("#usuario", "federico");
+  await pagina.type("#clave", CLAVE);
+  await Promise.all([
+    pagina.click('button[type="submit"]'),
+    pagina.waitForSelector("nav a", { timeout: 30000 }),
+  ]);
+  await new Promise((r) => setTimeout(r, 3000));
+  const inicioFederico = await pagina.evaluate(() => document.body.innerText);
+  chequear(
+    "Federico sí ve el panel completo",
+    inicioFederico.includes("Vendido este mes") &&
+      inicioFederico.includes("Stock valorizado"),
+    "el panel no apareció para el admin",
+  );
+  await captura("10-inicio-federico");
+
   console.log("\nErrores de JavaScript");
   const relevantes = errores.filter(
     (e) => !e.includes("favicon") && !e.includes("Download the React DevTools"),

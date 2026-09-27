@@ -194,6 +194,56 @@ async function main() {
     else ojo(`falta ${h}`, para);
   }
 
+  console.log("\n8. Una empleada, ¿puede hacerse administradora?");
+  console.log("   (el panel con la facturación es solo de Federico: migración 0006)");
+  {
+    const empleada = createClient(URL_BASE, ANON);
+    const login = await empleada.auth.signInWithPassword({
+      email: "claudia@barba.local",
+      password: CLAVE_EQUIPO,
+    });
+    if (login.error) {
+      ojo("no se pudo entrar como claudia", login.error.message);
+    } else {
+      const uid = login.data.user.id;
+
+      const propio = await empleada
+        .from("perfiles")
+        .select("es_admin")
+        .eq("id", uid)
+        .single();
+      if (propio.data?.es_admin === false) bien("su perfil dice que no es admin");
+      else mal("el perfil de la empleada vino marcado como admin");
+
+      const ascenso = await empleada
+        .from("perfiles")
+        .update({ es_admin: true })
+        .eq("id", uid)
+        .select();
+      const cambiadas = ascenso.data?.length ?? 0;
+      if (ascenso.error || cambiadas === 0) {
+        bien("no puede marcarse admin a sí misma");
+      } else {
+        mal("una empleada se puede hacer administradora sola");
+        // Dejar la base como estaba, pase lo que pase con la prueba.
+        await empleada.from("perfiles").update({ es_admin: false }).eq("id", uid);
+      }
+
+      const aFederico = await empleada
+        .from("perfiles")
+        .update({ nombre: "tocado" })
+        .neq("id", uid)
+        .select();
+      if (aFederico.error || (aFederico.data?.length ?? 0) === 0) {
+        bien("tampoco puede editar el perfil de otro");
+      } else {
+        mal("una empleada puede editar el perfil de otra persona");
+      }
+
+      await empleada.auth.signOut();
+    }
+  }
+
   console.log();
   console.log(`${graves} problema(s) grave(s) · ${leves} para mejorar`);
   if (graves) process.exit(1);
