@@ -85,7 +85,8 @@ python scripts/probar_operaciones.py      # la lógica de stock, contra Postgres
 npx tsx scripts/probar_app.ts             # integración con sesión real
 npx tsx scripts/probar_seguridad.ts       # ataca el sistema desde afuera
 python scripts/probar_intruso_con_cuenta.py   # cuenta sin perfil: no ve nada
-node scripts/probar_navegador.mjs         # la app en Chrome, de punta a punta
+node scripts/probar_navegador.mjs         # la app en Chrome, pantalla por pantalla
+node scripts/probar_recorrido.mjs         # un día de uso completo, con datos reales
 npx tsx scripts/medir_carga.ts            # cuánto pesa y tarda cada consulta
 ```
 
@@ -95,6 +96,11 @@ La de navegador acepta una URL para probar contra producción:
 > Si el servidor de desarrollo deja de responder en medio de las pruebas, no es
 > el código: `next dev` se cuelga cada tantas corridas. Se mata por puerto y se
 > levanta de nuevo.
+
+`probar_recorrido.mjs` emite, recibe, ajusta y anula de verdad, y **deja la base
+como la encontró** (borra el movimiento y vuelve el producto de prueba a «a
+consultar»). Igual, después de correr las pruebas conviene `datos_ejemplo.py
+--limpiar` para que la numeración arranque en R-0001.
 
 ## Base de datos
 

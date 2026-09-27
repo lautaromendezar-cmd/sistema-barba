@@ -66,8 +66,18 @@ async function main() {
   chequear("tiene perfil con nombre", perfil?.nombre, "Claudia");
 
   console.log("\nDatos cargados");
-  const { data: productos } = await supabase.from("productos").select("*").order("codigo");
-  chequear("ve los 12 productos", productos?.length, 12);
+  // Supabase corta en 1.000 filas sin avisar: contar por length mentiría. El
+  // total va con count exact, y la lista solo sirve para elegir un producto.
+  const { count: totalProductos } = await supabase
+    .from("productos")
+    .select("*", { count: "exact", head: true });
+  chequear("ve el catálogo entero (más de 1.000 productos)", (totalProductos ?? 0) > 1000, true);
+  const { data: productos } = await supabase
+    .from("productos")
+    .select("*")
+    .eq("precio_a_consultar", false)
+    .order("codigo")
+    .limit(50);
   const prod = productos![0];
   const upb = prod.unidades_por_bulto;
 
