@@ -751,7 +751,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           .insert({
             bodega: datos.bodega,
             nro_remito_proveedor: datos.nroRemitoProveedor,
-            usuario_id: usuario?.usuario ?? null,
+            // El autor lo completa la base (default auth.uid(), migración
+            // 0008): mandarlo desde acá permitía forjar el uuid de otro.
           })
           .select()
           .single();

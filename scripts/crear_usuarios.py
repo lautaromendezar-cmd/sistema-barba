@@ -6,20 +6,20 @@ No hay registro publico: las cuentas las crea el administrador y punto. Se
 entra escribiendo "claudia", no un mail; el mail interno existe solo porque
 Supabase Auth lo pide y nunca recibe correo.
 
-Para cambiarle la clave a alguien, se corre esto de nuevo con la clave nueva.
+Cada cuenta se queda con SU PROPIA clave, nunca una compartida entre las tres:
+sale de CLAVE_DEV_<USUARIO> en .env.local (por ejemplo CLAVE_DEV_CLAUDIA) o,
+si no esta, se genera una al azar y se imprime una sola vez. Para cambiarle la
+clave a alguien puntual, se pone su CLAVE_DEV_<USUARIO> en .env.local y se
+corre esto de nuevo.
 """
 
 import secrets
-import sys
 
 import psycopg
 
 from migrar import leer_env, url_conexion
 
 DOMINIO = "barba.local"
-
-# Sin clave escrita en el codigo: sale de CLAVE_DEV en .env.local, del
-# argumento, o se genera una al azar y se imprime una sola vez.
 
 # El rol es el texto que se ve abajo del nombre en el menu: es una etiqueta,
 # no un permiso. El permiso es la ultima columna, `es_admin`, que decide quien
@@ -34,14 +34,14 @@ PERSONAS = [
 
 def main() -> None:
     env = leer_env()
-    clave = (
-        sys.argv[1]
-        if len(sys.argv) > 1
-        else env.get("CLAVE_DEV") or secrets.token_urlsafe(12)
-    )
+    claves: dict[str, str] = {}
 
     with psycopg.connect(url_conexion(env), connect_timeout=20) as con:
         for usuario, nombre, rol, es_admin in PERSONAS:
+            clave = (
+                env.get(f"CLAVE_DEV_{usuario.upper()}") or secrets.token_urlsafe(12)
+            )
+            claves[usuario] = clave
             email = f"{usuario}@{DOMINIO}"
 
             existente = con.execute(
@@ -52,7 +52,7 @@ def main() -> None:
                 uid = existente[0]
                 con.execute(
                     """update auth.users
-                          set encrypted_password = crypt(%s, gen_salt('bf')),
+                          set encrypted_password = crypt(%s, gen_salt('bf', 10)),
                               updated_at = now()
                         where id = %s""",
                     (clave, uid),
@@ -73,7 +73,7 @@ def main() -> None:
                        ) values (
                            '00000000-0000-0000-0000-000000000000', gen_random_uuid(),
                            'authenticated', 'authenticated', %s,
-                           crypt(%s, gen_salt('bf')), now(), now(), now(),
+                           crypt(%s, gen_salt('bf', 10)), now(), now(), now(),
                            '{"provider":"email","providers":["email"]}'::jsonb,
                            %s::jsonb,
                            '', '', '', ''
@@ -111,7 +111,9 @@ def main() -> None:
 
         con.commit()
 
-    print(f"\nEntran con su nombre y la clave: {clave}")
+    print("\nEntran con su nombre y su propia clave:")
+    for usuario, clave in claves.items():
+        print(f"  {usuario:10s} {clave}")
 
 
 if __name__ == "__main__":

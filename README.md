@@ -37,7 +37,7 @@ Supabase Auth exige un email, así que la pantalla de login arma uno interno
 |---|---|
 | `python scripts/migrar.py` | Aplica las migraciones que falten. Lleva registro: se puede correr las veces que haga falta |
 | `python scripts/migrar.py --estado` | Muestra qué migraciones están aplicadas |
-| `python scripts/crear_usuarios.py [clave]` | Crea las cuentas o les cambia la clave |
+| `python scripts/crear_usuarios.py` | Crea las cuentas o les cambia la clave; cada una con la suya (`CLAVE_DEV_<USUARIO>`), nunca una compartida |
 | `npx tsx scripts/cargar_seed.ts` | Carga productos y clientes de ejemplo |
 
 ## Pruebas

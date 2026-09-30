@@ -24,8 +24,14 @@ const URL_BASE = env("NEXT_PUBLIC_SUPABASE_URL");
 const ANON = env("NEXT_PUBLIC_SUPABASE_ANON_KEY");
 const intruso = createClient(URL_BASE, ANON);
 
-/** La clave del equipo, para comparar lo que ve alguien de adentro. */
-const CLAVE_EQUIPO = process.argv[2] ?? env("CLAVE_DEV");
+/**
+ * Cada cuenta tiene su propia clave, nunca una compartida: hacen falta la de
+ * Federico (admin) y la de Claudia (empleada) por separado para comparar lo
+ * que ve alguien de adentro y, más abajo, probar si una empleada escala a
+ * administradora.
+ */
+const CLAVE_FEDERICO = process.argv[2] ?? env("CLAVE_DEV_FEDERICO");
+const CLAVE_CLAUDIA = process.argv[3] ?? env("CLAVE_DEV_CLAUDIA");
 
 let graves = 0;
 let leves = 0;
@@ -84,7 +90,7 @@ async function main() {
   const empleado = createClient(URL_BASE, ANON);
   await empleado.auth.signInWithPassword({
     email: "federico@barba.local",
-    password: CLAVE_EQUIPO,
+    password: CLAVE_FEDERICO,
   });
 
   for (const t of tablas) {
@@ -200,7 +206,7 @@ async function main() {
     const empleada = createClient(URL_BASE, ANON);
     const login = await empleada.auth.signInWithPassword({
       email: "claudia@barba.local",
-      password: CLAVE_EQUIPO,
+      password: CLAVE_CLAUDIA,
     });
     if (login.error) {
       ojo("no se pudo entrar como claudia", login.error.message);

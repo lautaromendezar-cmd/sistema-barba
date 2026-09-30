@@ -14,15 +14,20 @@ const BASE = process.argv[2] ?? "http://localhost:3007";
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const SALIDA = new URL("./capturas/", import.meta.url);
 
-// La clave no se escribe acá: sale de .env.local, que no se commitea.
-const CLAVE = (() => {
+// Las claves no se escriben acá: salen de .env.local, que no se commitea.
+// Cada cuenta tiene la suya (CLAVE_DEV_<USUARIO>), no una compartida.
+function leerClave(usuario) {
+  const variable = `CLAVE_DEV_${usuario.toUpperCase()}`;
   const texto = readFileSync(new URL("../.env.local", import.meta.url), "utf8");
   const linea = texto
     .split(String.fromCharCode(10))
-    .find((l) => l.startsWith("CLAVE_DEV="));
-  if (!linea) throw new Error("Falta CLAVE_DEV en .env.local");
-  return linea.slice("CLAVE_DEV=".length).trim();
-})();
+    .find((l) => l.startsWith(`${variable}=`));
+  if (!linea) throw new Error(`Falta ${variable} en .env.local`);
+  return linea.slice(variable.length + 1).trim();
+}
+
+const CLAVE_CLAUDIA = leerClave("claudia");
+const CLAVE_FEDERICO = leerClave("federico");
 
 mkdirSync(SALIDA, { recursive: true });
 
@@ -58,7 +63,7 @@ try {
   await captura("1-login");
 
   await pagina.type("#usuario", "claudia");
-  await pagina.type("#clave", CLAVE);
+  await pagina.type("#clave", CLAVE_CLAUDIA);
   await Promise.all([
     pagina.click('button[type="submit"]'),
     pagina.waitForSelector("nav a", { timeout: 30000 }),
@@ -232,7 +237,7 @@ try {
   }
   await pagina.waitForSelector("#usuario", { timeout: 30000 });
   await pagina.type("#usuario", "federico");
-  await pagina.type("#clave", CLAVE);
+  await pagina.type("#clave", CLAVE_FEDERICO);
   await Promise.all([
     pagina.click('button[type="submit"]'),
     pagina.waitForSelector("nav a", { timeout: 30000 }),

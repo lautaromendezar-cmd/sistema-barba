@@ -15,10 +15,40 @@ import pathlib
 import sys
 
 import psycopg
-from urllib.parse import unquote, urlsplit
+from urllib.parse import parse_qsl, unquote, urlencode, urlsplit, urlunsplit
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
 MIGRACIONES = RAIZ / "supabase" / "migrations"
+
+# El pooler de Supabase firma con SU PROPIA CA privada ("Supabase Root 2021
+# CA", auto-firmada), no con una CA publica: 'sslrootcert=system' probado en
+# esta maquina da 'certificate verify failed' porque ese root no esta en el
+# almacen de confianza del sistema operativo, ni en el bundle de certifi.
+# El archivo de abajo es ese root, bajado de la conexion real al pooler
+# (aws-0-us-west-2.pooler.supabase.com:5432) y confirmado contra la cadena
+# que el servidor manda (Root 2021 CA -> Intermediate 2021 CA -> *.pooler.
+# supabase.com); Supabase lo usa para todos los proyectos, no es especifico
+# de este, asi que no hace falta descargarlo de nuevo por proyecto.
+RAIZ_SUPABASE = RAIZ / "supabase" / "certs" / "supabase-root-2021-ca.pem"
+
+
+def _raiz_de_confianza() -> str:
+    """El valor a usar en sslrootcert para verificar el certificado del
+    pooler. Si el archivo con el root de Supabase esta en el repo (lo
+    normal), se usa ese. Si no esta -- por ejemplo un checkout viejo antes
+    de este cambio -- se cae a 'system' con un aviso, en vez de fallar en
+    seco: sigue sin validar contra un root cualquiera (mismo riesgo que
+    sslmode=require solo si tampoco existe el archivo), pero no rompe el
+    script para quien todavia no hizo `git pull`."""
+    if RAIZ_SUPABASE.exists():
+        return str(RAIZ_SUPABASE)
+    print(
+        f"aviso: no encontre {RAIZ_SUPABASE.relative_to(RAIZ)} -- "
+        "hace `git pull`. Verificando contra el almacen del sistema "
+        "mientras tanto (puede fallar la conexion).",
+        file=sys.stderr,
+    )
+    return "system"
 
 
 def leer_env() -> dict[str, str]:
@@ -34,9 +64,22 @@ def leer_env() -> dict[str, str]:
     return env
 
 
+def _forzar_verificacion_tls(url: str) -> str:
+    """Sobrescribe sslmode/sslrootcert de una URL de conexion ya armada para
+    que siempre verifique el certificado del servidor contra el almacen de
+    confianza del sistema, sin depender de que quien puso la URL (por ejemplo
+    en SUPABASE_POOLER_URL) se haya acordado de pedirlo. Conserva cualquier
+    otro parametro que la URL ya traiga."""
+    partes = urlsplit(url)
+    query = dict(parse_qsl(partes.query, keep_blank_values=True))
+    query["sslmode"] = "verify-full"
+    query["sslrootcert"] = _raiz_de_confianza()
+    return urlunsplit(partes._replace(query=urlencode(query)))
+
+
 def url_conexion(env: dict[str, str]) -> str:
     if env.get("SUPABASE_POOLER_URL"):
-        return env["SUPABASE_POOLER_URL"]
+        return _forzar_verificacion_tls(env["SUPABASE_POOLER_URL"])
 
     directa = env.get("SUPABASE_DB_URL")
     if not directa:
@@ -50,9 +93,11 @@ def url_conexion(env: dict[str, str]) -> str:
         sys.exit(f"No pude leer el proyecto de SUPABASE_DB_URL (host: {host})")
     ref = host.split(".")[1]
     region = env.get("SUPABASE_REGION", "us-west-2")
+    query = urlencode({"sslmode": "verify-full", "sslrootcert": _raiz_de_confianza()})
     return (
         f"postgresql://postgres.{ref}:{password}"
-        f"@aws-0-{region}.pooler.supabase.com:5432/postgres?sslmode=require"
+        f"@aws-0-{region}.pooler.supabase.com:5432/postgres"
+        f"?{query}"
     )
 
 
@@ -71,6 +116,11 @@ def main() -> None:
               aplicada_at timestamptz not null default now()
             )
         """)
+        # Se ejecuta siempre (no solo cuando se crea la tabla) para que un
+        # proyecto con _migraciones creada antes de este fix tambien quede
+        # protegida la proxima vez que corra este script.
+        con.execute("alter table _migraciones enable row level security")
+        con.execute("revoke all on _migraciones from anon, authenticated")
         con.commit()
 
         aplicadas = {

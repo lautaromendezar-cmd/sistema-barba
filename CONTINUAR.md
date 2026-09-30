@@ -23,19 +23,23 @@ npx vercel link --yes
 npx vercel env pull .env.local
 ```
 
-Después hay que **agregarle a mano estas dos líneas**, que Vercel no tiene
-porque el navegador no las necesita:
+Después hay que **agregarle a mano estas líneas**, que Vercel no tiene porque
+el navegador no las necesita:
 
 ```
 SUPABASE_DB_URL=postgresql://postgres:<clave de la base>@db.oiznxtovxlxxxoeoorii.supabase.co:5432/postgres
-CLAVE_DEV=<la clave con la que entran los usuarios>
+CLAVE_DEV_FEDERICO=<la clave de federico>
+CLAVE_DEV_CLAUDIA=<la clave de claudia>
+CLAVE_DEV_ROXANA=<la clave de roxana>
 ```
 
 - La **clave de la base** está en el panel de Supabase: proyecto
   `grupo-barba-stock` → Settings → Database. Si no la tenés, ahí mismo se
   resetea (y conviene, ver *Pendientes*).
-- La **clave de los usuarios** es la que se puso con `crear_usuarios.py`. Si no
-  te acordás, se cambia: `python scripts/crear_usuarios.py <clave nueva>`.
+- **Cada cuenta tiene su propia clave, no una compartida entre las tres.** Si
+  no las tenés a mano, se generan de nuevo con `python scripts/crear_usuarios.py`
+  (que las imprime una sola vez) o se le fija una puntual poniendo su
+  `CLAVE_DEV_<USUARIO>` en `.env.local` antes de correrlo.
 
 Para los scripts de Python hace falta, una sola vez:
 

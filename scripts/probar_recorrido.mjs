@@ -28,12 +28,14 @@ const CON_PRECIO = { codigo: "W598", nombre: "ALAMOS" }; // Catena, $5.700, caja
 const SIN_PRECIO = { codigo: "W1338", nombre: "63 GRAN MALBEC" }; // dice "Consultar"
 const CLIENTE_DOS_DIRECCIONES = "GUADALUPE";
 
-const CLAVE = (() => {
+// Cada cuenta tiene su propia clave (CLAVE_DEV_<USUARIO>), no una compartida.
+function leerClave(usuario) {
+  const variable = `CLAVE_DEV_${usuario.toUpperCase()}`;
   const texto = readFileSync(new URL("../.env.local", import.meta.url), "utf8");
-  const linea = texto.split(/\r?\n/).find((l) => l.startsWith("CLAVE_DEV="));
-  if (!linea) throw new Error("Falta CLAVE_DEV en .env.local");
-  return linea.slice("CLAVE_DEV=".length).trim();
-})();
+  const linea = texto.split(/\r?\n/).find((l) => l.startsWith(`${variable}=`));
+  if (!linea) throw new Error(`Falta ${variable} en .env.local`);
+  return linea.slice(variable.length + 1).trim();
+}
 
 mkdirSync(SALIDA, { recursive: true });
 
@@ -151,7 +153,7 @@ async function entrar(usuario) {
   await pagina.goto(BASE, { waitUntil: "networkidle0", timeout: 60000 });
   await pagina.waitForSelector("#usuario", { timeout: 30000 });
   await pagina.type("#usuario", usuario);
-  await pagina.type("#clave", CLAVE);
+  await pagina.type("#clave", leerClave(usuario));
   await Promise.all([
     pagina.click('button[type="submit"]'),
     pagina.waitForSelector("nav a", { timeout: 30000 }),

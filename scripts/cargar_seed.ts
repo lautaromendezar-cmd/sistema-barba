@@ -25,7 +25,7 @@ const supabase = createClient(
   env("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
 );
 
-const CLAVE = process.argv[2] ?? env("CLAVE_DEV");
+const CLAVE = process.argv[2] ?? env("CLAVE_DEV_FEDERICO");
 
 async function main() {
   const { error: errorLogin } = await supabase.auth.signInWithPassword({

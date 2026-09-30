@@ -49,7 +49,7 @@ const consultas: Array<[string, () => PromiseLike<{ data: unknown }>]> = [
 async function main() {
   const { error } = await supabase.auth.signInWithPassword({
     email: "federico@barba.local",
-    password: env("CLAVE_DEV"),
+    password: env("CLAVE_DEV_FEDERICO"),
   });
   if (error) throw new Error(`No se pudo entrar: ${error.message}`);
 
