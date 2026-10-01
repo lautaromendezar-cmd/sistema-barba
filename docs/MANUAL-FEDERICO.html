@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Manual del sistema de remitos</title>
+<style>
+  @page { size: A4; margin: 16mm 16mm 18mm; }
+  :root { --tinta: #111; --gris: #555; --linea: #ddd; --suave: #f4f4f2; --acento: #f5c400; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #fff; color: var(--tinta); font: 10.5pt/1.5 "Inter", "Segoe UI", Arial, sans-serif; }
+  .hoja { max-width: 760px; margin: 0 auto; padding: 24px 16px; }
+  header { border-bottom: 3px solid var(--tinta); padding-bottom: 10px; margin-bottom: 18px; }
+  header .marca { font-size: 9pt; letter-spacing: .08em; text-transform: uppercase; color: var(--gris); }
+  h1 { font-size: 22pt; line-height: 1.15; margin: 4px 0 6px; }
+  header p { margin: 0; color: var(--gris); }
+  h2 { font-size: 13pt; margin: 22px 0 6px; padding-left: 9px; border-left: 4px solid var(--acento); break-after: avoid; }
+  h3 { font-size: 10.5pt; margin: 12px 0 4px; break-after: avoid; }
+  p { margin: 0 0 8px; }
+  ol, ul { margin: 0 0 8px; padding-left: 20px; }
+  li { margin-bottom: 3px; }
+  b { font-weight: 650; }
+  .boton { display: inline-block; padding: 0 6px; border: 1px solid #bbb; border-radius: 4px; background: var(--suave); font-size: 9.5pt; white-space: nowrap; }
+  .idea { background: var(--suave); border-radius: 6px; padding: 10px 12px; margin: 8px 0 12px; }
+  .ojo { border: 1.5px solid var(--tinta); border-radius: 6px; padding: 9px 12px; margin: 8px 0 12px; }
+  table { width: 100%; border-collapse: collapse; margin: 6px 0 10px; font-size: 10pt; }
+  th, td { text-align: left; vertical-align: top; padding: 5px 8px; border-bottom: 1px solid var(--linea); }
+  th { font-size: 9pt; text-transform: uppercase; letter-spacing: .04em; color: var(--gris); }
+  section { break-inside: auto; }
+  .bloque { break-inside: avoid; }
+  footer { margin-top: 26px; padding-top: 8px; border-top: 1px solid var(--linea); color: var(--gris); font-size: 9pt; }
+  @media print { .hoja { padding: 0; max-width: none; } }
+</style>
+</head>
+<body>
+<div class="hoja">
+
+<header>
+  <div class="marca">Grupo Barba · sistema interno</div>
+  <h1>Manual del sistema de remitos</h1>
+  <p>Para Federico. Dirección: <b>barba-remitos.vercel.app</b></p>
+</header>
+
+<section>
+<h2>La idea en dos líneas</h2>
+<div class="idea">
+  <p><b>El remito descuenta stock. El ingreso de mercadería lo suma.</b> Nadie escribe el stock a mano: el sistema lo calcula con lo que sale y lo que entra.</p>
+  <p style="margin:0">Por eso hay una sola regla que no se puede saltear: <b>cada vez que llega mercadería, se carga como ingreso.</b> Si no, el stock se va a negativo en pocas semanas y deja de servir.</p>
+</div>
+</section>
+
+<section class="bloque">
+<h2>Entrar y salir</h2>
+<ol>
+  <li>Abrí <b>barba-remitos.vercel.app</b> en la computadora.</li>
+  <li>En <b>Usuario</b> escribí <b>federico</b>, en minúscula. No va el mail.</li>
+  <li>En <b>Contraseña</b>, la tuya. Cada uno tiene la suya y no se comparte: todo lo que hacés queda firmado con tu nombre.</li>
+  <li>Para salir: <span class="boton">Salir</span>, arriba a la derecha.</li>
+</ol>
+<p>No hay registro ni «olvidé mi contraseña». Las cuentas y los cambios de clave los hace el administrador.</p>
+</section>
+
+<section class="bloque">
+<h2>Qué hay en el menú</h2>
+<table>
+  <tr><th style="width:34%">Menú</th><th>Para qué</th></tr>
+  <tr><td><span class="boton">+ Nuevo remito</span></td><td>El botón amarillo de arriba. Lo que más se usa.</td></tr>
+  <tr><td><b>Inicio</b></td><td>El panel del negocio (ver al final).</td></tr>
+  <tr><td><b>Remitos</b></td><td>Todos los remitos: buscar, reimprimir, anular. Y lo que falta pedirle al proveedor.</td></tr>
+  <tr><td><b>Productos y stock</b></td><td>Lista de precios y stock. Corregir stock, cambiar precios, dar de alta productos.</td></tr>
+  <tr><td><b>Clientes</b></td><td>Alta y edición de clientes y sus direcciones de entrega.</td></tr>
+  <tr><td><b>Proveedores</b></td><td>A quién se le compra.</td></tr>
+  <tr><td><b>Ingreso de mercadería</b></td><td>Lo que llega al depósito.</td></tr>
+</table>
+<p><b>Buscador de arriba</b> (o <b>Ctrl + K</b>): escribí dos letras o más y busca a la vez en productos, clientes y remitos. Sirve para consultar rápido un precio o un stock.</p>
+</section>
+
+<section>
+<h2>Hacer un remito</h2>
+<ol>
+  <li>Tocá <span class="boton">+ Nuevo remito</span>.</li>
+  <li><b>Cliente:</b> elegilo de la lista. Si es nuevo, <span class="boton">+ Cliente nuevo</span>, completá al menos el nombre y la dirección, y <span class="boton">Guardar y usar</span>.</li>
+  <li><b>Productos:</b> en el buscador escribí el código o parte del nombre. Hacé clic en el que corresponde, o <b>Enter</b> para agregar el primero de la lista. Repetí con cada producto.</li>
+  <li><b>Cantidad:</b> se carga en <b>bultos</b>. Las unidades las calcula solo.</li>
+  <li><b>Precio:</b> viene el de lista. Si a este cliente le cobrás otro, cambialo en esa línea; abajo queda anotado el de lista.</li>
+  <li><b>Entrega:</b> cada línea dice <span class="boton">Se entrega</span>. Si algo se vendió pero no lo tenés y hay que pedirlo, tocá el botón para que diga <span class="boton">Pendiente</span>: queda en el remito, pero no descuenta stock.</li>
+  <li><b>Ajuste sobre el total:</b> <span class="boton">Contado · 0%</span> o <span class="boton">Transferencia · +10,5%</span>. Para hacer un descuento, escribí el porcentaje en negativo (por ejemplo −5).</li>
+  <li><b>Observaciones</b>, si hace falta.</li>
+  <li>Revisá el total y tocá <span class="boton">Emitir remito</span>.</li>
+  <li>Aparece el remito con su número (R-0001, R-0002…). Tocá <span class="boton">Imprimir</span> y elegí <b>2 copias</b> en la ventana de impresión.</li>
+</ol>
+<div class="ojo">
+  <p><b>Se puede emitir sin stock.</b> Si falta mercadería, avisa («faltan N unidades») pero deja emitir; el stock queda en negativo hasta que se cargue el ingreso.</p>
+  <p style="margin:0"><b>Lo que no deja es emitir un producto sin precio.</b> Unos 1.200 productos vinieron de la planilla con «Consultar» en lugar de precio: aparecen con la marca <b>a consultar</b>. Hay que escribirles el precio en la línea del remito (o cargarlo en Productos, y así ya queda para siempre).</p>
+</div>
+<h3>El remito impreso</h3>
+<p>Lleva el logo, los datos del cliente con su dirección principal, lo entregado con precios, aparte lo que quedó <b>pendiente de entrega</b>, los totales y dos firmas: <b>Entregó</b> (sale el nombre de quien lo hizo) y <b>Recibí conforme</b>. Dice «No válido como factura».</p>
+</section>
+
+<section class="bloque">
+<h2>Buscar, reimprimir o anular un remito</h2>
+<ul>
+  <li>Entrá a <b>Remitos</b> y buscá por número o por cliente.</li>
+  <li><span class="boton">Ver / imprimir</span> para verlo o sacar otra copia.</li>
+  <li><span class="boton">Anular</span> si se hizo mal. Pide confirmar, y la mercadería que había salido <b>vuelve al stock sola</b>. El remito no se borra: queda en la lista tachado y marcado ANULADO, con quién lo anuló. <b>No tiene vuelta atrás</b>: si hacía falta, se hace uno nuevo.</li>
+</ul>
+<p>Abajo de la lista está <b>Falta pedirle al proveedor</b>: todas las líneas que quedaron como <i>Pendiente</i>, agrupadas por bodega. Es la lista de compras.</p>
+</section>
+
+<section class="bloque">
+<h2>Cargar mercadería que llega</h2>
+<ol>
+  <li>Entrá a <b>Ingreso de mercadería</b> (o <span class="boton">Cargar mercadería</span> desde Inicio).</li>
+  <li>Escribí la <b>bodega o proveedor</b> y, si viene, el <b>número de remito del proveedor</b>.</li>
+  <li>Buscá cada producto y poné cuántos <b>bultos</b> llegaron.</li>
+  <li><span class="boton">Guardar ingreso</span>. Confirma cuántas unidades entraron.</li>
+</ol>
+<p>Abajo quedan los ingresos anteriores con fecha y quién los cargó. Un ingreso no se edita ni se borra: si se cargó mal, se corrige con un ajuste de stock (sección siguiente).</p>
+</section>
+
+<section>
+<h2>Productos y stock</h2>
+<p>La lista muestra código, nombre, precio por unidad, precio por bulto y stock en bultos. <b>En rojo</b> = en cero o negativo. No bloquea la venta, pero indica que falta cargar un ingreso o reponer. Usá el buscador o el filtro de sección: la pantalla muestra 200 productos a la vez.</p>
+<p>Cada producto tiene tres botones:</p>
+<table>
+  <tr><td style="width:24%"><span class="boton">Movimientos</span></td><td>Todo lo que entró y salió de ese producto, con fecha, detalle y usuario. Para entender por qué el stock da lo que da.</td></tr>
+  <tr><td><span class="boton">Ajustar</span></td><td><b>Roturas, vencimientos, conteos y errores de carga.</b> Contá lo que hay físicamente en el depósito y escribí ese total en <b>Unidades contadas</b>: el sistema calcula la diferencia. Poné el motivo («rotura», «conteo», «vencido») para que después se entienda.</td></tr>
+  <tr><td><span class="boton">Editar</span></td><td>Cambiar precio, nombre, código, presentación, unidades por bulto, bodega o proveedor. <b>Un precio nuevo vale para los remitos que vienen</b>: los ya emitidos conservan el precio con el que salieron.</td></tr>
+</table>
+<p><b>Producto nuevo:</b> <span class="boton">Nuevo producto</span>, con código, nombre, unidades por bulto y precio por unidad. Nace con stock cero: tiene existencias recién cuando se carga un ingreso.</p>
+<p><b>Precios:</b> el precio que se guarda es siempre <b>por unidad</b>. El de bulto lo calcula solo.</p>
+</section>
+
+<section class="bloque">
+<h2>Clientes</h2>
+<p>Cada cliente tiene un <b>número</b> (C-0001, C-0002…) que pone el sistema y <b>no cambia nunca</b>. Si alguien le borra o le cambia el nombre por error, por el número se sabe quién era.</p>
+<ul>
+  <li><b>Apodo</b>: como lo tienen agendado («SANTI»). Es lo que había en la planilla.</li>
+  <li><b>Razón social</b>: se va cargando con el tiempo. Cuando está, es lo que sale impreso en el remito, con el apodo debajo en chico.</li>
+  <li>El buscador encuentra al cliente por número, apodo o razón social.</li>
+  <li><b>Los remitos ya emitidos no cambian</b> aunque después se edite la ficha del cliente: guardan el nombre y la dirección que tenía al emitirse.</li>
+  <li><span class="boton">Cliente nuevo</span>: apodo, razón social si la hay, teléfono, vendedor (Fede, Claudia o Roxana), dirección de entrega y localidad.</li>
+  <li><span class="boton">Direcciones</span>: un cliente puede tener varias. La que está marcada como <b>principal</b> es la que sale impresa en el remito; para mandar a otra dirección, marcá esa como principal antes de hacer el remito.</li>
+  <li><span class="boton">Editar</span> para cambiar datos o darlo de baja. Un cliente nunca se borra: dado de baja deja de aparecer en la lista de clientes (se ve tildando «Ver también los dados de baja»).</li>
+</ul>
+<p>El campo <b>Descuento fijo</b> queda anotado en la ficha, pero <b>todavía no se aplica solo</b> en el remito: si el cliente tiene descuento, ponelo a mano como porcentaje negativo en el ajuste.</p>
+</section>
+
+<section class="bloque">
+<h2>Proveedores</h2>
+<p>Es a quién se le compra, que no siempre es la bodega que produce (por ejemplo cuando hay un distribuidor, o en cristalería, pastas y aceites). Se dan de alta con nombre, contacto, teléfono y mail. El proveedor de cada producto se asigna desde <b>Productos → Editar</b>.</p>
+</section>
+
+<section class="bloque">
+<h2>Tu pantalla de Inicio</h2>
+<p>Al entrar ves el panel completo del negocio:</p>
+<ul>
+  <li><b>Vendido este mes</b> y <b>Remitos emitidos</b>, cada uno comparado contra el mes pasado.</li>
+  <li><b>Stock valorizado</b>: cuánta plata hay en el depósito, a precio de lista.</li>
+  <li><b>Falta entregar</b>: lo vendido que todavía no salió.</li>
+  <li><b>Estado del depósito</b>: cuántos productos tienen stock, cuántos quedan pocos y cuántos están en cero.</li>
+  <li><b>Ventas de los últimos 12 meses</b>, solo con remitos emitidos.</li>
+  <li><b>Hay que reponer</b>, <b>Lo que más sale</b> y los <b>Últimos remitos</b> con su total.</li>
+</ul>
+</section>
+
+<section class="bloque">
+<h2>Lo que ve el equipo</h2>
+<p>Claudia y Roxana <b>no ven este panel</b>: su Inicio muestra solo lo operativo (lo que falta entregar, lo que hay que reponer y los remitos del día). Fuera de esa pantalla usan el sistema igual que vos: hacen y anulan remitos, cargan ingresos, ajustan stock y editan productos, precios y clientes. Los precios y los totales de cada remito los ven, porque los necesitan para trabajar.</p>
+<p>Todo queda firmado con el nombre de quien lo hizo, y eso se puede revisar:</p>
+<ul>
+  <li><b>Remitos</b>: quién emitió cada uno, y los anulados quedan tachados con quién los anuló.</li>
+  <li><b>Productos → Movimientos</b>: cada entrada, salida y ajuste de stock, con usuario y motivo.</li>
+  <li><b>Ingreso de mercadería</b>: quién cargó cada ingreso.</li>
+</ul>
+</section>
+
+<section class="bloque">
+<h2>Cuentas y contraseñas</h2>
+<p>Hay tres cuentas: la tuya (administrador) y las de Claudia y Roxana. Para dar de alta a alguien nuevo, cambiar una contraseña o sacarle el acceso a alguien que se va, avisale a Lautaro. No conviene compartir cuentas: si dos personas usan la misma, no se sabe quién hizo cada cosa.</p>
+</section>
+
+<section class="bloque">
+<h2>Para recordar</h2>
+<ul>
+  <li><b>Nada se borra.</b> Los remitos se anulan, los clientes y proveedores se dan de baja. Siempre queda el historial.</li>
+  <li><b>Llegó mercadería → ingreso.</b> Sin eso el stock no sirve.</li>
+  <li><b>Se rompió o venció algo → Ajustar</b>, con el motivo.</li>
+  <li><b>El stock en rojo no frena la venta</b>: es aviso de que falta reponer o cargar algo.</li>
+  <li><b>La contraseña es personal.</b> Si alguien usa la de otro, el remito sale firmado con un nombre equivocado.</li>
+</ul>
+</section>
+
+<footer>Manual de uso · Federico · 1 de octubre de 2026</footer>
+</div>
+</body>
+</html>

@@ -169,7 +169,7 @@ la llena un trigger en el paso borrador → emitido y después no se puede tocar
 Antes el remito leía la ficha cada vez: editar un cliente cambiaba todos sus
 remitos viejos, también al reimprimirlos.
 
-El manual para el cliente está en `docs/MANUAL.html` (y el PDF al lado).
+Hay dos manuales en `docs/`: `MANUAL-FEDERICO` (con el panel y lo que ve el equipo) y `MANUAL-CLAUDIA-ROXANA` (sin el panel de facturación). HTML y PDF de cada uno.
 
 ## Datos de ejemplo
 
