@@ -22,7 +22,11 @@ export type Producto = {
 /** A quien se le compra. Distinto de la bodega, que es quien produce. */
 export type Proveedor = {
   id: string;
+  /** Como lo llaman en el deposito. */
   nombre: string;
+  /** Solo los que facturan. El CUIT va con guiones: 30-71029502-2. */
+  razonSocial: string;
+  cuit: string;
   contacto: string;
   telefono: string;
   email: string;

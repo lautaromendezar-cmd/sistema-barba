@@ -114,6 +114,8 @@ type FilaProducto = {
 type FilaProveedor = {
   id: string;
   nombre: string;
+  razon_social: string | null;
+  cuit: string | null;
   contacto: string | null;
   telefono: string | null;
   email: string | null;
@@ -122,6 +124,20 @@ type FilaProveedor = {
 };
 
 const num = (v: string | number | null | undefined) => Number(v ?? 0);
+
+/** La base rechaza nombres y CUIT repetidos (0005, 0015): que se entienda por que. */
+function errorDeProveedor(
+  error: { code?: string; message: string },
+  nombre: string,
+) {
+  if (error.code === "23505")
+    return error.message.includes("cuit")
+      ? "Ya hay otro proveedor con ese CUIT."
+      : `Ya existe un proveedor que se llama "${nombre}".`;
+  if (error.code === "23514" && error.message.includes("cuit"))
+    return "El CUIT no es válido: revisá los números.";
+  return `No se pudo guardar el proveedor: ${error.message}`;
+}
 
 /**
  * Las partes que se pueden recargar por separado. Traerse todo despues de cada
@@ -358,6 +374,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         (v) => ({
           id: v.id,
           nombre: v.nombre,
+          razonSocial: v.razon_social ?? "",
+          cuit: v.cuit ?? "",
           contacto: v.contacto ?? "",
           telefono: v.telefono ?? "",
           email: v.email ?? "",
@@ -784,17 +802,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       agregarProveedor: async (p) => {
         const { error } = await supabase.from("proveedores").insert({
           nombre: p.nombre,
+          razon_social: p.razonSocial.trim() || null,
+          cuit: p.cuit.trim() || null,
           contacto: p.contacto || null,
           telefono: p.telefono || null,
           email: p.email || null,
           notas: p.notas,
         });
         if (error) {
-          setAviso(
-            error.code === "23505"
-              ? `Ya existe un proveedor que se llama "${p.nombre}".`
-              : `No se pudo guardar el proveedor: ${error.message}`,
-          );
+          setAviso(errorDeProveedor(error, p.nombre));
           return;
         }
         await cargar(["proveedores"]);
@@ -803,6 +819,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       editarProveedor: async (id, cambios) => {
         const fila: Record<string, unknown> = {};
         if (cambios.nombre !== undefined) fila.nombre = cambios.nombre;
+        if (cambios.razonSocial !== undefined)
+          fila.razon_social = cambios.razonSocial.trim() || null;
+        if (cambios.cuit !== undefined) fila.cuit = cambios.cuit.trim() || null;
         if (cambios.contacto !== undefined)
           fila.contacto = cambios.contacto || null;
         if (cambios.telefono !== undefined)
@@ -816,7 +835,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           .update(fila)
           .eq("id", id);
         if (error) {
-          setAviso(`No se pudo guardar el proveedor: ${error.message}`);
+          setAviso(errorDeProveedor(error, cambios.nombre ?? ""));
           return;
         }
         await cargar(["proveedores"]);

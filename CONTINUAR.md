@@ -157,6 +157,21 @@ Lo que hay que saber de esa importación:
 reales, así que esa franja amarilla miente: hay que apagarla antes del próximo
 deploy.
 
+## Proveedores con razón social y CUIT (1-oct-2026)
+
+La primera lista de proveedores (26-sep) era la de los que **no** facturan, con
+el nombre como los llaman. El 1-oct llegó la de los que facturan:
+`datos/listado de proveedores.xlsx` (fuera de git), 25 proveedores, 20 con
+CUIT. Se cargó con `python scripts/importar_proveedores.py --aplicar` (en seco
+sin el flag; se puede volver a correr sin duplicar).
+
+Migración 0015: columnas `razon_social` y `cuit`. La base no deja guardar un
+CUIT con el dígito verificador mal ni dos proveedores con el mismo. Dos ya
+existían y se completaron (ARTELLPIATELLI = ARTEL INC PIATELLI, ROSELL BOHER);
+a LEY SECA y ROLLAND se les sacó el CUIT que tenían pegado al nombre. Los 23
+nuevos quedaron con la razón social como nombre: se pueden renombrar a como
+los llamen sin perder la razón social. Quedan 54 proveedores, 22 con CUIT.
+
 ## Varias PC a la vez: avisos en vivo (1-oct-2026)
 
 Antes cada PC mostraba lo que había al entrar: un remito emitido en una no

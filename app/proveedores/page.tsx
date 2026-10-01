@@ -5,6 +5,7 @@ import { useStore } from "@/lib/store";
 import { Modal } from "@/components/Modal";
 import type { Proveedor } from "@/lib/types";
 import { normalizar } from "@/lib/texto";
+import { cuitValido, formatearCuit } from "@/lib/clientes";
 
 export default function ProveedoresPage() {
   const { db, agregarProveedor, editarProveedor } = useStore();
@@ -25,7 +26,7 @@ export default function ProveedoresPage() {
     const q = normalizar(busca);
     return db.proveedores
       .filter((v) => verInactivos || v.activo)
-      .filter((v) => !q || normalizar(`${v.nombre} ${v.contacto}`).includes(q));
+      .filter((v) => !q || normalizar(`${v.nombre} ${v.razonSocial} ${v.cuit} ${v.cuit.replace(/-/g, "")} ${v.contacto}`).includes(q));
   }, [db.proveedores, busca, verInactivos]);
 
   return (
@@ -50,7 +51,7 @@ export default function ProveedoresPage() {
         <input
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
-          placeholder="Buscar…"
+          placeholder="Buscar por nombre, razón social o CUIT…"
           className="border-line focus:border-ink min-w-64 flex-1 rounded-md border bg-white px-3 py-2 text-sm outline-none"
         />
         <label className="text-muted flex items-center gap-2 text-sm">
@@ -69,6 +70,7 @@ export default function ProveedoresPage() {
             <thead>
               <tr className="border-line text-faint border-b text-left text-[11px] tracking-wide uppercase">
                 <th className="px-4 py-3 font-semibold">Nombre</th>
+                <th className="px-4 py-3 font-semibold">CUIT</th>
                 <th className="px-4 py-3 font-semibold">Contacto</th>
                 <th className="px-4 py-3 font-semibold">Teléfono</th>
                 <th className="px-4 py-3 text-right font-semibold">Productos</th>
@@ -88,6 +90,12 @@ export default function ProveedoresPage() {
                         De baja
                       </span>
                     )}
+                    {v.razonSocial && v.razonSocial !== v.nombre && (
+                      <div className="text-faint text-xs">{v.razonSocial}</div>
+                    )}
+                  </td>
+                  <td className="tnum text-muted px-4 py-3 whitespace-nowrap">
+                    {v.cuit || "—"}
                   </td>
                   <td className="text-muted px-4 py-3">{v.contacto || "—"}</td>
                   <td className="text-muted px-4 py-3">{v.telefono || "—"}</td>
@@ -106,7 +114,7 @@ export default function ProveedoresPage() {
               ))}
               {lista.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="text-faint px-4 py-10 text-center">
+                  <td colSpan={6} className="text-faint px-4 py-10 text-center">
                     No hay proveedores cargados todavía.
                   </td>
                 </tr>
@@ -116,12 +124,6 @@ export default function ProveedoresPage() {
         </div>
       </div>
 
-      <p className="text-faint mt-4 text-xs leading-relaxed">
-        Los proveedores se crearon a partir de la columna <b>bodega</b> de los
-        productos, así que puede haber entradas que en realidad son rubros y no
-        proveedores. Corregirlos acá es parte del trabajo de poner la lista en
-        orden.
-      </p>
 
       {(creando || editando) && (
         <Modal
@@ -138,6 +140,8 @@ export default function ProveedoresPage() {
               else
                 await agregarProveedor({
                   nombre: datos.nombre ?? "",
+                  razonSocial: datos.razonSocial ?? "",
+                  cuit: datos.cuit ?? "",
                   contacto: datos.contacto ?? "",
                   telefono: datos.telefono ?? "",
                   email: datos.email ?? "",
@@ -163,6 +167,8 @@ function FormProveedor({
 }) {
   const [f, setF] = useState({
     nombre: proveedor?.nombre ?? "",
+    razonSocial: proveedor?.razonSocial ?? "",
+    cuit: proveedor?.cuit ?? "",
     contacto: proveedor?.contacto ?? "",
     telefono: proveedor?.telefono ?? "",
     email: proveedor?.email ?? "",
@@ -170,6 +176,8 @@ function FormProveedor({
     activo: proveedor?.activo ?? true,
   });
   const [guardando, setGuardando] = useState(false);
+  const cuitMal = f.cuit.trim() !== "" && !cuitValido(f.cuit.trim());
+  const sePuede = f.nombre.trim() !== "" && !cuitMal;
 
   const campo =
     "border-line focus:border-ink w-full rounded-md border bg-white px-3 py-2 text-sm outline-none";
@@ -180,7 +188,7 @@ function FormProveedor({
     <form
       onSubmit={async (e) => {
         e.preventDefault();
-        if (guardando || !f.nombre.trim()) return;
+        if (guardando || !sePuede) return;
         setGuardando(true);
         await onGuardar(f);
         setGuardando(false);
@@ -191,8 +199,37 @@ function FormProveedor({
         autoFocus
         value={f.nombre}
         onChange={(e) => setF({ ...f, nombre: e.target.value })}
+        placeholder="Como lo llaman"
         className={`${campo} mb-4`}
       />
+
+      <div className="mb-4 grid gap-4 sm:grid-cols-[1fr_11rem]">
+        <div>
+          <label className={etiqueta}>Razón social</label>
+          <input
+            value={f.razonSocial}
+            onChange={(e) => setF({ ...f, razonSocial: e.target.value })}
+            placeholder="Si factura"
+            className={campo}
+          />
+        </div>
+        <div>
+          <label className={etiqueta}>CUIT</label>
+          <input
+            value={f.cuit}
+            onChange={(e) => setF({ ...f, cuit: e.target.value })}
+            onBlur={() => setF((x) => ({ ...x, cuit: formatearCuit(x.cuit) }))}
+            placeholder="30-12345678-9"
+            inputMode="numeric"
+            className={`${campo} tnum ${cuitMal ? "border-red-500" : ""}`}
+          />
+          {cuitMal && (
+            <p className="mt-1 text-xs text-red-600">
+              No es un CUIT válido: revisá los números.
+            </p>
+          )}
+        </div>
+      </div>
 
       <div className="mb-4 grid gap-4 sm:grid-cols-2">
         <div>
@@ -248,7 +285,7 @@ function FormProveedor({
 
       <button
         type="submit"
-        disabled={guardando || !f.nombre.trim()}
+        disabled={guardando || !sePuede}
         className="bg-ink hover:bg-ink-hover w-full rounded-md px-4 py-2.5 text-sm font-medium text-white transition disabled:opacity-40"
       >
         {guardando ? "Guardando…" : "Guardar"}
