@@ -493,6 +493,77 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     };
   }, [cargarPerfil, cargar]);
 
+  // Lo que hace otra PC. Sin esto cada pantalla mostraba lo que habia al
+  // entrar: un remito emitido en una PC no aparecia en las otras hasta
+  // refrescar, y no se sabia si el pedido estaba cargado o no.
+  //
+  // El aviso de la base no se usa como dato, solo como "volve a pedir esta
+  // parte". Emitir un remito dispara varios (el remito, sus lineas, cada
+  // movimiento): se juntan un momento y se recarga una sola vez.
+  const hayUsuario = usuario !== null;
+  useEffect(() => {
+    if (!hayUsuario) return;
+
+    const pendientes = new Set<Parte>();
+    let espera: ReturnType<typeof setTimeout> | undefined;
+    const recargar = (partes: Parte[]) => {
+      partes.forEach((p) => pendientes.add(p));
+      clearTimeout(espera);
+      espera = setTimeout(() => {
+        const lote = [...pendientes];
+        pendientes.clear();
+        void cargar(lote);
+      }, 400);
+    };
+
+    const QUE_RECARGA: Record<string, Parte[]> = {
+      remitos: ["remitos", "stock"],
+      remito_lineas: ["remitos", "stock"],
+      ingresos: ["ingresos", "stock"],
+      ingreso_lineas: ["ingresos", "stock"],
+      movimientos: ["stock"],
+      clientes: ["clientes"],
+      cliente_direcciones: ["clientes"],
+      productos: ["productos"],
+      proveedores: ["proveedores"],
+    };
+
+    let canal = supabase.channel("cambios-del-equipo");
+    for (const tabla of Object.keys(QUE_RECARGA)) {
+      canal = canal.on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: tabla },
+        () => recargar(QUE_RECARGA[tabla]),
+      );
+    }
+    // Mientras la conexion estuvo caida (PC suspendida, wifi que se corta) los
+    // avisos se pierden: al volver a conectarse se trae todo de nuevo.
+    let yaConecto = false;
+    canal.subscribe((estado) => {
+      if (estado !== "SUBSCRIBED") return;
+      if (yaConecto) recargar(TODAS);
+      yaConecto = true;
+    });
+
+    // Respaldo por si la reconexion no avisa: volver a la pestaña despues de
+    // un rato fuera tambien trae todo.
+    let ocultaDesde = 0;
+    const alCambiarVisibilidad = () => {
+      if (document.hidden) {
+        ocultaDesde = Date.now();
+      } else if (ocultaDesde && Date.now() - ocultaDesde > 30_000) {
+        recargar(TODAS);
+      }
+    };
+    document.addEventListener("visibilitychange", alCambiarVisibilidad);
+
+    return () => {
+      clearTimeout(espera);
+      document.removeEventListener("visibilitychange", alCambiarVisibilidad);
+      void supabase.removeChannel(canal);
+    };
+  }, [hayUsuario, cargar]);
+
   // Buscar por codigo con find() recorre la lista entera, y en un remito eso
   // pasa una vez por linea. Con 4.000 productos se nota; con un indice, no.
   const porCodigo = useMemo(

@@ -89,6 +89,7 @@ python scripts/probar_operaciones.py      # la lógica de stock, contra Postgres
 npx tsx scripts/probar_app.ts             # integración con sesión real
 npx tsx scripts/probar_seguridad.ts       # ataca el sistema desde afuera
 python scripts/probar_intruso_con_cuenta.py   # cuenta sin perfil: no ve nada
+npx tsx scripts/probar_avisos_en_vivo.ts  # lo que hace una PC le llega a las otras
 node scripts/probar_navegador.mjs         # la app en Chrome, pantalla por pantalla
 node scripts/probar_recorrido.mjs         # un día de uso completo, con datos reales
 npx tsx scripts/medir_carga.ts            # cuánto pesa y tarda cada consulta
@@ -155,6 +156,19 @@ Lo que hay que saber de esa importación:
 ⚠️ **`NEXT_PUBLIC_MODO_DEMO` sigue prendido en Vercel.** Ahora los datos son
 reales, así que esa franja amarilla miente: hay que apagarla antes del próximo
 deploy.
+
+## Varias PC a la vez: avisos en vivo (1-oct-2026)
+
+Antes cada PC mostraba lo que había al entrar: un remito emitido en una no
+aparecía en las otras hasta refrescar. Ahora la app se suscribe a Supabase
+Realtime (migración 0014) y, cuando otra PC cambia remitos, ingresos, stock,
+clientes, productos o proveedores, recarga esa parte sola (~1 s). El aviso no
+se usa como dato, solo como «volvé a pedir esto». Si la conexión se cortó, al
+reconectar o al volver a la pestaña después de 30 s se trae todo.
+
+Realtime respeta las políticas de lectura: alguien sin cuenta no recibe nada
+(lo prueba `probar_avisos_en_vivo.ts`). Ojo: después de suscribirse, el
+servidor tarda unos segundos en empezar a mandar avisos.
 
 ## Clientes: número, apodo y razón social (1-oct-2026)
 
