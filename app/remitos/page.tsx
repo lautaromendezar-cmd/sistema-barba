@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useStore } from "@/lib/store";
+import { nombreCliente, textoBuscableCliente } from "@/lib/clientes";
 import { money, fecha, totalRemito } from "@/lib/formato";
 import { coincide, normalizar } from "@/lib/texto";
 import { RemitoDoc } from "@/components/RemitoDoc";
@@ -19,7 +20,7 @@ export default function Remitos() {
       .filter((r) => {
         if (!t) return true;
         const c = db.clientes.find((x) => x.id === r.clienteId);
-        return coincide(r.numero, t) || (c ? coincide(c.nombre, t) : false);
+        return coincide(r.numero, t) || (c ? coincide(textoBuscableCliente(c), t) : false);
       });
   }, [db.remitos, db.clientes, q]);
 
@@ -103,7 +104,7 @@ export default function Remitos() {
                       {fecha(r.fecha)}
                     </td>
                     <td className="px-4 py-3">
-                      {cliente(r.clienteId)?.nombre ?? "—"}
+                      {nombreCliente(cliente(r.clienteId)) || "—"}
                     </td>
                     <td className="px-4 py-3 text-muted">{r.usuario}</td>
                     <td

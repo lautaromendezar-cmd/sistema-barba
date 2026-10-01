@@ -3,11 +3,34 @@
 import { useStore } from "@/lib/store";
 import { money, fecha, pct, totalRemito } from "@/lib/formato";
 import type { Remito } from "@/lib/types";
+import { codigoCliente } from "@/lib/clientes";
 
 /** El papel que viaja en la camioneta. Se imprime con Ctrl+P. */
 export function RemitoDoc({ remito }: { remito: Remito }) {
   const { producto, cliente } = useStore();
-  const c = cliente(remito.clienteId);
+  // Un remito emitido muestra el cliente como estaba al emitirse, no la ficha
+  // de hoy. Los borradores (y los anteriores a la copia) leen la ficha.
+  const ficha = cliente(remito.clienteId);
+  const copia = remito.clienteDatos;
+  const c = copia
+    ? {
+        numero: copia.numero,
+        apodo: copia.apodo ?? "",
+        razonSocial: copia.razon_social ?? "",
+        direccion: copia.direccion ?? "",
+        localidad: copia.localidad ?? "",
+        telefono: copia.telefono ?? "",
+        notas: copia.notas ?? "",
+      }
+    : ficha && {
+        numero: ficha.numero,
+        apodo: ficha.nombre,
+        razonSocial: ficha.razonSocial ?? "",
+        direccion: ficha.direccion,
+        localidad: ficha.localidad,
+        telefono: ficha.telefono,
+        notas: ficha.notas,
+      };
   const entregadas = remito.lineas.filter((l) => l.entregado);
   const pendientes = remito.lineas.filter((l) => !l.entregado);
   const { subtotal, ajuste, total } = totalRemito(remito.lineas, remito.ajustePct);
@@ -51,9 +74,14 @@ export function RemitoDoc({ remito }: { remito: Remito }) {
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <div>
           <div className="text-[10px] font-semibold tracking-[0.14em] text-faint uppercase">
-            Cliente
+            Cliente{c?.numero ? ` ${codigoCliente(c.numero)}` : ""}
           </div>
-          <div className="mt-1 font-semibold">{c?.nombre ?? "—"}</div>
+          <div className="mt-1 font-semibold">
+            {c ? c.razonSocial.trim() || c.apodo : "—"}
+          </div>
+          {c?.razonSocial.trim() && (
+            <div className="text-xs text-muted">{c.apodo}</div>
+          )}
           <div className="text-xs leading-relaxed text-muted">
             {c?.direccion}
             {c?.localidad ? ` · ${c.localidad}` : ""}

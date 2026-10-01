@@ -383,7 +383,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           direcciones.find((d) => d.es_principal) ?? direcciones[0];
         return {
           id: c.id,
+          numero: c.numero ?? undefined,
           nombre: c.nombre,
+          razonSocial: c.razon_social ?? "",
           direccion: principal?.direccion ?? "",
           localidad: principal?.localidad ?? "",
           telefono: c.telefono ?? "",
@@ -410,6 +412,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           ? `R-${String(r.numero).padStart(4, "0")}`
           : "Borrador",
         clienteId: r.cliente_id,
+        clienteDatos: r.cliente_datos ?? undefined,
         fecha: r.emitido_at ?? r.creado_at,
         ajustePct: num(r.ajuste_pct),
         descuentoPct: num(r.descuento_pct),
@@ -585,6 +588,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           .from("clientes")
           .insert({
             nombre: datos.nombre,
+            razon_social: datos.razonSocial?.trim() || null,
             telefono: datos.telefono,
             vendedor: datos.vendedor || null,
             descuento_pct: datos.descuentoPct ?? 0,
@@ -641,6 +645,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       editarCliente: async (id, cambios) => {
         const fila: Record<string, unknown> = {};
         if (cambios.nombre !== undefined) fila.nombre = cambios.nombre;
+        if (cambios.razonSocial !== undefined)
+          fila.razon_social = cambios.razonSocial.trim() || null;
         if (cambios.telefono !== undefined) fila.telefono = cambios.telefono;
         if (cambios.vendedor !== undefined)
           fila.vendedor = cambios.vendedor || null;

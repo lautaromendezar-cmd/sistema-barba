@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useStore } from "@/lib/store";
+import { codigoCliente, nombreCliente } from "@/lib/clientes";
 import { money, enBultos, pct, totalRemito } from "@/lib/formato";
 import { BuscadorProducto } from "@/components/BuscadorProducto";
 import { RemitoDoc } from "@/components/RemitoDoc";
@@ -121,9 +122,12 @@ export default function NuevoRemito() {
               className="w-full rounded-md border border-line bg-white px-3 py-2 text-sm outline-none focus:border-ink"
             >
               <option value="">Elegir cliente…</option>
-              {db.clientes.map((c) => (
+              {db.clientes
+                .filter((c) => c.activo !== false || c.id === clienteId)
+                .map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.nombre} — {c.localidad}
+                  {[codigoCliente(c.numero), nombreCliente(c)].filter(Boolean).join(" · ")}
+                  {c.localidad ? ` — ${c.localidad}` : ""}
                 </option>
               ))}
             </select>
@@ -428,7 +432,7 @@ function FormCliente({
     >
       {(
         [
-          ["nombre", "Nombre / razón social", "Vinoteca La Cava"],
+          ["nombre", "Apodo (la razón social se carga en Clientes)", "Santi La Cava"],
           ["direccion", "Dirección de entrega", "Av. Rivadavia 12340"],
           ["localidad", "Localidad", "Ramos Mejía"],
           ["telefono", "Teléfono", "11 4567-8901"],

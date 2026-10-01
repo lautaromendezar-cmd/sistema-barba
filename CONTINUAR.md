@@ -1,6 +1,6 @@
 # Para retomar esto en otra computadora
 
-Última actualización: **26 de septiembre de 2026**.
+Última actualización: **1 de octubre de 2026**.
 
 ## Lo primero, siempre
 
@@ -155,6 +155,21 @@ Lo que hay que saber de esa importación:
 ⚠️ **`NEXT_PUBLIC_MODO_DEMO` sigue prendido en Vercel.** Ahora los datos son
 reales, así que esa franja amarilla miente: hay que apagarla antes del próximo
 deploy.
+
+## Clientes: número, apodo y razón social (1-oct-2026)
+
+Migración 0013. Cada cliente tiene un **número** (C-0001…) que pone la base y
+no se puede cambiar: si alguien pisa el nombre, por el número se sabe quién
+era. La columna `nombre` sigue llamándose así pero en pantalla es el
+**apodo** (como Federico lo tiene agendado); `razon_social` es nueva y
+opcional, y si está es lo que sale impreso en el remito.
+
+**El remito guarda una copia del cliente al emitirse** (`remitos.cliente_datos`,
+la llena un trigger en el paso borrador → emitido y después no se puede tocar).
+Antes el remito leía la ficha cada vez: editar un cliente cambiaba todos sus
+remitos viejos, también al reimprimirlos.
+
+El manual para el cliente está en `docs/MANUAL.html` (y el PDF al lado).
 
 ## Datos de ejemplo
 

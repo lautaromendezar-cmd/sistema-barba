@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { useStore } from "@/lib/store";
+import { nombreCliente } from "@/lib/clientes";
 import { money, enBultos, fecha, totalRemito } from "@/lib/formato";
 
 /** Un producto con menos de un bulto entero se considera bajo. */
@@ -349,7 +350,7 @@ function Panel() {
                       {fecha(r.fecha)}
                     </td>
                     <td className="px-3 py-3">
-                      {db.clientes.find((c) => c.id === r.clienteId)?.nombre ??
+                      {nombreCliente(db.clientes.find((c) => c.id === r.clienteId)) ||
                         "—"}
                     </td>
                     <td className="text-muted px-3 py-3">{r.usuario}</td>
@@ -410,7 +411,7 @@ function Operativo() {
   }, [db, stock, aPedir]);
 
   const porIdCliente = useMemo(
-    () => new Map(db.clientes.map((c) => [c.id, c.nombre])),
+    () => new Map(db.clientes.map((c) => [c.id, nombreCliente(c)])),
     [db.clientes],
   );
 

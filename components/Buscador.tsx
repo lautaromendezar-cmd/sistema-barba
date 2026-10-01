@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
+import { codigoCliente, nombreCliente, textoBuscableCliente } from "@/lib/clientes";
 import { normalizar } from "@/lib/texto";
 import { money } from "@/lib/formato";
 
@@ -69,13 +70,13 @@ export function Buscador() {
     const clientes: Resultado[] = db.clientes
       .filter(
         (c) =>
-          normalizar(c.nombre).includes(busca) ||
+          normalizar(textoBuscableCliente(c)).includes(busca) ||
           normalizar(c.localidad ?? "").includes(busca),
       )
       .slice(0, 4)
       .map((c) => ({
         tipo: "Cliente",
-        titulo: c.nombre,
+        titulo: [codigoCliente(c.numero), nombreCliente(c)].filter(Boolean).join(" · "),
         detalle: [c.direccion, c.localidad].filter(Boolean).join(" · "),
         destino: "/clientes",
       }));
@@ -85,7 +86,7 @@ export function Buscador() {
         const cli = db.clientes.find((c) => c.id === r.clienteId);
         return (
           normalizar(r.numero).includes(busca) ||
-          normalizar(cli?.nombre ?? "").includes(busca)
+          normalizar(cli ? textoBuscableCliente(cli) : "").includes(busca)
         );
       })
       .slice(0, 4)
@@ -93,7 +94,7 @@ export function Buscador() {
         tipo: "Remito",
         titulo: r.numero,
         detalle:
-          db.clientes.find((c) => c.id === r.clienteId)?.nombre ?? "sin cliente",
+          nombreCliente(db.clientes.find((c) => c.id === r.clienteId)) || "sin cliente",
         destino: "/remitos",
       }));
 

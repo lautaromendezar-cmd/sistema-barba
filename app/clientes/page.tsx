@@ -5,6 +5,7 @@ import { useStore } from "@/lib/store";
 import { Modal } from "@/components/Modal";
 import type { Cliente, Direccion } from "@/lib/types";
 import { normalizar } from "@/lib/texto";
+import { codigoCliente, nombreCliente, textoBuscableCliente } from "@/lib/clientes";
 
 const VENDEDORES = ["Fede", "Claudia", "Roxana"] as const;
 
@@ -23,7 +24,7 @@ export default function ClientesPage() {
       .filter((c) => {
         if (!q) return true;
         const donde = normalizar(
-          `${c.nombre} ${c.telefono} ${c.direccion} ${c.localidad}`,
+          `${textoBuscableCliente(c)} ${c.telefono} ${c.direccion} ${c.localidad}`,
         );
         return donde.includes(q);
       });
@@ -51,7 +52,7 @@ export default function ClientesPage() {
         <input
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
-          placeholder="Buscar por nombre, teléfono o localidad…"
+          placeholder="Buscar por número, nombre, teléfono o localidad…"
           className="border-line focus:border-ink min-w-64 flex-1 rounded-md border bg-white px-3 py-2 text-sm outline-none"
         />
         <label className="text-muted flex items-center gap-2 text-sm">
@@ -69,7 +70,8 @@ export default function ClientesPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-line text-faint border-b text-left text-[11px] tracking-wide uppercase">
-                <th className="px-4 py-3 font-semibold">Nombre</th>
+                <th className="px-4 py-3 font-semibold">Nº</th>
+                <th className="px-4 py-3 font-semibold">Cliente</th>
                 <th className="px-4 py-3 font-semibold">Dirección principal</th>
                 <th className="px-4 py-3 font-semibold">Teléfono</th>
                 <th className="px-4 py-3 font-semibold">Vendedor</th>
@@ -85,12 +87,18 @@ export default function ClientesPage() {
                     key={c.id}
                     className="border-line hover:bg-canvas border-b last:border-0"
                   >
+                    <td className="tnum text-faint px-4 py-3 whitespace-nowrap">
+                      {codigoCliente(c.numero)}
+                    </td>
                     <td className="px-4 py-3">
-                      <span className="font-medium">{c.nombre}</span>
+                      <span className="font-medium">{nombreCliente(c)}</span>
                       {c.activo === false && (
                         <span className="bg-canvas text-faint ml-2 rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase">
                           De baja
                         </span>
+                      )}
+                      {c.razonSocial?.trim() && (
+                        <div className="text-faint text-xs">{c.nombre}</div>
                       )}
                     </td>
                     <td className="text-muted px-4 py-3">
@@ -132,7 +140,7 @@ export default function ClientesPage() {
               })}
               {lista.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="text-faint px-4 py-10 text-center">
+                  <td colSpan={7} className="text-faint px-4 py-10 text-center">
                     No hay clientes que coincidan.
                   </td>
                 </tr>
@@ -157,6 +165,7 @@ export default function ClientesPage() {
               else
                 await agregarCliente({
                   nombre: datos.nombre ?? "",
+                  razonSocial: datos.razonSocial ?? "",
                   direccion: datos.direccion ?? "",
                   localidad: datos.localidad ?? "",
                   telefono: datos.telefono ?? "",
@@ -173,7 +182,7 @@ export default function ClientesPage() {
 
       {direcciones && (
         <Modal
-          titulo={`Direcciones de ${direcciones.nombre}`}
+          titulo={`Direcciones de ${nombreCliente(direcciones)}`}
           onCerrar={() => setDirecciones(null)}
         >
           <PanelDirecciones
@@ -194,6 +203,7 @@ function FormCliente({
 }) {
   const [f, setF] = useState({
     nombre: cliente?.nombre ?? "",
+    razonSocial: cliente?.razonSocial ?? "",
     telefono: cliente?.telefono ?? "",
     direccion: cliente?.direccion ?? "",
     localidad: cliente?.localidad ?? "",
@@ -219,13 +229,34 @@ function FormCliente({
         setGuardando(false);
       }}
     >
-      <label className={etiqueta}>Nombre o razón social</label>
-      <input
-        autoFocus
-        value={f.nombre}
-        onChange={(e) => setF({ ...f, nombre: e.target.value })}
-        className={`${campo} mb-4`}
-      />
+      {cliente?.numero && (
+        <p className="text-muted mb-4 text-sm">
+          Cliente <span className="text-ink font-semibold">{codigoCliente(cliente.numero)}</span>
+          <span className="text-faint"> · el número no cambia aunque se edite el resto</span>
+        </p>
+      )}
+
+      <div className="mb-4 grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className={etiqueta}>Apodo</label>
+          <input
+            autoFocus
+            value={f.nombre}
+            onChange={(e) => setF({ ...f, nombre: e.target.value })}
+            placeholder="Como lo tienen agendado"
+            className={campo}
+          />
+        </div>
+        <div>
+          <label className={etiqueta}>Razón social</label>
+          <input
+            value={f.razonSocial}
+            onChange={(e) => setF({ ...f, razonSocial: e.target.value })}
+            placeholder="Opcional · si está, sale en el remito"
+            className={campo}
+          />
+        </div>
+      </div>
 
       <div className="mb-4 grid gap-4 sm:grid-cols-2">
         <div>

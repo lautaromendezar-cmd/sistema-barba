@@ -41,7 +41,12 @@ export type Direccion = {
 
 export type Cliente = {
   id: string;
+  /** Lo pone la base y no cambia nunca: identifica al cliente aunque le cambien el nombre. */
+  numero?: number;
+  /** El apodo: como Federico lo tiene agendado ("SANTI"). La columna se sigue llamando nombre. */
   nombre: string;
+  /** Opcional. Si esta cargada, es lo que sale impreso en el remito. */
+  razonSocial?: string;
   direccion: string;
   localidad: string;
   telefono: string;
@@ -88,10 +93,22 @@ export type RemitoLinea = {
   entregado: boolean;
 };
 
+export type ClienteEnRemito = {
+  numero?: number;
+  apodo?: string;
+  razon_social?: string | null;
+  telefono?: string | null;
+  direccion?: string | null;
+  localidad?: string | null;
+  notas?: string | null;
+};
+
 export type Remito = {
   id: string;
   numero: string;
   clienteId: string;
+  /** Copia del cliente tomada al emitir. Si se edita la ficha, el remito no cambia. */
+  clienteDatos?: ClienteEnRemito;
   fecha: string;
   /** Positivo recarga (ej. 10.5 por transferencia), negativo descuenta. */
   ajustePct: number;
