@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { Login } from "./Login";
 import { Buscador, EscudoClaro } from "./Buscador";
+import { Avisos } from "./Avisos";
 
 /** Se prende con NEXT_PUBLIC_MODO_DEMO=1 mientras el sistema se muestra con
  *  datos inventados. Al cargar los reales se apaga y se vuelve a publicar. */
@@ -105,8 +106,7 @@ const LINKS = [
 ] as const;
 
 export function Shell({ children }: { children: React.ReactNode }) {
-  const { usuario, salir, cargando, errorCarga, aviso, descartarAviso } =
-    useStore();
+  const { usuario, salir, cargando, errorCarga } = useStore();
   const pathname = usePathname();
 
   if (cargando) {
@@ -218,22 +218,18 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        {(aviso || errorCarga) && (
+        {/* Que no se pudieron traer los datos: no es de una operacion, es de
+            toda la pantalla, y queda arriba hasta que la carga ande. */}
+        {errorCarga && (
           <div
             role="alert"
             className="no-print border-alerta/30 bg-alerta-soft text-alerta mx-auto mt-5 flex w-full max-w-6xl items-start gap-3 rounded-lg border px-4 py-3 text-sm lg:px-5"
           >
-            <span className="flex-1">{aviso ?? errorCarga}</span>
-            {aviso && (
-              <button
-                onClick={descartarAviso}
-                className="shrink-0 font-medium underline underline-offset-2"
-              >
-                Cerrar
-              </button>
-            )}
+            <span className="flex-1">{errorCarga}</span>
           </div>
         )}
+
+        <Avisos />
 
         <main className="mx-auto w-full max-w-6xl flex-1 px-5 py-7 lg:px-8">
           {children}

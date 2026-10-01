@@ -63,9 +63,8 @@ export default function Productos() {
 
       {alta && (
         <FormAlta
-          onGuardar={(p) => {
-            agregarProducto(p);
-            setAlta(false);
+          onGuardar={async (p) => {
+            if (await agregarProducto(p)) setAlta(false);
           }}
         />
       )}
@@ -207,9 +206,9 @@ export default function Productos() {
           <FormAjuste
             actual={stock(ajustando.codigo)}
             unidadesPorBulto={ajustando.unidadesPorBulto}
-            onGuardar={(nuevo, nota) => {
-              ajustarStock(ajustando.codigo, nuevo, nota);
-              setAjustando(null);
+            onGuardar={async (nuevo, nota) => {
+              if (await ajustarStock(ajustando.codigo, nuevo, nota))
+                setAjustando(null);
             }}
           />
         </Modal>
@@ -296,18 +295,22 @@ function FormAjuste({
 }: {
   actual: number;
   unidadesPorBulto: number;
-  onGuardar: (nuevo: number, nota: string) => void;
+  onGuardar: (nuevo: number, nota: string) => Promise<void>;
 }) {
   const [valor, setValor] = useState(String(actual));
   const [nota, setNota] = useState("");
+  const [guardando, setGuardando] = useState(false);
   const nuevo = Number(valor) || 0;
   const delta = nuevo - actual;
 
   return (
     <form
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
-        onGuardar(nuevo, nota);
+        if (guardando) return;
+        setGuardando(true);
+        await onGuardar(nuevo, nota);
+        setGuardando(false);
       }}
     >
       <p className="mb-4 text-sm text-muted">
@@ -344,16 +347,21 @@ function FormAjuste({
 
       <button
         type="submit"
-        disabled={delta === 0}
+        disabled={delta === 0 || guardando}
         className="w-full rounded-md bg-ink px-4 py-2.5 text-sm font-medium text-white transition hover:bg-ink-hover disabled:opacity-40"
       >
-        Guardar ajuste
+        {guardando ? "Guardando…" : "Guardar ajuste"}
       </button>
     </form>
   );
 }
 
-function FormAlta({ onGuardar }: { onGuardar: (p: Producto) => void }) {
+function FormAlta({
+  onGuardar,
+}: {
+  onGuardar: (p: Producto) => Promise<void>;
+}) {
+  const [guardando, setGuardando] = useState(false);
   const [f, setF] = useState({
     codigo: "",
     nombre: "",
@@ -369,9 +377,11 @@ function FormAlta({ onGuardar }: { onGuardar: (p: Producto) => void }) {
 
   return (
     <form
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
-        onGuardar({
+        if (guardando) return;
+        setGuardando(true);
+        await onGuardar({
           codigo: f.codigo.trim().toUpperCase(),
           nombre: f.nombre.trim(),
           bodega: f.bodega.trim(),
@@ -381,6 +391,7 @@ function FormAlta({ onGuardar }: { onGuardar: (p: Producto) => void }) {
           precioLista: Number(f.precioLista) || 0,
           enListaActual: true,
         });
+        setGuardando(false);
       }}
       className="mt-5 rounded-lg border border-line bg-surface p-5"
     >
@@ -415,9 +426,10 @@ function FormAlta({ onGuardar }: { onGuardar: (p: Producto) => void }) {
       </div>
       <button
         type="submit"
-        className="mt-5 rounded-md bg-ink px-4 py-2.5 text-sm font-medium text-white transition hover:bg-ink-hover"
+        disabled={guardando}
+        className="mt-5 rounded-md bg-ink px-4 py-2.5 text-sm font-medium text-white transition hover:bg-ink-hover disabled:opacity-40"
       >
-        Guardar producto
+        {guardando ? "Guardando…" : "Guardar producto"}
       </button>
       <p className="mt-3 text-xs text-muted">
         El producto nace con stock cero: recién tiene existencias cuando se carga
@@ -482,9 +494,9 @@ function FormEditarProducto({
         e.preventDefault();
         if (guardando) return;
         setGuardando(true);
-        await editarProducto(producto.id!, f);
+        const ok = await editarProducto(producto.id!, f);
         setGuardando(false);
-        onCerrar();
+        if (ok) onCerrar();
       }}
     >
       <div className="mb-4 grid gap-4 sm:grid-cols-[140px_1fr]">

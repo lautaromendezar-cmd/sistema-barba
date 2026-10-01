@@ -161,9 +161,11 @@ export default function ClientesPage() {
           <FormCliente
             cliente={editando}
             onGuardar={async (datos) => {
-              if (editando) await editarCliente(editando.id, datos);
-              else
-                await agregarCliente({
+              // Si no se guardo, la ventana queda abierta con lo escrito: el
+              // aviso de abajo dice por que, y se puede volver a intentar.
+              const ok = editando
+                ? await editarCliente(editando.id, datos)
+                : (await agregarCliente({
                   nombre: datos.nombre ?? "",
                   razonSocial: datos.razonSocial ?? "",
                   direccion: datos.direccion ?? "",
@@ -172,7 +174,8 @@ export default function ClientesPage() {
                   vendedor: datos.vendedor,
                   descuentoPct: datos.descuentoPct,
                   notas: datos.notas ?? "",
-                });
+                })) !== null;
+              if (!ok) return;
               setCreando(false);
               setEditando(null);
             }}
@@ -421,8 +424,7 @@ function PanelDirecciones({ cliente }: { cliente: Cliente }) {
           className="border-line bg-canvas rounded-lg border p-3"
           onSubmit={async (e) => {
             e.preventDefault();
-            await guardarDireccion(cliente.id, nueva);
-            setNueva(null);
+            if (await guardarDireccion(cliente.id, nueva)) setNueva(null);
           }}
         >
           <input

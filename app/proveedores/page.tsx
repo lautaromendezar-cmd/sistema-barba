@@ -136,9 +136,9 @@ export default function ProveedoresPage() {
           <FormProveedor
             proveedor={editando}
             onGuardar={async (datos) => {
-              if (editando) await editarProveedor(editando.id, datos);
-              else
-                await agregarProveedor({
+              const ok = editando
+                ? await editarProveedor(editando.id, datos)
+                : await agregarProveedor({
                   nombre: datos.nombre ?? "",
                   razonSocial: datos.razonSocial ?? "",
                   cuit: datos.cuit ?? "",
@@ -148,6 +148,7 @@ export default function ProveedoresPage() {
                   notas: datos.notas ?? "",
                   activo: true,
                 });
+              if (!ok) return;
               setCreando(false);
               setEditando(null);
             }}

@@ -102,3 +102,19 @@ body {
     padding: 0 !important;
   }
 }
+
+/* Avisos de abajo a la derecha: entran subiendo un poco, sin rebote. */
+@keyframes aviso-entra {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.aviso-entra {
+  animation: aviso-entra 180ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .aviso-entra {
+    animation: none;
+  }
+}

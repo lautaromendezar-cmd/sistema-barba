@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import type {
   Cliente,
@@ -38,9 +39,11 @@ type Store = {
   cargando: boolean;
   /** Si la carga falló, esto tiene el aviso y los datos de pantalla son viejos. */
   errorCarga: string | null;
-  /** Lo último que salió mal al guardar. `descartarAviso` lo limpia. */
-  aviso: string | null;
-  descartarAviso: () => void;
+  /** Los avisos de abajo a la derecha: lo que se guardó y lo que no. */
+  avisos: Aviso[];
+  cerrarAviso: (id: number) => void;
+  /** El navegador dice que no hay internet. */
+  sinConexion: boolean;
 
   entrar: (usuario: string, clave: string) => Promise<string | null>;
   salir: () => Promise<void>;
@@ -54,34 +57,36 @@ type Store = {
   /** El historial se consulta a la base al abrirlo: no vive en memoria. */
   movimientosDe: (codigo: string) => Promise<Movimiento[]>;
 
-  agregarProducto: (p: Producto) => Promise<void>;
-  editarProducto: (id: string, cambios: Partial<Producto>) => Promise<void>;
-  agregarCliente: (c: Omit<Cliente, "id">) => Promise<Cliente>;
-  editarCliente: (id: string, cambios: Partial<Cliente>) => Promise<void>;
+  agregarProducto: (p: Producto) => Promise<boolean>;
+  editarProducto: (id: string, cambios: Partial<Producto>) => Promise<boolean>;
+  agregarCliente: (c: Omit<Cliente, "id">) => Promise<Cliente | null>;
+  editarCliente: (id: string, cambios: Partial<Cliente>) => Promise<boolean>;
   guardarDireccion: (
     clienteId: string,
     d: Partial<Direccion> & { id?: string },
-  ) => Promise<void>;
-  borrarDireccion: (id: string) => Promise<void>;
-  agregarProveedor: (p: Omit<Proveedor, "id">) => Promise<void>;
-  editarProveedor: (id: string, cambios: Partial<Proveedor>) => Promise<void>;
+  ) => Promise<boolean>;
+  borrarDireccion: (id: string) => Promise<boolean>;
+  agregarProveedor: (p: Omit<Proveedor, "id">) => Promise<boolean>;
+  editarProveedor: (id: string, cambios: Partial<Proveedor>) => Promise<boolean>;
   registrarIngreso: (
     datos: Omit<Ingreso, "id" | "fecha" | "usuario">,
-  ) => Promise<void>;
+  ) => Promise<boolean>;
   ajustarStock: (
     codigo: string,
     nuevasUnidades: number,
     nota: string,
     tipo?: "ajuste" | "rotura" | "vencimiento" | "inventario_inicial",
-  ) => Promise<void>;
+  ) => Promise<boolean>;
   emitirRemito: (datos: {
     clienteId: string;
     lineas: RemitoLinea[];
     ajustePct: number;
     notas: string;
   }) => Promise<Remito>;
-  anularRemito: (id: string) => Promise<void>;
+  anularRemito: (id: string) => Promise<boolean>;
 };
+
+export type Aviso = { id: number; tipo: "ok" | "error"; texto: string };
 
 const Ctx = createContext<Store | null>(null);
 
@@ -125,11 +130,36 @@ type FilaProveedor = {
 
 const num = (v: string | number | null | undefined) => Number(v ?? 0);
 
+/**
+ * Sin internet, supabase-js no devuelve un error de la base sino el de fetch
+ * ("TypeError: Failed to fetch"), que no le dice nada a nadie. Y no es lo mismo
+ * que no haya conexion (seguro no se guardo) que una respuesta que no llego (se
+ * pudo haber guardado igual): en ese caso hay que mirar antes de repetirlo, o
+ * el remito sale dos veces.
+ */
+function errorDeRed(contexto: string, error: unknown): string | null {
+  if (typeof navigator !== "undefined" && !navigator.onLine)
+    return `${contexto}: no hay conexión a internet. Volvé a intentar cuando vuelva.`;
+  const texto = String((error as { message?: string })?.message ?? error);
+  if (/failed to fetch|networkerror|load failed|network request failed|fetch failed/i.test(texto))
+    return "No llegó la respuesta del servidor: puede que se haya guardado o no. Fijate en la lista antes de repetirlo.";
+  return null;
+}
+
+function mensajeDeError(contexto: string, error: unknown) {
+  return (
+    errorDeRed(contexto, error) ??
+    `${contexto}: ${String((error as { message?: string })?.message ?? error)}`
+  );
+}
+
 /** La base rechaza nombres y CUIT repetidos (0005, 0015): que se entienda por que. */
 function errorDeProveedor(
   error: { code?: string; message: string },
   nombre: string,
 ) {
+  const deRed = errorDeRed("No se pudo guardar el proveedor", error);
+  if (deRed) return deRed;
   if (error.code === "23505")
     return error.message.includes("cuit")
       ? "Ya hay otro proveedor con ese CUIT."
@@ -166,6 +196,16 @@ type Parte =
  */
 const PAGINA = 1000;
 
+/** El navegador avisa cuando se corta y cuando vuelve internet. */
+function suscribirConexion(avisar: () => void) {
+  window.addEventListener("online", avisar);
+  window.addEventListener("offline", avisar);
+  return () => {
+    window.removeEventListener("online", avisar);
+    window.removeEventListener("offline", avisar);
+  };
+}
+
 async function porPaginas<T>(
   consulta: (
     desde: number,
@@ -197,8 +237,29 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [cargando, setCargando] = useState(true);
   const [errorCarga, setErrorCarga] = useState<string | null>(null);
-  /** Lo último que salió mal en una operación. El Shell lo muestra arriba. */
-  const [aviso, setAviso] = useState<string | null>(null);
+  /** Lo que se guardó y lo que no: los muestra <Avisos /> abajo a la derecha. */
+  const [avisos, setAvisos] = useState<Aviso[]>([]);
+  const enLinea = useSyncExternalStore(
+    suscribirConexion,
+    () => navigator.onLine,
+    () => true,
+  );
+  const proximoAviso = useRef(1);
+
+  const cerrarAviso = useCallback(
+    (id: number) => setAvisos((as) => as.filter((a) => a.id !== id)),
+    [],
+  );
+  /** Lo que salio bien se va solo; un error se queda hasta que lo cierren. */
+  const notificar = useCallback(
+    (tipo: Aviso["tipo"], texto: string) => {
+      const id = proximoAviso.current++;
+      // Mas de cuatro apilados ya tapan la pantalla: se van los mas viejos.
+      setAvisos((as) => [...as.slice(-3), { id, tipo, texto }]);
+      if (tipo === "ok") setTimeout(() => cerrarAviso(id), 4000);
+    },
+    [cerrarAviso],
+  );
   /** Viene de las vistas de la base, que suman sobre todos los movimientos. */
   const [stockCalculado, setStockCalculado] = useState<{
     fisico: Map<string, number>;
@@ -582,6 +643,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     };
   }, [hayUsuario, cargar]);
 
+  // Sin internet no se puede guardar nada, y es mejor saberlo antes de cargar
+  // un remito entero que al tocar «Emitir». Al volver se trae todo, porque los
+  // avisos de las otras PC no llegaron mientras tanto.
+  const sinConexion = hayUsuario && !enLinea;
+  useEffect(() => {
+    if (!hayUsuario) return;
+    const alVolver = () => {
+      notificar("ok", "Volvió la conexión.");
+      void cargar();
+    };
+    window.addEventListener("online", alVolver);
+    return () => window.removeEventListener("online", alVolver);
+  }, [hayUsuario, cargar, notificar]);
+
   // Buscar por codigo con find() recorre la lista entera, y en un remito eso
   // pasa una vez por linea. Con 4.000 productos se nota; con un indice, no.
   const porCodigo = useMemo(
@@ -599,13 +674,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   );
 
   const valor = useMemo<Store>(() => {
+    const fallo = (contexto: string, error: unknown) => {
+      notificar("error", mensajeDeError(contexto, error));
+      return false;
+    };
+
     return {
       db,
       usuario,
       cargando,
       errorCarga,
-      aviso,
-      descartarAviso: () => setAviso(null),
+      avisos,
+      cerrarAviso,
+      sinConexion,
 
       entrar: async (nombreUsuario, clave) => {
         const { error } = await supabase.auth.signInWithPassword({
@@ -638,7 +719,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           .order("fecha", { ascending: false })
           .limit(200);
         if (error) {
-          setAviso(`No se pudo traer el historial: ${error.message}`);
+          notificar("error", mensajeDeError("No se pudo traer el historial", error));
           return [];
         }
         return (data ?? []).map((m) => ({
@@ -665,11 +746,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           precio_lista: p.precioLista,
           en_lista_actual: p.enListaActual,
         });
-        if (error) {
-          setAviso(`No se pudo guardar el producto: ${error.message}`);
-          return;
-        }
+        if (error) return fallo("No se pudo guardar el producto", error);
+        notificar("ok", `Producto ${p.codigo} cargado.`);
         await cargar(["productos"]);
+        return true;
       },
 
       agregarCliente: async (datos) => {
@@ -685,19 +765,31 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           })
           .select()
           .single();
-        if (error) throw new Error(error.message);
+        if (error) {
+          fallo("No se pudo guardar el cliente", error);
+          return null;
+        }
 
         if (datos.direccion) {
-          await supabase.from("cliente_direcciones").insert({
+          const res = await supabase.from("cliente_direcciones").insert({
             cliente_id: data.id,
             direccion: datos.direccion,
             localidad: datos.localidad,
             es_principal: true,
           });
+          // El cliente ya quedo creado: no se devuelve null, pero se avisa.
+          if (res.error)
+            fallo(
+              `El cliente ${datos.nombre} se guardó sin la dirección`,
+              res.error,
+            );
+          else notificar("ok", `Cliente ${datos.nombre} cargado.`);
+        } else {
+          notificar("ok", `Cliente ${datos.nombre} cargado.`);
         }
 
         await cargar(["clientes"]);
-        return { ...datos, id: data.id };
+        return { ...datos, id: data.id, numero: data.numero };
       },
 
       editarProducto: async (id, cambios) => {
@@ -724,11 +816,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           .from("productos")
           .update(fila)
           .eq("id", id);
-        if (error) {
-          setAviso(`No se pudo guardar el producto: ${error.message}`);
-          return;
-        }
+        if (error) return fallo("No se pudo guardar el producto", error);
+        notificar("ok", "Cambios del producto guardados.");
         await cargar(["productos", "stock"]);
+        return true;
       },
 
       editarCliente: async (id, cambios) => {
@@ -748,11 +839,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           .from("clientes")
           .update(fila)
           .eq("id", id);
-        if (error) {
-          setAviso(`No se pudo guardar el cliente: ${error.message}`);
-          return;
-        }
+        if (error) return fallo("No se pudo guardar el cliente", error);
+        notificar(
+          "ok",
+          cambios.activo === false
+            ? "Cliente dado de baja."
+            : "Cambios del cliente guardados.",
+        );
         await cargar(["clientes"]);
+        return true;
       },
 
       guardarDireccion: async (clienteId, d) => {
@@ -767,10 +862,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
         // Una sola principal por cliente: la nueva desplaza a la anterior.
         if (fila.es_principal) {
-          await supabase
+          const res = await supabase
             .from("cliente_direcciones")
             .update({ es_principal: false })
             .eq("cliente_id", clienteId);
+          if (res.error)
+            return fallo("No se pudo guardar la dirección", res.error);
         }
 
         const { error } = d.id
@@ -780,11 +877,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
               .eq("id", d.id)
           : await supabase.from("cliente_direcciones").insert(fila);
 
-        if (error) {
-          setAviso(`No se pudo guardar la dirección: ${error.message}`);
-          return;
-        }
+        if (error) return fallo("No se pudo guardar la dirección", error);
+        notificar("ok", "Dirección guardada.");
         await cargar(["clientes"]);
+        return true;
       },
 
       borrarDireccion: async (id) => {
@@ -792,11 +888,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           .from("cliente_direcciones")
           .delete()
           .eq("id", id);
-        if (error) {
-          setAviso(`No se pudo borrar la dirección: ${error.message}`);
-          return;
-        }
+        if (error) return fallo("No se pudo borrar la dirección", error);
+        notificar("ok", "Dirección borrada.");
         await cargar(["clientes"]);
+        return true;
       },
 
       agregarProveedor: async (p) => {
@@ -810,10 +905,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           notas: p.notas,
         });
         if (error) {
-          setAviso(errorDeProveedor(error, p.nombre));
-          return;
+          notificar("error", errorDeProveedor(error, p.nombre));
+          return false;
         }
+        notificar("ok", `Proveedor ${p.nombre} cargado.`);
         await cargar(["proveedores"]);
+        return true;
       },
 
       editarProveedor: async (id, cambios) => {
@@ -835,10 +932,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           .update(fila)
           .eq("id", id);
         if (error) {
-          setAviso(errorDeProveedor(error, cambios.nombre ?? ""));
-          return;
+          notificar("error", errorDeProveedor(error, cambios.nombre ?? ""));
+          return false;
         }
+        notificar(
+          "ok",
+          cambios.activo === false
+            ? "Proveedor dado de baja."
+            : "Cambios del proveedor guardados.",
+        );
         await cargar(["proveedores"]);
+        return true;
       },
 
       registrarIngreso: async (datos) => {
@@ -852,10 +956,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           })
           .select()
           .single();
-        if (error) {
-          setAviso(`No se pudo guardar el ingreso: ${error.message}`);
-          return;
-        }
+        if (error) return fallo("No se guardó el ingreso", error);
 
         // El trigger de la base genera los movimientos de stock.
         const lineas = datos.lineas.map((l) => {
@@ -871,10 +972,22 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         });
         const res = await supabase.from("ingreso_lineas").insert(lineas);
         if (res.error) {
-          setAviso(`El ingreso quedó incompleto: ${res.error.message}`);
+          // La cabecera ya existe sin lineas: no sumo nada al stock, pero
+          // aparece en «Ingresos anteriores». Hay que cargarlo de nuevo.
+          await cargar(["ingresos", "stock"]);
+          return fallo(
+            "El ingreso quedó vacío y no sumó stock, cargalo de nuevo",
+            res.error,
+          );
         }
 
+        const unidades = datos.lineas.reduce((t, l) => t + l.unidades, 0);
+        notificar(
+          "ok",
+          `Ingreso guardado: entraron ${unidades.toLocaleString("es-AR")} unidades al depósito.`,
+        );
         await cargar(["ingresos", "stock"]);
+        return true;
       },
 
       ajustarStock: async (codigo, nuevasUnidades, nota, tipo = "ajuste") => {
@@ -884,11 +997,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           p_nota: nota,
           p_tipo: tipo,
         });
-        if (error) {
-          setAviso(`No se pudo ajustar el stock: ${error.message}`);
-          return;
-        }
+        if (error) return fallo("No se pudo ajustar el stock", error);
+        notificar("ok", `Stock de ${codigo} ajustado.`);
         await cargar(["stock"]);
+        return true;
       },
 
       emitirRemito: async (datos) => {
@@ -905,7 +1017,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           })
           .select()
           .single();
-        if (error) throw new Error(error.message);
+        if (error) {
+          const texto = mensajeDeError("No se emitió el remito", error);
+          notificar("error", texto);
+          throw new Error(texto);
+        }
 
         const lineas = datos.lineas.map((l, i) => {
           const p = porCodigo.get(l.productoCodigo);
@@ -922,17 +1038,26 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           };
         });
         const resLineas = await supabase.from("remito_lineas").insert(lineas);
-        if (resLineas.error) throw new Error(resLineas.error.message);
+        if (resLineas.error) {
+          const texto = mensajeDeError("No se emitió el remito", resLineas.error);
+          notificar("error", texto);
+          throw new Error(texto);
+        }
 
         // Recien acá deja de ser borrador: toma numero y descuenta stock.
         const { data: emitido, error: errorEmitir } = await supabase
           .rpc("emitir_remito", { p_remito_id: remito.id })
           .single();
-        if (errorEmitir) throw new Error(errorEmitir.message);
+        if (errorEmitir) {
+          const texto = mensajeDeError("No se emitió el remito", errorEmitir);
+          notificar("error", texto);
+          throw new Error(texto);
+        }
 
         await cargar(["remitos", "stock"]);
 
         const numero = (emitido as { numero: number }).numero;
+        notificar("ok", `Remito R-${String(numero).padStart(4, "0")} emitido.`);
         return {
           ...datos,
           id: remito.id,
@@ -948,17 +1073,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           p_remito_id: rid,
           p_motivo: "",
         });
-        if (error) {
-          setAviso(`No se pudo anular el remito: ${error.message}`);
-          return;
-        }
+        if (error) return fallo("No se pudo anular el remito", error);
+        const numero = db.remitos.find((x) => x.id === rid)?.numero;
+        notificar("ok", numero ? `Remito ${numero} anulado.` : "Remito anulado.");
         await cargar(["remitos", "stock"]);
+        return true;
       },
     };
   }, [
     db,
     usuario,
-    aviso,
+    avisos,
+    sinConexion,
+    notificar,
+    cerrarAviso,
     cargando,
     cargar,
     stockCalculado,

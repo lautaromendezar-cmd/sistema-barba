@@ -12,14 +12,18 @@ export default function Ingresos() {
   const [bodega, setBodega] = useState("");
   const [nro, setNro] = useState("");
   const [lineas, setLineas] = useState<Linea[]>([]);
-  const [ok, setOk] = useState("");
+  const [guardando, setGuardando] = useState(false);
 
   const unidadesDe = (l: Linea) =>
     l.bultos * (producto(l.codigo)?.unidadesPorBulto ?? 1);
 
-  function guardar() {
-    if (lineas.length === 0) return;
-    registrarIngreso({
+  // Antes decia «Ingreso guardado» y vaciaba el formulario sin esperar a la
+  // base: sin internet se perdia lo cargado y el cartel mentia. Ahora el aviso
+  // lo da el store cuando la base confirma, y si falla lo cargado queda.
+  async function guardar() {
+    if (lineas.length === 0 || guardando) return;
+    setGuardando(true);
+    const ok = await registrarIngreso({
       bodega: bodega.trim() || "Sin especificar",
       nroRemitoProveedor: nro.trim(),
       lineas: lineas.map((l) => ({
@@ -28,12 +32,11 @@ export default function Ingresos() {
         unidades: unidadesDe(l),
       })),
     });
-    const total = lineas.reduce((a, l) => a + unidadesDe(l), 0);
-    setOk(`Ingreso guardado: entraron ${total} unidades al depósito.`);
+    setGuardando(false);
+    if (!ok) return;
     setLineas([]);
     setBodega("");
     setNro("");
-    setTimeout(() => setOk(""), 6000);
   }
 
   return (
@@ -43,12 +46,6 @@ export default function Ingresos() {
         Lo que entra al depósito. Es la contracara del remito: sin esto, el
         stock se va a negativo.
       </p>
-
-      {ok && (
-        <div className="mt-5 rounded-md border border-line bg-acento-soft px-4 py-3 text-sm text-acento-ink">
-          {ok}
-        </div>
-      )}
 
       <div className="mt-6 rounded-lg border border-line bg-surface p-5">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -155,10 +152,10 @@ export default function Ingresos() {
           </span>
           <button
             onClick={guardar}
-            disabled={lineas.length === 0}
+            disabled={lineas.length === 0 || guardando}
             className="rounded-md bg-ink px-4 py-2.5 text-sm font-medium text-white transition hover:bg-ink-hover disabled:opacity-40"
           >
-            Guardar ingreso
+            {guardando ? "Guardando…" : "Guardar ingreso"}
           </button>
         </div>
       </div>

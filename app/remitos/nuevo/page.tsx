@@ -144,6 +144,7 @@ export default function NuevoRemito() {
           <FormCliente
             onGuardar={async (datos) => {
               const c = await agregarCliente(datos);
+              if (!c) return;
               setClienteId(c.id);
               setNuevoCliente(false);
             }}
