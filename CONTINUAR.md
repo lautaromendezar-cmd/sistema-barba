@@ -198,6 +198,20 @@ la llena un trigger en el paso borrador → emitido y después no se puede tocar
 Antes el remito leía la ficha cada vez: editar un cliente cambiaba todos sus
 remitos viejos, también al reimprimirlos.
 
+**9-oct: cada alta gastaba dos números** (default de la columna + trigger,
+cada uno con su `nextval`). La 0016 sacó el default. Los 24 clientes cargados
+ese día se renumeraron a C-0592…C-0615. **Ojo: `probar_operaciones.py` crea
+un cliente adentro de su rollback y la secuencia NO vuelve atrás**: después de
+correrlo, el próximo cliente real salta uno. Si molesta,
+`select setval('clientes_numero_seq', (select max(numero) from clientes))`.
+
+**Clientes nuevos sueltos** (no la planilla grande): `scripts/importar_clientes_nuevos.py`,
+en seco por defecto, solo agrega, salta los que chocan por nombre o teléfono.
+`importar_planilla.py` NO sirve para esto: borra todos los clientes.
+Del lote del 9-oct quedaron afuera **ANDRES CIAMPO** (¿= C-0069 ANDRES CAMPO,
+misma dirección?) y **GASTON MUGELLO MOTOS** (¿= C-0222 GASTON BARZOLA, Fleming
+2279?): esperan que Federico confirme.
+
 Hay dos manuales en `docs/`: `MANUAL-FEDERICO` (con el panel y lo que ve el equipo) y `MANUAL-CLAUDIA-ROXANA` (sin el panel de facturación). HTML y PDF de cada uno.
 
 ## Datos de ejemplo
