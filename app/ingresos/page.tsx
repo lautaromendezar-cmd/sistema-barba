@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useStore } from "@/lib/store";
 import { fechaHora, enBultos } from "@/lib/formato";
 import { BuscadorProducto } from "@/components/BuscadorProducto";
+import { BuscadorProveedor } from "@/components/BuscadorProveedor";
 import type { Ingreso } from "@/lib/types";
 
 type Linea = { codigo: string; bultos: number };
@@ -23,9 +24,6 @@ export default function Ingresos() {
   const [lineas, setLineas] = useState<Linea[]>([]);
   const [guardando, setGuardando] = useState(false);
 
-  const proveedores = db.proveedores.filter(
-    (v) => v.activo !== false || v.id === proveedorId,
-  );
   const nombreProveedor = (id: string | null | undefined) =>
     db.proveedores.find((v) => v.id === id)?.nombre;
 
@@ -75,18 +73,7 @@ export default function Ingresos() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className={etiqueta}>Proveedor</label>
-            <select
-              value={proveedorId}
-              onChange={(e) => setProveedorId(e.target.value)}
-              className={campo}
-            >
-              <option value="">Elegir proveedor…</option>
-              {proveedores.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.nombre}
-                </option>
-              ))}
-            </select>
+            <BuscadorProveedor valor={proveedorId} onElegir={setProveedorId} />
             <p className="mt-1 text-xs text-faint">
               Se completa solo con el primer producto. Si no está en la lista,
               se agrega en Proveedores.
@@ -253,20 +240,7 @@ function IngresoAnterior({ ing }: { ing: Ingreso }) {
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-[200px] flex-1">
             <label className={etiqueta}>Proveedor</label>
-            <select
-              value={proveedorId}
-              onChange={(e) => setProveedorId(e.target.value)}
-              className={campo}
-            >
-              <option value="">Sin especificar</option>
-              {db.proveedores
-                .filter((v) => v.activo !== false || v.id === proveedorId)
-                .map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.nombre}
-                  </option>
-                ))}
-            </select>
+            <BuscadorProveedor valor={proveedorId} onElegir={setProveedorId} />
           </div>
           <div className="w-48">
             <label className={etiqueta}>Nº de remito</label>
