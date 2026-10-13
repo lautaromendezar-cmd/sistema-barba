@@ -212,6 +212,16 @@ misma dirección?) y **GASTON MUGELLO MOTOS** (¿= C-0222 GASTON BARZOLA, Flemin
 
 Hay dos manuales en `docs/`: `MANUAL-FEDERICO` (con el panel y lo que ve el equipo) y `MANUAL-CLAUDIA-ROXANA` (sin el panel de facturación). HTML y PDF de cada uno.
 
+## Versión y novedades (13-oct-2026)
+
+El número de versión se ve en el login y al pie del menú (`v1.3`); al
+tocarlo se abre «Novedades del sistema», escrito para el equipo. Todo sale de
+`lib/version.ts`: **al publicar algo que se note, agregar una entrada arriba
+con el número siguiente.** Si hubo una versión nueva desde la última vez que esa
+PC miró las novedades, el número lleva un cartelito «nuevo». Pasando el mouse
+por el número se ve el commit publicado (lo pone Vercel; ver `next.config.ts`).
+Cuando se prenda la línea libre (0017), eso es la 1.4.
+
 ## Pedidos del 13-oct-2026
 
 Lista que pasó Federico. Estado de cada uno:

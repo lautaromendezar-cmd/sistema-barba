@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { useStore } from "@/lib/store";
+import { Novedades } from "@/components/Novedades";
 
 export function Login() {
   const { entrar } = useStore();
@@ -96,6 +97,9 @@ export function Login() {
           Las cuentas las crea el administrador.
           <br />
           No hay registro público.
+        </p>
+        <p className="text-faint mt-3 text-center text-xs">
+          <Novedades />
         </p>
       </div>
     </div>

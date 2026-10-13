@@ -6,6 +6,7 @@ import { useStore } from "@/lib/store";
 import { Login } from "./Login";
 import { Buscador, EscudoClaro } from "./Buscador";
 import { Avisos } from "./Avisos";
+import { Novedades } from "./Novedades";
 
 /** Se prende con NEXT_PUBLIC_MODO_DEMO=1 mientras el sistema se muestra con
  *  datos inventados. Al cargar los reales se apaga y se vuelve a publicar. */
@@ -176,7 +177,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
         <div className="border-panel-linea mt-auto hidden border-t px-5 py-4 md:block">
           <p className="text-panel-text text-xs leading-relaxed">
-            Grupo Barba · sistema interno
+            Grupo Barba · sistema interno ·{" "}
+            <Novedades className="hover:text-panel-text-fuerte" />
           </p>
         </div>
 
