@@ -1,6 +1,6 @@
 # Para retomar esto en otra computadora
 
-Última actualización: **1 de octubre de 2026**.
+Última actualización: **13 de octubre de 2026**.
 
 ## Lo primero, siempre
 
@@ -72,9 +72,8 @@ tiempo, y eso les cambia el trabajo. Sin decidir.
 
 ## Publicar
 
-No hay despliegue automático: **el push a GitHub no dispara nada** (la cuenta
-está marcada y eso rompe la integración, aunque el `git push` sí funciona).
-Se publica a mano:
+**El push a `main` publica solo** (desde el 30-sep, cuando se recuperó la
+cuenta de GitHub). Si algún día deja de hacerlo, se publica a mano:
 
 ```bash
 npx vercel deploy --prod --yes
@@ -153,9 +152,8 @@ Lo que hay que saber de esa importación:
   direcciones de entrega**, no como dos clientes. Varios de los repetidos son
   el mismo domicilio escrito distinto («CRAMER 1266» y «CREAMER 1266»).
 
-⚠️ **`NEXT_PUBLIC_MODO_DEMO` sigue prendido en Vercel.** Ahora los datos son
-reales, así que esa franja amarilla miente: hay que apagarla antes del próximo
-deploy.
+`NEXT_PUBLIC_MODO_DEMO` (la franja amarilla de «datos de ejemplo») se sacó de
+Vercel el 13-oct: los datos ya son reales.
 
 ## Proveedores con razón social y CUIT (1-oct-2026)
 
@@ -213,6 +211,44 @@ misma dirección?) y **GASTON MUGELLO MOTOS** (¿= C-0222 GASTON BARZOLA, Flemin
 2279?): esperan que Federico confirme.
 
 Hay dos manuales en `docs/`: `MANUAL-FEDERICO` (con el panel y lo que ve el equipo) y `MANUAL-CLAUDIA-ROXANA` (sin el panel de facturación). HTML y PDF de cada uno.
+
+## Pedidos del 13-oct-2026
+
+Lista que pasó Federico. Estado de cada uno:
+
+1. **Que las PC se actualicen solas**: ya estaba (avisos en vivo, 1-oct).
+2. **Configurar las copias del remito**: en suspenso, no está claro qué
+   quieren (¿cuántas hojas? ¿original/duplicado? ¿una sin precios?).
+3. **Corregir un remito**: botón *Corregir* en Remitos. Abre Nuevo remito con
+   todo cargado (`/remitos/nuevo?corrige=<id>`); al emitir, sale uno nuevo
+   con «Reemplaza al remito R-xxxx.» en observaciones y el original se anula
+   con motivo «Corregido por R-yyyy». El emitido nunca se edita (0010/0011
+   siguen igual): si se abandona la corrección, el original queda vigente.
+4. **33891 ROLLAND guardado como ANDESMAR**: no era un error del sistema.
+   Roxana escribió ANDESMAR en el campo libre «Bodega / proveedor». Ahora el
+   proveedor se elige de la lista, se completa solo con el proveedor del
+   primer producto, avisa si un producto es de otro y los ingresos se pueden
+   corregir (solo proveedor y nº, las cantidades no). El 33891 ya se corrigió
+   a ROLLAND en la base.
+   De paso apareció un bug real en el buscador de productos: con el código
+   exacto + Enter agregaba **otro** producto en 185 códigos (W243 agregaba
+   W2435, porque iba el primero por nombre que *contenía* «W243»). Ahora el
+   código exacto va primero.
+5. **Remitos entre dos fechas**: atajos (Hoy, Ayer, 7 días, Este mes) y
+   desde/hasta en Remitos, con resumen (remitos, clientes, bultos, con
+   pendientes, anulados, total), columnas de bultos y entrega, e *Imprimir
+   listado*. Con fechas, la consulta va a la base (no al límite de 500).
+6. **Producto fuera de lista** (botella especial para un solo cliente): línea
+   libre en el remito con descripción, unidades y precio; sale impresa y suma
+   al total, no toca stock. **Necesita la migración 0017** (producto_id
+   opcional en remito_lineas). ⚠️ Hasta aplicarla, el botón está apagado con
+   `HAY_LINEAS_LIBRES = false` en `app/remitos/nuevo/page.tsx`: aplicar
+   `python scripts/migrar.py` y recién después ponerlo en `true`.
+
+**Ojo con los datos de prueba en producción:** quedan 4 ingresos «ABRAS
+PRUEBA-1» de las pruebas automáticas (`probar_recorrido.mjs` borra el
+movimiento pero no la cabecera) y se ven en Ingresos anteriores. Los remitos
+R-0003…R-0010 están todos anulados.
 
 ## Datos de ejemplo
 

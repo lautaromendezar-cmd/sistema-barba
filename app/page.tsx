@@ -88,7 +88,8 @@ function Panel() {
     const porProducto = new Map<string, { unidades: number; importe: number }>();
     for (const r of emitidos) {
       for (const l of r.lineas) {
-        if (!l.entregado) continue;
+        // Las lineas fuera de lista no son un producto: no entran al ranking.
+        if (!l.entregado || !l.productoCodigo) continue;
         const act = porProducto.get(l.productoCodigo) ?? {
           unidades: 0,
           importe: 0,

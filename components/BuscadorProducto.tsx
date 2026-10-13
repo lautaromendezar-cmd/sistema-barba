@@ -24,9 +24,19 @@ export function BuscadorProducto({
   const { db, stock } = useStore();
   const [q, setQ] = useState("");
 
+  // Los productos vienen ordenados por nombre: buscando "3389", uno cuyo
+  // codigo solo CONTIENE eso podia quedar primero y Enter lo agregaba en vez
+  // del 3389. El codigo exacto va siempre arriba, despues los que empiezan
+  // con lo escrito, y recien despues el resto.
   const resultados = useMemo(() => {
     const t = normalizar(q);
     if (!t) return [];
+    const rango = (p: Producto) => {
+      const codigo = normalizar(p.codigo);
+      if (codigo === t) return 0;
+      if (codigo.startsWith(t)) return 1;
+      return 2;
+    };
     return db.productos
       .filter((p) => !excluir.includes(p.codigo))
       .filter(
@@ -35,7 +45,10 @@ export function BuscadorProducto({
           coincide(p.nombre, t) ||
           coincide(p.bodega, t),
       )
-      .slice(0, 8);
+      .map((p) => ({ p, r: rango(p) }))
+      .sort((a, b) => a.r - b.r)
+      .slice(0, 8)
+      .map((x) => x.p);
   }, [q, db.productos, excluir]);
 
   function elegir(p: Producto) {

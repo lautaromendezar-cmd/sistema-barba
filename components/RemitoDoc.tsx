@@ -115,15 +115,19 @@ export function RemitoDoc({ remito }: { remito: Remito }) {
           </tr>
         </thead>
         <tbody>
-          {entregadas.map((l) => {
-            const p = producto(l.productoCodigo);
+          {entregadas.map((l, i) => {
+            const p = l.productoCodigo ? producto(l.productoCodigo) : undefined;
             return (
-              <tr key={l.productoCodigo} className="border-b border-line">
+              <tr key={i} className="border-b border-line">
                 <td className="tnum py-1.5 pr-2 font-mono text-[11px] text-muted">
-                  {l.productoCodigo}
+                  {l.productoCodigo || "—"}
                 </td>
-                <td className="py-1.5 pr-2">{p?.nombre ?? l.productoCodigo}</td>
-                <td className="tnum py-1.5 pr-2 text-right">{l.bultos}</td>
+                <td className="py-1.5 pr-2">
+                  {l.descripcion ?? p?.nombre ?? l.productoCodigo}
+                </td>
+                <td className="tnum py-1.5 pr-2 text-right">
+                  {l.productoCodigo ? l.bultos : "—"}
+                </td>
                 <td className="tnum py-1.5 pr-2 text-right">{l.unidades}</td>
                 <td className="tnum py-1.5 pr-2 text-right">
                   {money(l.precioUnitario)}
@@ -144,10 +148,10 @@ export function RemitoDoc({ remito }: { remito: Remito }) {
             Pendiente de entrega — se pide al proveedor
           </div>
           <ul className="mt-1.5 space-y-0.5 text-xs">
-            {pendientes.map((l) => {
+            {pendientes.map((l, i) => {
               const p = producto(l.productoCodigo);
               return (
-                <li key={l.productoCodigo} className="flex justify-between gap-4">
+                <li key={i} className="flex justify-between gap-4">
                   <span>
                     <span className="tnum font-mono text-[11px] text-muted">
                       {l.productoCodigo}

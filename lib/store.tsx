@@ -71,6 +71,11 @@ type Store = {
   registrarIngreso: (
     datos: Omit<Ingreso, "id" | "fecha" | "usuario">,
   ) => Promise<boolean>;
+  /** Solo la cabecera: proveedor y numero. Las cantidades ya movieron stock. */
+  editarIngreso: (
+    id: string,
+    cambios: { proveedorId: string | null; nroRemitoProveedor: string },
+  ) => Promise<boolean>;
   ajustarStock: (
     codigo: string,
     nuevasUnidades: number,
@@ -83,7 +88,14 @@ type Store = {
     ajustePct: number;
     notas: string;
   }) => Promise<Remito>;
-  anularRemito: (id: string) => Promise<boolean>;
+  anularRemito: (id: string, motivo?: string) => Promise<boolean>;
+  /**
+   * Los remitos emitidos entre dos instantes, consultados a la base: los de
+   * `db.remitos` son solo los ultimos 500. null si la consulta fallo.
+   */
+  remitosEntre: (desdeIso: string, hastaIso: string) => Promise<Remito[] | null>;
+  /** Un remito puntual, aunque no este entre los ultimos 500. */
+  traerRemito: (id: string) => Promise<Remito | null>;
 };
 
 export type Aviso = { id: number; tipo: "ok" | "error"; texto: string };
@@ -129,6 +141,44 @@ type FilaProveedor = {
 };
 
 const num = (v: string | number | null | undefined) => Number(v ?? 0);
+
+const numeroRemito = (n: number | null | undefined) =>
+  n ? `R-${String(n).padStart(4, "0")}` : "Borrador";
+
+/** Fila de `remitos` con sus lineas, como la devuelve Postgres, a la forma de la app. */
+function filaARemito(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  r: any,
+  nombreDe: (id: string | null | undefined) => string,
+  codigoDe: (id: string) => string,
+): Remito {
+  return {
+    id: r.id,
+    numero: numeroRemito(r.numero),
+    clienteId: r.cliente_id,
+    clienteDatos: r.cliente_datos ?? undefined,
+    fecha: r.emitido_at ?? r.creado_at,
+    ajustePct: num(r.ajuste_pct),
+    descuentoPct: num(r.descuento_pct),
+    estado: r.estado,
+    usuario: nombreDe(r.usuario_id),
+    anuladoPor: nombreDe(r.anulado_por) || undefined,
+    notas: r.notas ?? "",
+    anuladoAt: r.anulado_at ?? undefined,
+    motivoAnulacion: r.motivo_anulacion ?? undefined,
+    lineas: ([...(r.remito_lineas ?? [])] as Record<string, unknown>[])
+      .sort((a, b) => num(a.orden as number) - num(b.orden as number))
+      .map((l) => ({
+        // Una linea libre no apunta a ningun producto (0017).
+        productoCodigo: l.producto_id ? codigoDe(l.producto_id as string) : "",
+        descripcion: (l.descripcion as string | null) ?? undefined,
+        bultos: l.cantidad_bultos as number,
+        unidades: l.unidades_totales as number,
+        precioUnitario: num(l.precio_unitario as string),
+        entregado: l.entregado as boolean,
+      })),
+  };
+}
 
 /**
  * Sin internet, supabase-js no devuelve un error de la base sino el de fetch
@@ -485,29 +535,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (remitos) {
-      parcial.remitos = (remitos.data ?? []).map((r) => ({
-        id: r.id,
-        numero: r.numero
-          ? `R-${String(r.numero).padStart(4, "0")}`
-          : "Borrador",
-        clienteId: r.cliente_id,
-        clienteDatos: r.cliente_datos ?? undefined,
-        fecha: r.emitido_at ?? r.creado_at,
-        ajustePct: num(r.ajuste_pct),
-        descuentoPct: num(r.descuento_pct),
-        estado: r.estado,
-        usuario: nombreDe(r.usuario_id),
-        anuladoPor: nombreDe(r.anulado_por) || undefined,
-        notas: r.notas ?? "",
-        anuladoAt: r.anulado_at ?? undefined,
-        lineas: (r.remito_lineas ?? []).map((l: Record<string, unknown>) => ({
-          productoCodigo: codigoDe(l.producto_id as string),
-          bultos: l.cantidad_bultos as number,
-          unidades: l.unidades_totales as number,
-          precioUnitario: num(l.precio_unitario as string),
-          entregado: l.entregado as boolean,
-        })),
-      }));
+      parcial.remitos = (remitos.data ?? []).map((r) =>
+        filaARemito(r, nombreDe, codigoDe),
+      );
     }
 
     if (ingresos) {
@@ -515,6 +545,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         id: i.id,
         fecha: i.creado_at,
         bodega: i.bodega ?? "",
+        proveedorId: i.proveedor_id ?? null,
         nroRemitoProveedor: i.nro_remito_proveedor ?? "",
         usuario: nombreDe(i.usuario_id),
         lineas: (i.ingreso_lineas ?? []).map((l: Record<string, unknown>) => ({
@@ -671,6 +702,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const idDe = useCallback(
     (codigo: string) => porCodigo.get(codigo)?.id ?? "",
     [porCodigo],
+  );
+
+  // Lo mismo que usa cargar(), para las consultas que se hacen fuera de ella.
+  const nombreDeRef = useCallback(
+    (id: string | null | undefined) =>
+      (id ? nombrePorPerfil.current.get(id) : "") ?? "",
+    [],
+  );
+  const codigoDeRef = useCallback(
+    (id: string) => porIdProducto.current.get(id) ?? "",
+    [],
   );
 
   const valor = useMemo<Store>(() => {
@@ -950,6 +992,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           .from("ingresos")
           .insert({
             bodega: datos.bodega,
+            proveedor_id: datos.proveedorId || null,
             nro_remito_proveedor: datos.nroRemitoProveedor,
             // El autor lo completa la base (default auth.uid(), migración
             // 0008): mandarlo desde acá permitía forjar el uuid de otro.
@@ -990,6 +1033,22 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         return true;
       },
 
+      editarIngreso: async (id, cambios) => {
+        const prov = db.proveedores.find((v) => v.id === cambios.proveedorId);
+        const { error } = await supabase
+          .from("ingresos")
+          .update({
+            proveedor_id: prov?.id ?? null,
+            bodega: prov?.nombre ?? "Sin especificar",
+            nro_remito_proveedor: cambios.nroRemitoProveedor.trim(),
+          })
+          .eq("id", id);
+        if (error) return fallo("No se pudo corregir el ingreso", error);
+        notificar("ok", "Ingreso corregido.");
+        await cargar(["ingresos"]);
+        return true;
+      },
+
       ajustarStock: async (codigo, nuevasUnidades, nota, tipo = "ajuste") => {
         const { error } = await supabase.rpc("ajustar_stock", {
           p_producto_id: idDe(codigo),
@@ -1024,6 +1083,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
 
         const lineas = datos.lineas.map((l, i) => {
+          // Linea libre: no apunta a ningun producto y no mueve stock (0017).
+          if (!l.productoCodigo)
+            return {
+              remito_id: remito.id,
+              producto_id: null,
+              descripcion: l.descripcion?.trim() ?? "",
+              cantidad_bultos: 0,
+              cantidad_unidades: l.unidades,
+              unidades_por_bulto: 1,
+              precio_unitario: l.precioUnitario,
+              entregado: true,
+              orden: i,
+            };
           const p = porCodigo.get(l.productoCodigo);
           return {
             remito_id: remito.id,
@@ -1057,27 +1129,57 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         await cargar(["remitos", "stock"]);
 
         const numero = (emitido as { numero: number }).numero;
-        notificar("ok", `Remito R-${String(numero).padStart(4, "0")} emitido.`);
+        notificar("ok", `Remito ${numeroRemito(numero)} emitido.`);
         return {
           ...datos,
           id: remito.id,
-          numero: `R-${String(numero).padStart(4, "0")}`,
+          numero: numeroRemito(numero),
           fecha: new Date().toISOString(),
           estado: "emitido",
           usuario: usuario?.nombre ?? "",
         } as Remito;
       },
 
-      anularRemito: async (rid) => {
+      anularRemito: async (rid, motivo = "") => {
         const { error } = await supabase.rpc("anular_remito", {
           p_remito_id: rid,
-          p_motivo: "",
+          p_motivo: motivo,
         });
         if (error) return fallo("No se pudo anular el remito", error);
         const numero = db.remitos.find((x) => x.id === rid)?.numero;
         notificar("ok", numero ? `Remito ${numero} anulado.` : "Remito anulado.");
         await cargar(["remitos", "stock"]);
         return true;
+      },
+
+      remitosEntre: async (desdeIso, hastaIso) => {
+        const { data, error } = await porPaginas((desde, hasta) =>
+          supabase
+            .from("remitos")
+            .select("*, remito_lineas(*)")
+            .gte("emitido_at", desdeIso)
+            .lt("emitido_at", hastaIso)
+            .order("emitido_at", { ascending: false })
+            .order("id")
+            .range(desde, hasta),
+        );
+        if (error) {
+          notificar("error", mensajeDeError("No se pudieron traer los remitos", error));
+          return null;
+        }
+        return (data ?? []).map((r) => filaARemito(r, nombreDeRef, codigoDeRef));
+      },
+
+      traerRemito: async (rid) => {
+        const enMemoria = db.remitos.find((r) => r.id === rid);
+        if (enMemoria) return enMemoria;
+        const { data, error } = await supabase
+          .from("remitos")
+          .select("*, remito_lineas(*)")
+          .eq("id", rid)
+          .maybeSingle();
+        if (error || !data) return null;
+        return filaARemito(data, nombreDeRef, codigoDeRef);
       },
     };
   }, [
@@ -1094,6 +1196,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     idDe,
     porCodigo,
     porIdCliente,
+    nombreDeRef,
+    codigoDeRef,
   ]);
 
   return <Ctx.Provider value={valor}>{children}</Ctx.Provider>;

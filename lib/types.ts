@@ -89,7 +89,10 @@ export type Movimiento = {
 };
 
 export type RemitoLinea = {
+  /** Vacio en una linea libre: algo que no esta en el catalogo ni toca stock. */
   productoCodigo: string;
+  /** Solo en las lineas libres: lo que sale impreso en lugar del producto. */
+  descripcion?: string;
   bultos: number;
   unidades: number;
   precioUnitario: number;
@@ -125,12 +128,16 @@ export type Remito = {
   notas: string;
   anuladoPor?: string;
   anuladoAt?: string;
+  /** Por que se anulo. Al corregir un remito dice cual lo reemplaza. */
+  motivoAnulacion?: string;
 };
 
 export type Ingreso = {
   id: string;
   fecha: string;
+  /** El nombre que se escribio o el del proveedor elegido. */
   bodega: string;
+  proveedorId?: string | null;
   nroRemitoProveedor: string;
   usuario: string;
   lineas: { productoCodigo: string; bultos: number; unidades: number }[];
