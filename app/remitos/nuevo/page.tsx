@@ -27,12 +27,6 @@ type Fila = {
   entregado: boolean;
 };
 
-/**
- * Las líneas libres necesitan la migración 0017 (producto_id opcional). Hasta
- * que esté aplicada en la base, el botón no se muestra: emitir fallaría.
- */
-const HAY_LINEAS_LIBRES = false;
-
 /** La nota que deja una corrección. Al corregir una corrección no se acumula. */
 const NOTA_REEMPLAZO = /^Reemplaza al remito R-\d+\.\s*/;
 
@@ -333,7 +327,6 @@ function NuevoRemito({ corrigeId }: { corrigeId: string | null }) {
               }
             />
           </div>
-          {HAY_LINEAS_LIBRES && (
           <button
             onClick={() =>
               setFilas((prev) => [
@@ -354,7 +347,6 @@ function NuevoRemito({ corrigeId }: { corrigeId: string | null }) {
           >
             + Producto fuera de lista
           </button>
-          )}
         </div>
 
         {filas.length > 0 && (

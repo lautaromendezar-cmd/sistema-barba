@@ -16,6 +16,13 @@ export type Novedad = {
 
 export const NOVEDADES: Novedad[] = [
   {
+    version: "1.4",
+    fecha: "2026-10-13",
+    cambios: [
+      "Nuevo remito: botón «+ Producto fuera de lista» para algo que no está en el catálogo, como una botella especial para un solo cliente. Se escribe la descripción, las unidades y el precio; sale impreso en el remito y suma al total, pero no descuenta stock.",
+    ],
+  },
+  {
     version: "1.3",
     fecha: "2026-10-13",
     cambios: [
