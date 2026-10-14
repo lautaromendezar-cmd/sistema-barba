@@ -220,7 +220,7 @@ tocarlo se abre «Novedades del sistema», escrito para el equipo. Todo sale de
 con el número siguiente.** Si hubo una versión nueva desde la última vez que esa
 PC miró las novedades, el número lleva un cartelito «nuevo». Pasando el mouse
 por el número se ve el commit publicado (lo pone Vercel; ver `next.config.ts`).
-Cuando se prenda la línea libre (0017), eso es la 1.4.
+La 1.4 es la línea libre (0017).
 
 ## Pedidos del 13-oct-2026
 
@@ -250,10 +250,8 @@ Lista que pasó Federico. Estado de cada uno:
    listado*. Con fechas, la consulta va a la base (no al límite de 500).
 6. **Producto fuera de lista** (botella especial para un solo cliente): línea
    libre en el remito con descripción, unidades y precio; sale impresa y suma
-   al total, no toca stock. **Necesita la migración 0017** (producto_id
-   opcional en remito_lineas). ⚠️ Hasta aplicarla, el botón está apagado con
-   `HAY_LINEAS_LIBRES = false` en `app/remitos/nuevo/page.tsx`: aplicar
-   `python scripts/migrar.py` y recién después ponerlo en `true`.
+   al total, no toca stock. Migración 0017 (producto_id opcional en
+   remito_lineas), **aplicada y publicada el 13-oct como v1.4**.
 
 **Ojo con los datos de prueba en producción:** quedan 4 ingresos «ABRAS
 PRUEBA-1» de las pruebas automáticas (`probar_recorrido.mjs` borra el
