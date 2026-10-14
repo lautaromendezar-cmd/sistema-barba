@@ -258,6 +258,28 @@ PRUEBA-1» de las pruebas automáticas (`probar_recorrido.mjs` borra el
 movimiento pero no la cabecera) y se ven en Ingresos anteriores. Los remitos
 R-0003…R-0010 están todos anulados.
 
+## Inventario real cargado (14-oct-2026)
+
+Federico mandó `datos/INVENTARIO ACTUAL 2026.xlsx` (fuera de git). Antes de
+cargarlo se borró todo el movimiento de prueba (`datos_ejemplo.py --limpiar`;
+backup en `datos/backups/movimiento-antes-del-inventario-2026-10-14.json`), así
+que **la base arranca limpia: 0 remitos, el próximo es R-0001.**
+
+`python scripts/importar_inventario.py --aplicar` cargó **788 productos, 24.276
+unidades**, como movimientos `inventario_inicial`. Solo entró lo que cierra con
+el sistema: código, nombre y unidades por caja. **Ojo: el código de esa
+planilla sale de un VLOOKUP contra la lista de febrero 2024, y hay códigos que
+hoy son de otro vino** (W3302 es Trivento Golden en el inventario y La Salonera
+en el sistema).
+
+Lo que no entró está en `datos/inventario-para-revisar.xlsx`, una hoja por
+motivo, para que Federico complete la columna amarilla: 54 sin código, 24 con
+código de otro producto, 20 que no existen en el sistema, 17 con unidades por
+caja distintas, 5 negativos (quedaron en 0), 2 códigos repetidos y 2 sin total.
+Cuando vuelva, esos se cargan con `ajustar_stock(..., 'inventario_inicial')`.
+
+**`datos_ejemplo.py --limpiar` ya no es inofensivo:** borra el inventario.
+
 ## Datos de ejemplo
 
 Lo que hoy se ve en el sistema **es inventado**: un año de movimiento para poder
