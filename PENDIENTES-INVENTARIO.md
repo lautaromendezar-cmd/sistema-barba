@@ -27,7 +27,6 @@ Cómo se carga sin la clave de la base: logueado como `federico` con supabase-js
 | 1327-1328 | Domingo Molina Hermanos Malbec (4c = 24) y Torrontés (1c = 6) | "Teníamos invertido el código": el Torrontés es W4160 y el Malbec W4164. Hoy W4160 se llama "Hermanos Malbec" y W4164 no existe: hay que renombrar W4160 y dar de alta W4164. |
 | 463 | Owner Malbec Red Blend (4c = 24) | Puso W4681 y "no tengo incorporada esa bodega", pero en el sistema W4681 es el Catena **Malbec Argentino**. Le falta un código propio. |
 | 1064 | Catena Malbec Argentino (6c + 4s = 40) | Puso W4686, que no existe, y "hay cajas de 6; el W654 es el que viene por 4". En el sistema el Malbec Argentino x6 es W4681. ¿Va en W4681? |
-| 228 | La Biblia de Judas Tomo I Terroir Malbec (1 caja de 3 = 3) | Dejó el código sugerido W3962 (Sottano La Biblia de Judas) y borró el nombre. ¿Es ese? |
 
 **No contestó** (quedaron como estaban; preguntar si son o no):
 
@@ -39,8 +38,9 @@ Cómo se carga sin la clave de la base: logueado como `federico` con supabase-js
 | 1002 | Chachingo Porter, 1s | W3966 Chachingo Blonde (en el sistema W3965 es Starberg) |
 | 1003 | Chachingo Amber, 1s | W3966 Chachingo Blonde (en el sistema W3963 es Asahi) |
 
-**Sin código que caen en un producto existente.** Confirmó el producto, pero
-algunos ya tienen stock de otra fila. Hay que saber si se suman:
+**Sin código que caen en un producto existente.** El código lo escribió Federico
+(el script no sugería por debajo de 0,8 de parecido), pero algunos ya tienen stock
+de otra fila. Hay que saber si se suman:
 
 | Fila | Inventario | Producto | Ya tiene |
 |---|---|---|---|
@@ -50,7 +50,7 @@ algunos ya tienen stock de otra fila. Hay que saber si se suman:
 | 1371 | Las Perdices syrah viognier, 5s | W1999 Las Perdices Viognier | 3 (¿y es el mismo vino?) |
 | 1389 | Brut Codorníu tradicional semi sec, 2s | W2972 María Codorníu Método Tradicional | 20 (¿y es el mismo vino?) |
 | 1390 | Brut Codorníu clásico, 5s | W2974 María Codorníu Brut Nature | 8 (¿y es el mismo vino?) |
-| 1307 | Casarena DNA CS 2017, 1c | W542 (x3), sin contestar | 3 |
+| 1307 | Casarena DNA CS 2017, 1c | W542 (x3): **sugerencia nuestra, no la tocó** | 3 |
 
 ## 2. Productos a dar de alta (66)
 
@@ -140,6 +140,9 @@ se pueden pasar a botellas:
 | W4814 | Arístides Confidencial | 1c |
 | W4815 | Anelis Blend | 1c + 1s |
 | W4816 | Amor y Vivir Cabernet Sauvignon | 1s |
+
+**Contestado y todavía sin cargar:** La Biblia de Judas Tomo I (fila 228, 1 caja de 3)
+→ W3962. El código lo escribió Federico (el nuestro no llegaba a 0,8): cargar 3.
 
 ## 3. Sin nada que hacer
 
