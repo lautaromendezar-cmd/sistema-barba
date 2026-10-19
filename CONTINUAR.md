@@ -280,6 +280,26 @@ Cuando vuelva, esos se cargan con `ajustar_stock(..., 'inventario_inicial')`.
 
 **`datos_ejemplo.py --limpiar` ya no es inofensivo:** borra el inventario.
 
+### Respuestas de Federico, primera tanda (19-oct-2026)
+
+Federico devolvió la planilla completada (`datos/inventario-corregido.xlsx`,
+fuera de git; en la PC de la oficina). Se cargó lo que quedó claro: **27
+productos, 528 botellas** como `inventario_inicial`, y se pasaron a caja x6
+W1106 y W1107 (Durigutti Clásico Malbec y Cab Franc, el reclamo que lo
+destrabó), W948, W2398 y W1967. Se hizo logueado como federico
+(`ajustar_stock` por la API), sin la clave de la base.
+
+Queda sin cargar:
+
+- **Unos 50 a dar de alta** (le asignó códigos W4745–W4816 y otros que el
+  sistema no tiene: Owner, Chakana, Mythic, Kaiken...). Faltan precio y caja.
+- **Dudas para preguntarle:** Pispi W2399 (¿15 o 30?), Estuche Animal W716
+  (¿1 o 6?), Salentein Magnum W4396 (x4 o x6), Doña Paula W1067 (dos filas,
+  ¿se suman?), Trivento Golden CS → W3313 que es el *Reserve*, W3303 pasa de
+  La Salonera a Golden CF, W4160/W4164 Hermanos invertidos, W4681 Owner vs.
+  Catena Malbec Argentino, y los que no contestó (Chachingo, Las Bases, Birth
+  of Catena, Casalta Clásico, sin código que caen en productos con stock).
+
 ## Datos de ejemplo
 
 Lo que hoy se ve en el sistema **es inventado**: un año de movimiento para poder
