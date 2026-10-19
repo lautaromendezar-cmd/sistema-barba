@@ -12,6 +12,28 @@ Cómo se carga sin la clave de la base: logueado como `federico` con supabase-js
 (`CLAVE_DEV_FEDERICO` en `.env.local`), `update` en `productos` y
 `rpc("ajustar_stock", {..., p_tipo: "inventario_inicial"})`.
 
+## Último pedido a Federico (19-oct-2026)
+
+Se le mandó `datos/Ultimo pedido inventario.xlsx` (fuera de git, en la PC de la
+oficina). Tiene dos hojas: **Preguntas** (las 18 dudas de abajo) y **Productos
+nuevos** (67 productos con el código que dio él, donde tiene que completar la caja
+y si se vende suelto; en 21 la caja ya va con lo que decía su planilla, para que la
+confirme). **Los precios no se le piden:** los ponen ellos desde Productos → Editar.
+
+Cuando conteste, lo hacemos nosotros:
+
+1. Dar de alta los 67 con `precio_a_consultar = true` y precio 0 (la pantalla
+   «Nuevo producto» exige precio, por eso no lo pueden hacer ellos) y cargarles el stock.
+2. Renombrar W4160 a «Hermanos Torrontés» (él dijo que estaban invertidos) y cargar
+   6. El Malbec 2025 es W4164 y está entre los 67.
+3. Cargar lo que ya contestó y no depende de nada: La Biblia de Judas W3962 → 3,
+   Trivento Reserve White Blend W4406 → 6, Pascual Toso Estate CS W2547 → 18.
+4. Aplicar las respuestas de la hoja Preguntas.
+5. Avisarles que filtren los productos «a consultar» y les pongan precio.
+
+**No inventar datos:** si una caja o una respuesta viene en blanco, ese producto no
+se carga.
+
 `c` = cajas, `s` = botellas sueltas. "Fila" es la fila de `INVENTARIO ACTUAL 2026.xlsx`.
 
 ## 1. Dudas para preguntarle a Federico
