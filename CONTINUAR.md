@@ -289,16 +289,9 @@ W1106 y W1107 (Durigutti Clásico Malbec y Cab Franc, el reclamo que lo
 destrabó), W948, W2398 y W1967. Se hizo logueado como federico
 (`ajustar_stock` por la API), sin la clave de la base.
 
-Queda sin cargar:
-
-- **Unos 50 a dar de alta** (le asignó códigos W4745–W4816 y otros que el
-  sistema no tiene: Owner, Chakana, Mythic, Kaiken...). Faltan precio y caja.
-- **Dudas para preguntarle:** Pispi W2399 (¿15 o 30?), Estuche Animal W716
-  (¿1 o 6?), Salentein Magnum W4396 (x4 o x6), Doña Paula W1067 (dos filas,
-  ¿se suman?), Trivento Golden CS → W3313 que es el *Reserve*, W3303 pasa de
-  La Salonera a Golden CF, W4160/W4164 Hermanos invertidos, W4681 Owner vs.
-  Catena Malbec Argentino, y los que no contestó (Chachingo, Las Bases, Birth
-  of Catena, Casalta Clásico, sin código que caen en productos con stock).
+**Lo que falta, producto por producto, está en
+[PENDIENTES-INVENTARIO.md](PENDIENTES-INVENTARIO.md):** dudas para Federico,
+66 productos para dar de alta (faltan precio y caja) y lo que no hay que hacer.
 
 ## Datos de ejemplo
 
