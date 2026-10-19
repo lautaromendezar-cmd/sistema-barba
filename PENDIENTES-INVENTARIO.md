@@ -29,7 +29,7 @@ Cuando conteste, lo hacemos nosotros:
 3. Cargar lo que ya contestó y no depende de nada: La Biblia de Judas W3962 → 3,
    Trivento Reserve White Blend W4406 → 6, Pascual Toso Estate CS W2547 → 18.
 4. Aplicar las respuestas de la hoja Preguntas.
-5. Avisarles que filtren los productos «a consultar» y les pongan precio.
+5. Avisarles que les pongan precio. Ojo: Productos no tiene filtro «a consultar»; con 67 conviene agregarlo (o pasarles la lista).
 
 **No inventar datos:** si una caja o una respuesta viene en blanco, ese producto no
 se carga.
