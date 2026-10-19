@@ -12,6 +12,28 @@ Cómo se carga sin la clave de la base: logueado como `federico` con supabase-js
 (`CLAVE_DEV_FEDERICO` en `.env.local`), `update` en `productos` y
 `rpc("ajustar_stock", {..., p_tipo: "inventario_inicial"})`.
 
+## Al retomar
+
+1. `git pull`.
+2. **Los dos Excel no están en git** (el repo es público): `datos/inventario-corregido.xlsx`
+   (lo que contestó Federico) y `datos/Ultimo pedido inventario.xlsx` (lo que hay que
+   mandarle). Están en `Desktop\Claude\sistema-barba\datos\` de la PC de la oficina.
+   Si no los trajiste, el pedido se regenera con `scripts/armar_pedido_inventario.py`, pero necesita `inventario-corregido.xlsx`.
+3. Mandarle el pedido a Federico (el texto del mensaje está abajo) y esperar.
+4. Opcional antes de cargar los 67: agregar el filtro «a consultar» en Productos.
+
+### Mensaje para Federico
+
+> Hola Federico! Gracias por completar la planilla, ya cargamos todo lo que estaba
+> claro (incluido el Durigutti Clásico). Te mando un último Excel con lo que nos falta
+> para terminar: en la primera hoja hay 18 preguntas cortas, y en la segunda los
+> productos nuevos, donde necesitamos cuántas botellas trae cada caja y si se vende
+> suelto. Los precios no hace falta: los cargamos "a consultar" y después se los ponen
+> ustedes desde Productos → Editar.
+>
+> Una pregunta más: desde el 13/10, ¿vendieron algo sin hacer el remito en el sistema?
+> Si fue así, avisanos, porque el stock que cargamos es el de ese día.
+
 ## Último pedido a Federico (19-oct-2026)
 
 Se le mandó `datos/Ultimo pedido inventario.xlsx` (fuera de git, en la PC de la
