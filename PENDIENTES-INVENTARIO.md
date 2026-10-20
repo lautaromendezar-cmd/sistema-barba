@@ -12,6 +12,39 @@ Cómo se carga sin la clave de la base: logueado como `federico` con supabase-js
 (`CLAVE_DEV_FEDERICO` en `.env.local`), `update` en `productos` y
 `rpc("ajustar_stock", {..., p_tipo: "inventario_inicial"})`.
 
+## Respuestas de Federico del 20-oct (17 hs)
+
+Volvió `datos/Grupo Barba - lo que falta del inventario CORREGIDO 17hs.xlsx` (fuera
+de git). Contestó **las 18 preguntas** y confirmó **los 21 productos con caja**. En los
+**46 sin caja sólo completó «¿se vende suelto?»**: la caja sigue en blanco.
+
+Lo carga `scripts/cargar_respuestas_20oct.ts` (en seco por defecto; `--aplicar`
+escribe). Lo corre Lautaro, porque el modo auto no deja escribir en prod:
+
+- 16 existentes: P1-P6, P8, P10, P12-13, P16-18 + W4160 renombrado a HERMANOS
+  TORRONTÉS (6) + Biblia de Judas 3, Trivento White Blend 6, Pascual Toso CS 18.
+  W4396 pasa a caja x4.
+- 23 altas «a consultar»: los 21, más **W4817** Owner Malbec Red Blend (P7, código
+  nuevo, caja x6 de su planilla) y **W4177** Casalta Clásico (P11: el código que dio
+  no existía; caja x12 como el resto de Casalta). W4767 Black Colibrí entra en 0 («ya
+  no hay stock»).
+- Sin cambios: W542 Casarena DNA queda en 3 (P14), W453 Sylvestra en 5 (P15), W2919
+  Raquis en 0 (P9: es ese código y salió la única caja).
+- Ninguno de estos productos tuvo movimientos en R-0001 ni en el ingreso del 16-oct,
+  así que el conteo va tal cual (el script igual suma lo movido después, si hubiera).
+
+Decisiones a revisar:
+
+- **P8**: contestó «SI, W4686 CAJA X 6». W4686 no existe; se cargó en W4681 (el
+  Malbec Argentino x6). Si en su lista nueva el código es W4686, renombrar el código.
+- **W4160**: se renombró pero conserva el precio de la lista ($14.637), que decía
+  «Hermanos Malbec». Si los códigos estaban invertidos, el precio puede ser del Malbec.
+- Bodega de las altas sin referencia (BIPLANO, MYTHIC, BLACK COLIBRÍ, CHAKANA, OWNER,
+  SAL DE AQUÍ): puse la marca. Se corrige desde Productos → Editar.
+
+**Falta:** la caja de los 46 (W4771-W4816). Sin eso no se cargan (los que tienen
+cajas no se pueden pasar a botellas). Volver a pedírsela a Federico.
+
 ## Movimientos a mano cargados (20-oct-2026)
 
 **El equipo todavía no usa el sistema: sigue anotando todo a mano.** Lo que vale
