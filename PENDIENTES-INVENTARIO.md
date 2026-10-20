@@ -33,6 +33,16 @@ como pidió él:
 - Ojo: `ajustar_stock` con el conteo de la planilla de inventario ya **pisa** estos
   movimientos. Para los pendientes, sumar al conteo lo que salió/entró desde el 13-oct.
 
+## Excel enviado a Federico (20-oct-2026)
+
+Se les mandó `datos/Grupo Barba - lo que falta del inventario.xlsx` (fuera de git;
+lo arma `armar_excel` desde «Ultimo pedido inventario.xlsx», que queda
+reemplazado). Hojas: **Leeme** (estado y cómo arrancar), **Preguntas** (las 18; la 9
+del Raquis ya dice que salió la única caja) y **Productos nuevos** (67: 21 con la
+caja de su planilla para confirmar y 46 sin caja; Owner White Blend W4768 ya con 3
+sueltas). **Esperando respuesta.** Cuando vuelva, seguir los pasos de «Cuando
+conteste» más abajo, leyendo las columnas amarillas de este Excel.
+
 ## Al retomar
 
 1. `git pull`.
