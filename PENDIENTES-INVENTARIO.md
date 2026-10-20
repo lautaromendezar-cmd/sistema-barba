@@ -44,6 +44,8 @@ Decisiones a revisar:
 
 **Falta:** la caja de los 46 (W4771-W4816). Sin eso no se cargan (los que tienen
 cajas no se pueden pasar a botellas). Volver a pedírsela a Federico.
+Pedido armado el 20-oct: `datos/Grupo Barba - ultimo pedido (cajas).xlsx` (fuera de git;
+lo arma `scripts/armar_pedido_cajas.py`), con las 46 cajas y las 3 decisiones de arriba para confirmar.
 
 ## Movimientos a mano cargados (20-oct-2026)
 
