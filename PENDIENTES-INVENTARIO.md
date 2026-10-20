@@ -18,8 +18,8 @@ Volvió `datos/Grupo Barba - lo que falta del inventario CORREGIDO 17hs.xlsx` (f
 de git). Contestó **las 18 preguntas** y confirmó **los 21 productos con caja**. En los
 **46 sin caja sólo completó «¿se vende suelto?»**: la caja sigue en blanco.
 
-Lo carga `scripts/cargar_respuestas_20oct.ts` (en seco por defecto; `--aplicar`
-escribe). Lo corre Lautaro, porque el modo auto no deja escribir en prod:
+**Cargado el 20-oct** con `scripts/cargar_respuestas_20oct.ts --aplicar` y verificado
+con una segunda corrida en seco (todo en «=»):
 
 - 16 existentes: P1-P6, P8, P10, P12-13, P16-18 + W4160 renombrado a HERMANOS
   TORRONTÉS (6) + Biblia de Judas 3, Trivento White Blend 6, Pascual Toso CS 18.
