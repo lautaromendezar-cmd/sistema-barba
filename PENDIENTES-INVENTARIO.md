@@ -12,6 +12,27 @@ Cómo se carga sin la clave de la base: logueado como `federico` con supabase-js
 (`CLAVE_DEV_FEDERICO` en `.env.local`), `update` en `productos` y
 `rpc("ajustar_stock", {..., p_tipo: "inventario_inicial"})`.
 
+## Movimientos a mano cargados (20-oct-2026)
+
+**El equipo todavía no usa el sistema: sigue anotando todo a mano.** Lo que vale
+arriba de «no hubo ningún remito» quedó viejo. Federico mandó
+`datos/ENTRADAS Y SALIDAS INVENTARIO 13-16oct.xlsx` (fuera de git) y se cargó
+como pidió él:
+
+- **R-0001** al cliente nuevo DISTRIBUIDORA BARBA (nº 616), fecha 15-oct: las
+  salidas del 13 al 15-oct, 57 líneas, 1.149 unidades.
+- **Ingreso** del proveedor nuevo DISTRIBUIDORA BARBA, fecha 16-oct, «Planilla 13
+  al 16-oct»: 19 líneas, 451 unidades.
+- Verificado: stock = inventario + ingreso − remito en los 57+19 productos; ninguno negativo.
+- **Quedaron afuera** porque no existen en el sistema: **W4397** Raquis Las Bases
+  Malbec 2021 (salió 1 caja; ver la duda de la fila 400) y **W4682** Owner White
+  Blend (salieron 3 cajas: al darlo de alta como W4768 va con 21 − 18 = **3**).
+- **Falta lo que movieron del 16-oct en adelante.** El día que arranquen con el
+  sistema, pedirles la misma planilla desde el 16-oct y cargarla igual (mismo
+  cliente y proveedor). Arrancan cuando quieran.
+- Ojo: `ajustar_stock` con el conteo de la planilla de inventario ya **pisa** estos
+  movimientos. Para los pendientes, sumar al conteo lo que salió/entró desde el 13-oct.
+
 ## Al retomar
 
 1. `git pull`.
