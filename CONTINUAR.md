@@ -12,7 +12,12 @@ OK explícito de Lautaro.** Lautaro cobra mantenimiento ($50.000/mes).
   project) para tener copias de seguridad diarias y que no se pause, y el
   proyecto `barba-remitos` de Vercel a Pro si está en Hobby (uso comercial).
   Después, confirmar en Database → Backups que hay copias.
-- **Revisión semanal (lunes, el primer mes: 26-oct a 16-nov):**
+- **Revisión semanal automática:** el cron de Vercel (`vercel.json`) llama a
+  `/api/revision-semanal` los **sábados 9:00** (12:00 UTC), cuando no trabajan,
+  y el resultado le llega por mail a Lautaro (Resend). Variables en Vercel,
+  solo Production: `CRON_SECRET`, `REVISION_CLAVE` (= la clave de federico:
+  **si se le cambia, actualizarla**), `REVISION_MAIL`, `RESEND_API_KEY`.
+  La lógica está en `lib/revision.ts`. A mano, la misma revisión:
 
   ```bash
   npx tsx scripts/revisar_datos.ts          # o --dias 30
