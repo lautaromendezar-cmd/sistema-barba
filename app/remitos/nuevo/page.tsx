@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useStore } from "@/lib/store";
-import { codigoCliente, nombreCliente } from "@/lib/clientes";
+import { BuscadorCliente } from "@/components/BuscadorCliente";
 import { money, enBultos, pct, totalRemito } from "@/lib/formato";
 import { BuscadorProducto } from "@/components/BuscadorProducto";
 import { RemitoDoc } from "@/components/RemitoDoc";
@@ -269,21 +269,7 @@ function NuevoRemito({ corrigeId }: { corrigeId: string | null }) {
             <label className="mb-1 block text-xs font-semibold tracking-wide text-muted uppercase">
               Cliente
             </label>
-            <select
-              value={clienteId}
-              onChange={(e) => setClienteId(e.target.value)}
-              className="w-full rounded-md border border-line bg-white px-3 py-2 text-sm outline-none focus:border-ink"
-            >
-              <option value="">Elegir cliente…</option>
-              {db.clientes
-                .filter((c) => c.activo !== false || c.id === clienteId)
-                .map((c) => (
-                <option key={c.id} value={c.id}>
-                  {[codigoCliente(c.numero), nombreCliente(c)].filter(Boolean).join(" · ")}
-                  {c.localidad ? ` — ${c.localidad}` : ""}
-                </option>
-              ))}
-            </select>
+            <BuscadorCliente valor={clienteId} onElegir={setClienteId} />
           </div>
           <button
             onClick={() => setNuevoCliente((v) => !v)}

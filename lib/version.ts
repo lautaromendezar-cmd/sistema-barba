@@ -16,6 +16,13 @@ export type Novedad = {
 
 export const NOVEDADES: Novedad[] = [
   {
+    version: "1.8",
+    fecha: "2026-10-22",
+    cambios: [
+      "Nuevo remito: el cliente se busca escribiendo el número, el nombre o la localidad, en vez de bajar por la lista. Enter elige el primero.",
+    ],
+  },
+  {
     version: "1.7",
     fecha: "2026-10-22",
     cambios: [
