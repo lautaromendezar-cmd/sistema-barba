@@ -14,6 +14,9 @@
 import { createClient } from "@supabase/supabase-js";
 import { revisar, comoTexto, resumen } from "@/lib/revision";
 
+// Puede esperar hasta medio minuto si la sesión nace «en el futuro» (ver lib/revision.ts).
+export const maxDuration = 120;
+
 export async function GET(request: Request) {
   const secreto = process.env.CRON_SECRET;
   if (!secreto || request.headers.get("authorization") !== `Bearer ${secreto}`)

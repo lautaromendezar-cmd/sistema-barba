@@ -51,13 +51,25 @@ async function todo(
   orden = "id",
 ): Promise<Fila[]> {
   const filas: Fila[] = [];
+  let intento = 0;
   for (let d = 0; ; d += 1000) {
     const { data, error } = await sb
       .from(tabla)
       .select(columnas)
       .order(orden)
       .range(d, d + 999);
-    if (error) throw new Error(`${tabla}: ${error.message}`);
+    if (error) {
+      // Recién iniciada la sesión, la base a veces la rechaza con «JWT issued
+      // at future»: el reloj de auth va unos segundos adelantado. Se espera.
+      if (/issued at future/i.test(error.message) && intento < 6) {
+        await new Promise((r) => setTimeout(r, 5000));
+        intento++;
+        d -= 1000;
+        continue;
+      }
+      throw new Error(`${tabla}: ${error.message}`);
+    }
+    intento = 0;
     filas.push(...((data ?? []) as unknown as Fila[]));
     if (!data || data.length < 1000) return filas;
   }
