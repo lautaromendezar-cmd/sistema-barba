@@ -196,11 +196,19 @@ function errorDeRed(contexto: string, error: unknown): string | null {
   return null;
 }
 
+/**
+ * Lo que devuelve la base viene en ingles y no le dice nada al equipo (22-oct:
+ * «null value in column "nota"...» confundio a todos). En pantalla va en
+ * castellano con el codigo para diagnosticar; el texto original, a la consola.
+ */
 function mensajeDeError(contexto: string, error: unknown) {
-  return (
-    errorDeRed(contexto, error) ??
-    `${contexto}: ${String((error as { message?: string })?.message ?? error)}`
-  );
+  const deRed = errorDeRed(contexto, error);
+  if (deRed) return deRed;
+  console.error(contexto, error);
+  const codigo = (error as { code?: string })?.code;
+  return codigo
+    ? `${contexto}. Sacale una foto a este cartel y avisale a Lautaro (código ${codigo}).`
+    : `${contexto}: ${String((error as { message?: string })?.message ?? error)}`;
 }
 
 /** La base rechaza nombres y CUIT repetidos (0005, 0015): que se entienda por que. */

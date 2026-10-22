@@ -16,6 +16,14 @@ export type Novedad = {
 
 export const NOVEDADES: Novedad[] = [
   {
+    version: "1.5",
+    fecha: "2026-10-22",
+    cambios: [
+      "Ingresos: ya se pueden guardar sin Nº de remito del proveedor. Antes daba error y quedaba un ingreso vacío en la lista.",
+      "Los carteles de error salen en castellano. Si aparece uno que no se entiende, sacale una foto y mandásela a Lautaro.",
+    ],
+  },
+  {
     version: "1.4",
     fecha: "2026-10-13",
     cambios: [
