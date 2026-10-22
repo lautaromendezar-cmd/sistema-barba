@@ -2,6 +2,33 @@
 
 Última actualización: **13 de octubre de 2026**.
 
+## EN USO desde el 21/22-oct-2026: mantenimiento
+
+**El equipo ya carga todo en el sistema. No se tocan datos de producción sin
+OK explícito de Lautaro.** Lautaro cobra mantenimiento ($50.000/mes).
+
+- **Plan pago (agendado para el sáb 24-oct):** pasar el proyecto de Supabase
+  `grupo-barba-stock` a la organización paga (Settings → General → Transfer
+  project) para tener copias de seguridad diarias y que no se pause, y el
+  proyecto `barba-remitos` de Vercel a Pro si está en Hobby (uso comercial).
+  Después, confirmar en Database → Backups que hay copias.
+- **Revisión semanal (lunes, el primer mes: 26-oct a 16-nov):**
+
+  ```bash
+  npx tsx scripts/revisar_datos.ts          # o --dias 30
+  ```
+
+  Solo lee. Los chequeos duros (remitos, anulaciones e ingresos cuadran con
+  los movimientos de stock) tienen que dar OK; si alguno da ⚠ es un problema
+  de la base y se mira antes de tocar nada. Los blandos (negativos, ingresos
+  vacíos, borradores viejos, pendientes de más de 7 días, saltos de numeración,
+  ajustes manuales) son para preguntarle al equipo. Primera corrida, 22-oct:
+  base coherente; 6 ingresos vacíos del bug de abajo, sin anular.
+- **22-oct, primer día:** ingresos sin Nº fallaban (0018), se agregó Anular
+  ingreso (0019) y la columna Sueltas (v1.7). En esta PC las migraciones las
+  pega Lautaro en el SQL Editor (no hay `SUPABASE_DB_URL`); la prueba de 0019
+  fue un `do $$ … raise exception` que deshace todo.
+
 ## Lo primero, siempre
 
 ```bash
