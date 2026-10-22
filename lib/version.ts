@@ -16,6 +16,13 @@ export type Novedad = {
 
 export const NOVEDADES: Novedad[] = [
   {
+    version: "1.7",
+    fecha: "2026-10-22",
+    cambios: [
+      "Ingresos: columna «Sueltas» para cargar botellas que no vienen en caja cerrada. Una sola botella es 0 bultos y 1 suelta.",
+    ],
+  },
+  {
     version: "1.6",
     fecha: "2026-10-22",
     cambios: [

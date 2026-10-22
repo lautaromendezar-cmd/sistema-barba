@@ -7,7 +7,8 @@ import { BuscadorProducto } from "@/components/BuscadorProducto";
 import { BuscadorProveedor } from "@/components/BuscadorProveedor";
 import type { Ingreso } from "@/lib/types";
 
-type Linea = { codigo: string; bultos: number };
+/** Bultos cerrados más botellas sueltas: a veces llega una caja abierta o una sola. */
+type Linea = { codigo: string; bultos: number; sueltas: number };
 
 const etiqueta =
   "mb-1 block text-xs font-semibold tracking-wide text-muted uppercase";
@@ -28,7 +29,16 @@ export default function Ingresos() {
     db.proveedores.find((v) => v.id === id)?.nombre;
 
   const unidadesDe = (l: Linea) =>
-    l.bultos * (producto(l.codigo)?.unidadesPorBulto ?? 1);
+    l.bultos * (producto(l.codigo)?.unidadesPorBulto ?? 1) + l.sueltas;
+
+  const cambiar = (i: number, campo: "bultos" | "sueltas", valor: string) =>
+    setLineas((prev) =>
+      prev.map((x, j) =>
+        j === i ? { ...x, [campo]: Math.max(0, Math.floor(Number(valor)) || 0) } : x,
+      ),
+    );
+
+  const enCero = lineas.filter((l) => unidadesDe(l) === 0);
 
   // Los productos que, según su ficha, se le compran a otro proveedor.
   const deOtroProveedor = proveedorId
@@ -42,7 +52,7 @@ export default function Ingresos() {
   // base: sin internet se perdia lo cargado y el cartel mentia. Ahora el aviso
   // lo da el store cuando la base confirma, y si falla lo cargado queda.
   async function guardar() {
-    if (lineas.length === 0 || guardando) return;
+    if (lineas.length === 0 || enCero.length > 0 || guardando) return;
     setGuardando(true);
     const ok = await registrarIngreso({
       bodega: nombreProveedor(proveedorId) ?? "Sin especificar",
@@ -97,7 +107,7 @@ export default function Ingresos() {
             excluir={lineas.map((l) => l.codigo)}
             onElegir={(p) => {
               if (!proveedorId && p.proveedorId) setProveedorId(p.proveedorId);
-              setLineas((prev) => [...prev, { codigo: p.codigo, bultos: 1 }]);
+              setLineas((prev) => [...prev, { codigo: p.codigo, bultos: 1, sueltas: 0 }]);
             }}
           />
         </div>
@@ -107,8 +117,9 @@ export default function Ingresos() {
             <thead>
               <tr className="border-b border-line text-left text-[11px] tracking-wider text-faint uppercase">
                 <th className="py-2 font-semibold">Producto</th>
-                <th className="w-28 py-2 text-right font-semibold">Bultos</th>
-                <th className="w-32 py-2 text-right font-semibold">Unidades</th>
+                <th className="w-24 py-2 text-right font-semibold">Bultos</th>
+                <th className="w-24 py-2 text-right font-semibold">Sueltas</th>
+                <th className="w-28 py-2 text-right font-semibold">Unidades</th>
                 <th className="w-10"></th>
               </tr>
             </thead>
@@ -135,21 +146,26 @@ export default function Ingresos() {
                     <td className="py-2.5 text-right">
                       <input
                         type="number"
-                        min={1}
+                        min={0}
                         value={l.bultos}
-                        onChange={(e) =>
-                          setLineas((prev) =>
-                            prev.map((x, j) =>
-                              j === i
-                                ? { ...x, bultos: Math.max(1, Number(e.target.value) || 1) }
-                                : x,
-                            ),
-                          )
-                        }
+                        onChange={(e) => cambiar(i, "bultos", e.target.value)}
+                        aria-label="Bultos"
                         className="tnum w-20 rounded-md border border-line px-2 py-1.5 text-right outline-none focus:border-ink"
                       />
                     </td>
-                    <td className="tnum py-2.5 text-right text-muted">
+                    <td className="py-2.5 text-right">
+                      <input
+                        type="number"
+                        min={0}
+                        value={l.sueltas}
+                        onChange={(e) => cambiar(i, "sueltas", e.target.value)}
+                        aria-label="Unidades sueltas"
+                        className="tnum w-20 rounded-md border border-line px-2 py-1.5 text-right outline-none focus:border-ink"
+                      />
+                    </td>
+                    <td
+                      className={`tnum py-2.5 text-right ${unidadesDe(l) === 0 ? "text-alerta font-medium" : "text-muted"}`}
+                    >
                       {unidadesDe(l)} u
                     </td>
                     <td className="py-2.5 text-right">
@@ -175,6 +191,11 @@ export default function Ingresos() {
             {lineas.length === 0
               ? "Buscá un producto para empezar."
               : `${lineas.length} producto(s) · ${lineas.reduce((a, l) => a + unidadesDe(l), 0)} unidades`}
+            {enCero.length > 0 && (
+              <span className="text-alerta ml-2 font-medium">
+                · hay productos en 0 unidades
+              </span>
+            )}
             {deOtroProveedor.length > 0 && (
               <span className="text-alerta ml-2 font-medium">
                 · revisá el proveedor
@@ -183,7 +204,7 @@ export default function Ingresos() {
           </span>
           <button
             onClick={guardar}
-            disabled={lineas.length === 0 || guardando}
+            disabled={lineas.length === 0 || enCero.length > 0 || guardando}
             className="rounded-md bg-ink px-4 py-2.5 text-sm font-medium text-white transition hover:bg-ink-hover disabled:opacity-40"
           >
             {guardando ? "Guardando…" : "Guardar ingreso"}
