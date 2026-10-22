@@ -89,6 +89,8 @@ type Store = {
     notas: string;
   }) => Promise<Remito>;
   anularRemito: (id: string, motivo?: string) => Promise<boolean>;
+  /** Descuenta lo que sumo el ingreso y lo deja marcado como anulado (0019). */
+  anularIngreso: (id: string) => Promise<boolean>;
   /**
    * Los remitos emitidos entre dos instantes, consultados a la base: los de
    * `db.remitos` son solo los ultimos 500. null si la consulta fallo.
@@ -561,6 +563,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           bultos: l.cantidad_bultos as number,
           unidades: l.unidades_totales as number,
         })),
+        anuladoPor: i.anulado_at ? nombreDe(i.anulado_por) : undefined,
+        anuladoAt: i.anulado_at ?? undefined,
       }));
     }
 
@@ -1157,6 +1161,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         const numero = db.remitos.find((x) => x.id === rid)?.numero;
         notificar("ok", numero ? `Remito ${numero} anulado.` : "Remito anulado.");
         await cargar(["remitos", "stock"]);
+        return true;
+      },
+
+      anularIngreso: async (iid) => {
+        const { error } = await supabase.rpc("anular_ingreso", {
+          p_ingreso_id: iid,
+        });
+        if (error) return fallo("No se pudo anular el ingreso", error);
+        notificar("ok", "Ingreso anulado: lo que había sumado salió del stock.");
+        await cargar(["ingresos", "stock"]);
         return true;
       },
 

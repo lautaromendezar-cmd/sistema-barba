@@ -16,6 +16,13 @@ export type Novedad = {
 
 export const NOVEDADES: Novedad[] = [
   {
+    version: "1.6",
+    fecha: "2026-10-22",
+    cambios: [
+      "Ingresos: botón «Anular» en cada ingreso anterior, como en los remitos. Lo que había sumado sale del stock y el ingreso queda en la lista tachado, con quién lo anuló. No tiene vuelta atrás: si hacía falta, se carga uno nuevo.",
+    ],
+  },
+  {
     version: "1.5",
     fecha: "2026-10-22",
     cambios: [

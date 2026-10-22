@@ -141,6 +141,9 @@ export type Ingreso = {
   nroRemitoProveedor: string;
   usuario: string;
   lineas: { productoCodigo: string; bultos: number; unidades: number }[];
+  /** Nombre de quien lo anulo (0019). Sin anular, undefined. */
+  anuladoPor?: string;
+  anuladoAt?: string;
 };
 
 /**

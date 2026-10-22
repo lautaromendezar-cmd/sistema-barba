@@ -212,10 +212,12 @@ export default function Ingresos() {
 /**
  * Un ingreso ya guardado. Se puede corregir el proveedor y el número, que son
  * datos de referencia; las cantidades no, porque ya sumaron stock: si se cargó
- * mal una cantidad, se corrige con un ajuste en Productos.
+ * mal una cantidad, se corrige con un ajuste en Productos. Si estaba todo mal,
+ * se anula (0019) y se carga de nuevo.
  */
 function IngresoAnterior({ ing }: { ing: Ingreso }) {
-  const { db, producto, editarIngreso } = useStore();
+  const { db, producto, editarIngreso, anularIngreso } = useStore();
+  const anulado = Boolean(ing.anuladoAt);
   const [editando, setEditando] = useState(false);
   const [proveedorId, setProveedorId] = useState(ing.proveedorId ?? "");
   const [nro, setNro] = useState(ing.nroRemitoProveedor);
@@ -276,21 +278,46 @@ function IngresoAnterior({ ing }: { ing: Ingreso }) {
             <span className="tnum ml-2 font-mono text-xs text-faint">
               {ing.nroRemitoProveedor || "s/nº"}
             </span>
+            {anulado && (
+              <span className="ml-2 rounded bg-acento-soft px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-acento-ink uppercase">
+                Anulado
+              </span>
+            )}
           </div>
           <div className="flex items-baseline gap-3 text-xs text-muted">
             <span>
               {fechaHora(ing.fecha)} · cargó {ing.usuario}
+              {anulado && ` · anuló ${ing.anuladoPor} el ${fechaHora(ing.anuladoAt!)}`}
             </span>
-            <button
-              onClick={() => setEditando(true)}
-              className="rounded border border-line px-2 py-0.5 text-xs text-muted transition hover:border-ink hover:text-acento-ink"
-            >
-              Corregir
-            </button>
+            {!anulado && (
+              <button
+                onClick={() => setEditando(true)}
+                className="rounded border border-line px-2 py-0.5 text-xs text-muted transition hover:border-ink hover:text-acento-ink"
+              >
+                Corregir
+              </button>
+            )}
+            {!anulado && (
+              <button
+                onClick={() => {
+                  if (
+                    confirm(
+                      `¿Anular el ingreso de ${nombre}? Lo que sumó sale del stock. No tiene vuelta atrás: si hacía falta, se carga uno nuevo.`,
+                    )
+                  )
+                    void anularIngreso(ing.id);
+                }}
+                className="rounded border border-line px-2 py-0.5 text-xs text-muted transition hover:border-ink hover:text-acento-ink"
+              >
+                Anular
+              </button>
+            )}
           </div>
         </div>
       )}
-      <ul className="mt-2 space-y-1 text-sm text-muted">
+      <ul
+        className={`mt-2 space-y-1 text-sm text-muted ${anulado ? "text-faint line-through" : ""}`}
+      >
         {ing.lineas.map((l) => {
           const p = producto(l.productoCodigo);
           return (
