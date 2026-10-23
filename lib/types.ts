@@ -140,7 +140,8 @@ export type Ingreso = {
   proveedorId?: string | null;
   nroRemitoProveedor: string;
   usuario: string;
-  lineas: { productoCodigo: string; bultos: number; unidades: number }[];
+  /** `sueltas` viene de la base; al registrar no hace falta, sale de unidades. */
+  lineas: { productoCodigo: string; bultos: number; sueltas?: number; unidades: number }[];
   /** Nombre de quien lo anulo (0019). Sin anular, undefined. */
   anuladoPor?: string;
   anuladoAt?: string;

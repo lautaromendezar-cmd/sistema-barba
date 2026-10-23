@@ -68,9 +68,10 @@ type Store = {
   borrarDireccion: (id: string) => Promise<boolean>;
   agregarProveedor: (p: Omit<Proveedor, "id">) => Promise<boolean>;
   editarProveedor: (id: string, cambios: Partial<Proveedor>) => Promise<boolean>;
+  /** Devuelve el id del ingreso guardado (para imprimirlo), o null si falló. */
   registrarIngreso: (
     datos: Omit<Ingreso, "id" | "fecha" | "usuario">,
-  ) => Promise<boolean>;
+  ) => Promise<string | null>;
   /** Solo la cabecera: proveedor y numero. Las cantidades ya movieron stock. */
   editarIngreso: (
     id: string,
@@ -561,6 +562,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         lineas: (i.ingreso_lineas ?? []).map((l: Record<string, unknown>) => ({
           productoCodigo: codigoDe(l.producto_id as string),
           bultos: l.cantidad_bultos as number,
+          sueltas: l.cantidad_unidades as number,
           unidades: l.unidades_totales as number,
         })),
         anuladoPor: i.anulado_at ? nombreDe(i.anulado_por) : undefined,
@@ -1011,7 +1013,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           })
           .select()
           .single();
-        if (error) return fallo("No se guardó el ingreso", error);
+        if (error) {
+          fallo("No se guardó el ingreso", error);
+          return null;
+        }
 
         // El trigger de la base genera los movimientos de stock.
         const lineas = datos.lineas.map((l) => {
@@ -1030,10 +1035,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           // La cabecera ya existe sin lineas: no sumo nada al stock, pero
           // aparece en «Ingresos anteriores». Hay que cargarlo de nuevo.
           await cargar(["ingresos", "stock"]);
-          return fallo(
-            "El ingreso quedó vacío y no sumó stock, cargalo de nuevo",
-            res.error,
-          );
+          fallo("El ingreso quedó vacío y no sumó stock, cargalo de nuevo", res.error);
+          return null;
         }
 
         const unidades = datos.lineas.reduce((t, l) => t + l.unidades, 0);
@@ -1042,7 +1045,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           `Ingreso guardado: entraron ${unidades.toLocaleString("es-AR")} unidades al depósito.`,
         );
         await cargar(["ingresos", "stock"]);
-        return true;
+        return data.id as string;
       },
 
       editarIngreso: async (id, cambios) => {

@@ -16,6 +16,14 @@ export type Novedad = {
 
 export const NOVEDADES: Novedad[] = [
   {
+    version: "1.9",
+    fecha: "2026-10-23",
+    cambios: [
+      "Nuevo remito: columna «Sueltas» para vender botellas fuera de caja cerrada. Una sola botella es 0 bultos y 1 suelta.",
+      "Ingresos: al guardar aparece la hoja del ingreso para imprimir (proveedor, Nº de remito, fecha, quién lo cargó y los productos). Los anteriores se reimprimen con «Ver / imprimir».",
+    ],
+  },
+  {
     version: "1.8",
     fecha: "2026-10-22",
     cambios: [

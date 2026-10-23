@@ -21,7 +21,9 @@ type Fila = {
   libre?: boolean;
   descripcion?: string;
   bultos: number;
-  /** Solo en las libres: en las demás sale de bultos × unidades por bulto. */
+  /** Botellas fuera de caja cerrada: una sola es 0 bultos y 1 suelta. */
+  sueltas?: number;
+  /** Solo en las libres: en las demás sale de bultos × unidades por bulto + sueltas. */
   unidades?: number;
   precioUnitario: number;
   entregado: boolean;
@@ -99,6 +101,9 @@ function NuevoRemito({ corrigeId }: { corrigeId: string | null }) {
             ? {
                 codigo: l.productoCodigo,
                 bultos: l.bultos,
+                sueltas:
+                  l.unidades -
+                  l.bultos * (producto(l.productoCodigo)?.unidadesPorBulto ?? 1),
                 precioUnitario: l.precioUnitario,
                 entregado: l.entregado,
               }
@@ -114,12 +119,12 @@ function NuevoRemito({ corrigeId }: { corrigeId: string | null }) {
         ),
       );
     })();
-  }, [corrigeId, hayCatalogo, traerRemito]);
+  }, [corrigeId, hayCatalogo, traerRemito, producto]);
 
   const unidadesDe = (f: Fila) =>
     f.libre
       ? (f.unidades ?? 0)
-      : f.bultos * (producto(f.codigo)?.unidadesPorBulto ?? 1);
+      : f.bultos * (producto(f.codigo)?.unidadesPorBulto ?? 1) + (f.sueltas ?? 0);
 
   /**
    * Al corregir, lo que entregó el original todavía figura descontado: vuelve
@@ -154,8 +159,9 @@ function NuevoRemito({ corrigeId }: { corrigeId: string | null }) {
   const libreSinDescripcion = filas.some(
     (f) => f.libre && !(f.descripcion ?? "").trim(),
   );
+  const enCero = filas.some((f) => !f.libre && unidadesDe(f) === 0);
   const puedeEmitir =
-    clienteId !== "" && filas.length > 0 && !libreSinDescripcion;
+    clienteId !== "" && filas.length > 0 && !libreSinDescripcion && !enCero;
 
   const cambiar = (i: number, cambios: Partial<Fila>) =>
     setFilas((prev) => prev.map((x, j) => (j === i ? { ...x, ...cambios } : x)));
@@ -306,6 +312,7 @@ function NuevoRemito({ corrigeId }: { corrigeId: string | null }) {
                   {
                     codigo: p.codigo,
                     bultos: 1,
+                    sueltas: 0,
                     precioUnitario: p.precioLista,
                     entregado: true,
                   },
@@ -337,11 +344,12 @@ function NuevoRemito({ corrigeId }: { corrigeId: string | null }) {
 
         {filas.length > 0 && (
           <div className="mt-5 overflow-x-auto">
-            <table className="w-full min-w-[760px] text-sm">
+            <table className="w-full min-w-[840px] text-sm">
               <thead>
                 <tr className="border-b border-line text-left text-[11px] tracking-wider text-faint uppercase">
                   <th className="py-2 font-semibold">Producto</th>
                   <th className="w-24 py-2 text-right font-semibold">Bultos</th>
+                  <th className="w-24 py-2 text-right font-semibold">Sueltas</th>
                   <th className="w-20 py-2 text-right font-semibold">Unid.</th>
                   <th className="w-32 py-2 text-right font-semibold">
                     Precio unidad
@@ -398,6 +406,7 @@ function NuevoRemito({ corrigeId }: { corrigeId: string | null }) {
                           </div>
                         </td>
                         <td className="py-2.5 text-right text-faint">—</td>
+                        <td className="py-2.5 text-right text-faint">—</td>
                         <td className="py-2.5 text-right">
                           <input
                             type="number"
@@ -444,17 +453,36 @@ function NuevoRemito({ corrigeId }: { corrigeId: string | null }) {
                       <td className="py-2.5 text-right">
                         <input
                           type="number"
-                          min={1}
+                          min={0}
                           value={f.bultos}
                           onChange={(e) =>
                             cambiar(i, {
-                              bultos: Math.max(1, Number(e.target.value) || 1),
+                              bultos: Math.max(0, Math.floor(Number(e.target.value)) || 0),
                             })
                           }
+                          aria-label="Bultos"
                           className="tnum w-20 rounded-md border border-line px-2 py-1.5 text-right outline-none focus:border-ink"
                         />
                       </td>
-                      <td className="tnum py-2.5 text-right text-muted">{u}</td>
+                      <td className="py-2.5 text-right">
+                        <input
+                          type="number"
+                          min={0}
+                          value={f.sueltas ?? 0}
+                          onChange={(e) =>
+                            cambiar(i, {
+                              sueltas: Math.max(0, Math.floor(Number(e.target.value)) || 0),
+                            })
+                          }
+                          aria-label="Unidades sueltas"
+                          className="tnum w-20 rounded-md border border-line px-2 py-1.5 text-right outline-none focus:border-ink"
+                        />
+                      </td>
+                      <td
+                        className={`tnum py-2.5 text-right ${u === 0 ? "text-alerta font-medium" : "text-muted"}`}
+                      >
+                        {u}
+                      </td>
                       <td className="py-2.5 text-right">
                         {precio}
                         {p?.precioAConsultar && f.precioUnitario === 0 ? (
@@ -586,7 +614,9 @@ function NuevoRemito({ corrigeId }: { corrigeId: string | null }) {
             <p className="mt-2 text-center text-xs text-muted">
               {libreSinDescripcion
                 ? "Falta escribir qué es el producto fuera de lista."
-                : "Falta elegir cliente y cargar al menos un producto."}
+                : enCero
+                  ? "Hay productos en 0 unidades: poné bultos o sueltas, o quitalos."
+                  : "Falta elegir cliente y cargar al menos un producto."}
             </p>
           )}
         </div>
