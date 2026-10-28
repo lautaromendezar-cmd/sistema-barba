@@ -12,14 +12,17 @@ import {
 } from "react";
 import type {
   Cliente,
+  Compra,
   DB,
   Direccion,
   Proveedor,
   Ingreso,
+  Lista,
   Movimiento,
   Producto,
   Remito,
   RemitoLinea,
+  UltimoCosto,
   Usuario,
 } from "./types";
 import { emailDe, supabase } from "./supabase";
@@ -56,6 +59,19 @@ type Store = {
   cliente: (id: string) => Cliente | undefined;
   /** El historial se consulta a la base al abrirlo: no vive en memoria. */
   movimientosDe: (codigo: string) => Promise<Movimiento[]>;
+  /** La ultima compra con costo. undefined = nunca se cargo un costo. */
+  ultimoCosto: (codigo: string) => UltimoCosto | undefined;
+  /** Las compras con costo de un producto, de la base al abrir la ficha. */
+  comprasDe: (codigo: string) => Promise<Compra[]>;
+  /**
+   * Pisa los precios de una lista en una sola transaccion (aplicar_precios,
+   * 0020). En la oferta, precio null saca al producto. Devuelve cuantos
+   * cambiaron, o null si fallo.
+   */
+  aplicarPrecios: (
+    lista: Lista,
+    precios: { codigo: string; precio: number | null }[],
+  ) => Promise<number | null>;
 
   agregarProducto: (p: Producto) => Promise<boolean>;
   editarProducto: (id: string, cambios: Partial<Producto>) => Promise<boolean>;
@@ -72,10 +88,18 @@ type Store = {
   registrarIngreso: (
     datos: Omit<Ingreso, "id" | "fecha" | "usuario">,
   ) => Promise<string | null>;
-  /** Solo la cabecera: proveedor y numero. Las cantidades ya movieron stock. */
+  /**
+   * La cabecera (proveedor y numero) y el costo de cada linea. Las cantidades
+   * no: ya movieron stock, y la base rechaza el cambio (0020).
+   */
   editarIngreso: (
     id: string,
-    cambios: { proveedorId: string | null; nroRemitoProveedor: string },
+    cambios: {
+      proveedorId: string | null;
+      nroRemitoProveedor: string;
+      /** Solo las lineas cuyo costo cambio, por id de linea. */
+      costos?: { lineaId: string; costoUnitario: number | null }[];
+    },
   ) => Promise<boolean>;
   ajustarStock: (
     codigo: string,
@@ -126,6 +150,7 @@ type FilaProducto = {
   se_vende_suelto: boolean;
   precio_lista: string | number;
   precio_a_consultar: boolean;
+  precio_oferta: string | number | null;
   en_lista_actual: boolean;
   proveedor_id: string | null;
   activo: boolean;
@@ -178,6 +203,7 @@ function filaARemito(
         bultos: l.cantidad_bultos as number,
         unidades: l.unidades_totales as number,
         precioUnitario: num(l.precio_unitario as string),
+        lista: (l.lista as Lista | undefined) ?? "oficial",
         entregado: l.entregado as boolean,
       })),
   };
@@ -243,6 +269,7 @@ type Parte =
   | "remitos"
   | "ingresos"
   | "stock"
+  | "costos"
   | "perfiles";
 
 /**
@@ -290,6 +317,7 @@ const TODAS: Parte[] = [
   "remitos",
   "ingresos",
   "stock",
+  "costos",
   "perfiles",
 ];
 
@@ -326,6 +354,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     fisico: Map<string, number>;
     aPedir: Map<string, number>;
   }>({ fisico: new Map(), aPedir: new Map() });
+  /** Por código de producto: la última compra con costo (vista ultimo_costo). */
+  const [ultimosCostos, setUltimosCostos] = useState<Map<string, UltimoCosto>>(
+    new Map(),
+  );
 
   // Dos traducciones que hacen falta para mapear remitos, ingresos y
   // movimientos: id de producto -> codigo, y uuid de perfil -> nombre. Van en
@@ -347,6 +379,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       stockAPedir,
       perfiles,
       proveedores,
+      costos,
     ] = await Promise.all([
       pide("productos")
         ? porPaginas((desde, hasta) =>
@@ -411,6 +444,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       pide("proveedores")
         ? supabase.from("proveedores").select("*").order("nombre")
         : null,
+      // Una fila por producto que alguna vez entró con costo (0020).
+      pide("costos")
+        ? porPaginas((desde, hasta) =>
+            supabase
+              .from("ultimo_costo")
+              .select("*")
+              .order("producto_id")
+              .range(desde, hasta),
+          )
+        : null,
     ]);
 
     // Si la carga falla, NO se pisa lo que ya estaba: mostrar todo en cero
@@ -425,6 +468,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       stockAPedir,
       perfiles,
       proveedores,
+      costos,
     ].find((r) => r?.error)?.error;
     if (problema) {
       setErrorCarga(
@@ -469,6 +513,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       });
     }
 
+    if (costos) {
+      setUltimosCostos(
+        new Map(
+          (costos.data ?? []).map((c) => [
+            codigoDe(c.producto_id),
+            {
+              costoUnitario: num(c.costo_unitario),
+              fecha: c.fecha as string,
+              proveedor: (c.proveedor as string | null) ?? "",
+            },
+          ]),
+        ),
+      );
+    }
+
     const parcial: Partial<DB> = {};
 
     if (productos) {
@@ -484,6 +543,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           seVendeSuelto: p.se_vende_suelto,
           precioLista: num(p.precio_lista),
           precioAConsultar: p.precio_a_consultar === true,
+          precioOferta:
+            p.precio_oferta == null ? null : num(p.precio_oferta),
           enListaActual: p.en_lista_actual,
           proveedorId: p.proveedor_id ?? null,
           activo: p.activo,
@@ -560,10 +621,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         nroRemitoProveedor: i.nro_remito_proveedor ?? "",
         usuario: nombreDe(i.usuario_id),
         lineas: (i.ingreso_lineas ?? []).map((l: Record<string, unknown>) => ({
+          id: l.id as string,
           productoCodigo: codigoDe(l.producto_id as string),
           bultos: l.cantidad_bultos as number,
           sueltas: l.cantidad_unidades as number,
           unidades: l.unidades_totales as number,
+          costoUnitario:
+            l.costo_unitario == null ? null : num(l.costo_unitario as string),
         })),
         anuladoPor: i.anulado_at ? nombreDe(i.anulado_por) : undefined,
         anuladoAt: i.anulado_at ?? undefined,
@@ -643,8 +707,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const QUE_RECARGA: Record<string, Parte[]> = {
       remitos: ["remitos", "stock"],
       remito_lineas: ["remitos", "stock"],
-      ingresos: ["ingresos", "stock"],
-      ingreso_lineas: ["ingresos", "stock"],
+      ingresos: ["ingresos", "stock", "costos"],
+      ingreso_lineas: ["ingresos", "stock", "costos"],
       movimientos: ["stock"],
       clientes: ["clientes"],
       cliente_direcciones: ["clientes"],
@@ -790,6 +854,57 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }));
       },
 
+      ultimoCosto: (codigo) => ultimosCostos.get(codigo),
+
+      // Como el historial: se pide al abrir la ficha, filtrado en la base.
+      comprasDe: async (codigo) => {
+        const id = idDe(codigo);
+        if (!id) return [];
+        const { data, error } = await supabase
+          .from("ingreso_lineas")
+          .select(
+            "unidades_totales, costo_unitario, ingresos!inner(creado_at, bodega, anulado_at)",
+          )
+          .eq("producto_id", id)
+          .not("costo_unitario", "is", null)
+          .is("ingresos.anulado_at", null)
+          .limit(500);
+        if (error) {
+          notificar("error", mensajeDeError("No se pudieron traer las compras", error));
+          return [];
+        }
+        return (data ?? []).map((l) => {
+          const ing = l.ingresos as unknown as { creado_at: string; bodega: string | null };
+          return {
+            fecha: ing.creado_at,
+            proveedor: ing.bodega ?? "",
+            unidades: l.unidades_totales as number,
+            costoUnitario: num(l.costo_unitario as string),
+          };
+        });
+      },
+
+      aplicarPrecios: async (lista, precios) => {
+        const filas = precios
+          .map((x) => ({ id: idDe(x.codigo), precio: x.precio }))
+          .filter((x) => x.id);
+        const { data, error } = await supabase.rpc("aplicar_precios", {
+          p_lista: lista,
+          p_precios: filas,
+        });
+        if (error) {
+          fallo("No se aplicaron los precios (no cambió ninguno)", error);
+          return null;
+        }
+        const cambiados = data as number;
+        notificar(
+          "ok",
+          `Lista ${lista} actualizada: ${cambiados.toLocaleString("es-AR")} precios cambiados.`,
+        );
+        await cargar(["productos"]);
+        return cambiados;
+      },
+
       agregarProducto: async (p) => {
         const { error } = await supabase.from("productos").insert({
           codigo: p.codigo,
@@ -862,6 +977,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           fila.se_vende_suelto = cambios.seVendeSuelto;
         if (cambios.precioLista !== undefined)
           fila.precio_lista = cambios.precioLista;
+        // 0 o vacío = sale de la oferta (la base no acepta una oferta en cero).
+        if (cambios.precioOferta !== undefined)
+          fila.precio_oferta = cambios.precioOferta || null;
         if (cambios.enListaActual !== undefined)
           fila.en_lista_actual = cambios.enListaActual;
         if (cambios.proveedorId !== undefined)
@@ -1028,6 +1146,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             cantidad_unidades:
               l.unidades - l.bultos * (p?.unidadesPorBulto ?? 1),
             unidades_por_bulto: p?.unidadesPorBulto ?? 1,
+            costo_unitario: l.costoUnitario || null,
           };
         });
         const res = await supabase.from("ingreso_lineas").insert(lineas);
@@ -1044,7 +1163,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           "ok",
           `Ingreso guardado: entraron ${unidades.toLocaleString("es-AR")} unidades al depósito.`,
         );
-        await cargar(["ingresos", "stock"]);
+        await cargar(["ingresos", "stock", "costos"]);
         return data.id as string;
       },
 
@@ -1059,8 +1178,22 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           })
           .eq("id", id);
         if (error) return fallo("No se pudo corregir el ingreso", error);
+
+        // Una por una: son pocas y cada una es un update chico. Si falla a
+        // mitad, las anteriores quedan guardadas y el aviso lo dice.
+        for (const c of cambios.costos ?? []) {
+          const res = await supabase
+            .from("ingreso_lineas")
+            .update({ costo_unitario: c.costoUnitario || null })
+            .eq("id", c.lineaId);
+          if (res.error) {
+            await cargar(["ingresos", "costos"]);
+            return fallo("Se guardó solo una parte de los costos", res.error);
+          }
+        }
+
         notificar("ok", "Ingreso corregido.");
-        await cargar(["ingresos"]);
+        await cargar(["ingresos", "costos"]);
         return true;
       },
 
@@ -1120,6 +1253,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
               l.unidades - l.bultos * (p?.unidadesPorBulto ?? 1),
             unidades_por_bulto: p?.unidadesPorBulto ?? 1,
             precio_unitario: l.precioUnitario,
+            lista: l.lista ?? "oficial",
             entregado: l.entregado,
             orden: i,
           };
@@ -1217,6 +1351,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     cargando,
     cargar,
     stockCalculado,
+    ultimosCostos,
     errorCarga,
     idDe,
     porCodigo,

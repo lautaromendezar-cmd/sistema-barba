@@ -2,14 +2,22 @@
 
 import { useState } from "react";
 import { useStore } from "@/lib/store";
-import { fechaHora, enBultos } from "@/lib/formato";
+import { fechaHora, enBultos, money } from "@/lib/formato";
 import { BuscadorProducto } from "@/components/BuscadorProducto";
 import { BuscadorProveedor } from "@/components/BuscadorProveedor";
 import { IngresoDoc } from "@/components/IngresoDoc";
 import type { Ingreso } from "@/lib/types";
 
-/** Bultos cerrados más botellas sueltas: a veces llega una caja abierta o una sola. */
-type Linea = { codigo: string; bultos: number; sueltas: number };
+/**
+ * Bultos cerrados más botellas sueltas: a veces llega una caja abierta o una sola.
+ * El costo se escribe por caja, como viene en el remito del proveedor (0 = no se
+ * cargó); en la base se guarda por unidad, como todo precio del sistema.
+ */
+type Linea = { codigo: string; bultos: number; sueltas: number; costoCaja: number };
+
+/** Lo que se le pagó por caja → por unidad. Sin costo, null. */
+const porUnidad = (costoCaja: number, unidadesPorBulto: number) =>
+    costoCaja > 0 ? costoCaja / Math.max(1, unidadesPorBulto) : null;
 
 const etiqueta =
   "mb-1 block text-xs font-semibold tracking-wide text-muted uppercase";
@@ -38,7 +46,11 @@ export default function Ingresos() {
   const unidadesDe = (l: Linea) =>
     l.bultos * (producto(l.codigo)?.unidadesPorBulto ?? 1) + l.sueltas;
 
-  const cambiar = (i: number, campo: "bultos" | "sueltas", valor: string) =>
+  const cambiar = (
+    i: number,
+    campo: "bultos" | "sueltas" | "costoCaja",
+    valor: string,
+  ) =>
     setLineas((prev) =>
       prev.map((x, j) =>
         j === i
@@ -71,6 +83,10 @@ export default function Ingresos() {
         productoCodigo: l.codigo,
         bultos: l.bultos,
         unidades: unidadesDe(l),
+        costoUnitario: porUnidad(
+          l.costoCaja,
+          producto(l.codigo)?.unidadesPorBulto ?? 1,
+        ),
       })),
     });
     setGuardando(false);
@@ -156,7 +172,7 @@ export default function Ingresos() {
                   setProveedorId(p.proveedorId);
                 setLineas((prev) => [
                   ...prev,
-                  { codigo: p.codigo, bultos: 1, sueltas: 0 },
+                  { codigo: p.codigo, bultos: 1, sueltas: 0, costoCaja: 0 },
                 ]);
               }}
             />
@@ -173,6 +189,12 @@ export default function Ingresos() {
                   </th>
                   <th className="w-28 py-2 text-right font-semibold">
                     Unidades
+                  </th>
+                  <th
+                    className="w-36 py-2 text-right font-semibold"
+                    title="Lo que se le pagó al proveedor por caja. Si el remito no trae precio, se deja vacío y se completa después con «Corregir»."
+                  >
+                    Costo x caja
                   </th>
                   <th className="w-10"></th>
                 </tr>
@@ -228,6 +250,22 @@ export default function Ingresos() {
                         className={`tnum py-2.5 text-right ${unidadesDe(l) === 0 ? "text-alerta font-medium" : "text-muted"}`}
                       >
                         {unidadesDe(l)} u
+                      </td>
+                      <td className="py-2.5 text-right">
+                        <input
+                          type="number"
+                          min={0}
+                          value={l.costoCaja || ""}
+                          onChange={(e) =>
+                            cambiar(i, "costoCaja", e.target.value)
+                          }
+                          onFocus={(e) => e.target.select()}
+                          placeholder={
+                            (p?.unidadesPorBulto ?? 1) > 1 ? "opcional" : "x unidad"
+                          }
+                          aria-label="Costo por caja"
+                          className="tnum w-28 rounded-md border border-line px-2 py-1.5 text-right outline-none focus:border-ink"
+                        />
                       </td>
                       <td className="py-2.5 text-right">
                         <button
@@ -321,7 +359,8 @@ export default function Ingresos() {
 }
 
 /**
- * Un ingreso ya guardado. Se puede corregir el proveedor y el número, que son
+ * Un ingreso ya guardado. Se puede corregir el proveedor, el número y el costo
+ * de cada línea (el remito del proveedor a veces llega sin precio), que son
  * datos de referencia; las cantidades no, porque ya sumaron stock: si se cargó
  * mal una cantidad, se corrige con un ajuste en Productos. Si estaba todo mal,
  * se anula (0019) y se carga de nuevo.
@@ -333,15 +372,38 @@ function IngresoAnterior({ ing, onVer }: { ing: Ingreso; onVer: () => void }) {
   const [proveedorId, setProveedorId] = useState(ing.proveedorId ?? "");
   const [nro, setNro] = useState(ing.nroRemitoProveedor);
   const [guardando, setGuardando] = useState(false);
+  /** Costo por caja de cada línea mientras se corrige, por id de línea. */
+  const costosDeHoy = () =>
+    Object.fromEntries(
+      ing.lineas.map((l) => [
+        l.id ?? "",
+        l.costoUnitario
+          ? Math.round(
+              l.costoUnitario * (producto(l.productoCodigo)?.unidadesPorBulto ?? 1),
+            )
+          : 0,
+      ]),
+    );
+  const [costos, setCostos] = useState<Record<string, number>>(costosDeHoy);
 
   const nombre =
     db.proveedores.find((v) => v.id === ing.proveedorId)?.nombre ?? ing.bodega;
 
   async function guardar() {
     setGuardando(true);
+    const antes = costosDeHoy();
     const ok = await editarIngreso(ing.id, {
       proveedorId: proveedorId || null,
       nroRemitoProveedor: nro,
+      costos: ing.lineas
+        .filter((l) => l.id && costos[l.id] !== antes[l.id])
+        .map((l) => ({
+          lineaId: l.id!,
+          costoUnitario: porUnidad(
+            costos[l.id!] ?? 0,
+            producto(l.productoCodigo)?.unidadesPorBulto ?? 1,
+          ),
+        })),
     });
     setGuardando(false);
     if (ok) setEditando(false);
@@ -375,6 +437,7 @@ function IngresoAnterior({ ing, onVer }: { ing: Ingreso; onVer: () => void }) {
             onClick={() => {
               setProveedorId(ing.proveedorId ?? "");
               setNro(ing.nroRemitoProveedor);
+              setCostos(costosDeHoy());
               setEditando(false);
             }}
             className="rounded-md border border-line px-3 py-2 text-sm text-muted transition hover:border-ink hover:text-acento-ink"
@@ -409,7 +472,10 @@ function IngresoAnterior({ ing, onVer }: { ing: Ingreso; onVer: () => void }) {
             </button>
             {!anulado && (
               <button
-                onClick={() => setEditando(true)}
+                onClick={() => {
+                  setCostos(costosDeHoy());
+                  setEditando(true);
+                }}
                 className="rounded border border-line px-2 py-0.5 text-xs text-muted transition hover:border-ink hover:text-acento-ink"
               >
                 Corregir
@@ -438,11 +504,39 @@ function IngresoAnterior({ ing, onVer }: { ing: Ingreso; onVer: () => void }) {
       >
         {ing.lineas.map((l) => {
           const p = producto(l.productoCodigo);
+          const porBulto = p?.unidadesPorBulto ?? 1;
           return (
-            <li key={l.productoCodigo} className="flex justify-between gap-4">
+            <li
+              key={l.id ?? l.productoCodigo}
+              className="flex items-center justify-between gap-4"
+            >
               <span>{p?.nombre ?? l.productoCodigo}</span>
-              <span className="tnum shrink-0 whitespace-nowrap">
-                +{enBultos(l.unidades, p?.unidadesPorBulto ?? 1)}
+              <span className="tnum flex shrink-0 items-center gap-3 whitespace-nowrap">
+                {editando && l.id ? (
+                  <input
+                    type="number"
+                    min={0}
+                    value={costos[l.id] || ""}
+                    onChange={(e) =>
+                      setCostos({
+                        ...costos,
+                        [l.id!]: Math.max(0, Number(e.target.value) || 0),
+                      })
+                    }
+                    onFocus={(e) => e.target.select()}
+                    placeholder={porBulto > 1 ? "costo x caja" : "costo x unidad"}
+                    aria-label="Costo por caja"
+                    className="tnum w-32 rounded-md border border-line bg-white px-2 py-1 text-right text-sm no-underline outline-none focus:border-ink"
+                  />
+                ) : (
+                  l.costoUnitario && (
+                    <span className="text-xs text-faint">
+                      {money(l.costoUnitario * porBulto)}
+                      {porBulto > 1 ? "/caja" : "/u"}
+                    </span>
+                  )
+                )}
+                +{enBultos(l.unidades, porBulto)}
               </span>
             </li>
           );

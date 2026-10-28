@@ -16,7 +16,28 @@ export type Producto = {
   precioLista: number;
   /** La lista decia "Consultar": no se puede emitir un remito con el en cero. */
   precioAConsultar?: boolean;
+  /** POR UNIDAD, como precioLista. null = no esta en la lista de oferta (0020). */
+  precioOferta?: number | null;
   enListaActual: boolean;
+};
+
+/** De que lista sale el precio de una linea del remito. Se elige por linea. */
+export type Lista = "oficial" | "oferta";
+
+/** La ultima compra con costo de un producto (vista ultimo_costo, 0020). */
+export type UltimoCosto = {
+  /** POR UNIDAD, como todo precio del sistema. */
+  costoUnitario: number;
+  fecha: string;
+  proveedor: string;
+};
+
+/** Una linea de ingreso con costo, para la tabla «Compras» de un producto. */
+export type Compra = {
+  fecha: string;
+  proveedor: string;
+  unidades: number;
+  costoUnitario: number;
 };
 
 /** A quien se le compra. Distinto de la bodega, que es quien produce. */
@@ -96,6 +117,8 @@ export type RemitoLinea = {
   bultos: number;
   unidades: number;
   precioUnitario: number;
+  /** De que lista salio el precio. Sin dato = oficial (lo de antes de 0020). */
+  lista?: Lista;
   /** false = queda pendiente de entrega y NO descuenta stock. */
   entregado: boolean;
 };
@@ -141,7 +164,16 @@ export type Ingreso = {
   nroRemitoProveedor: string;
   usuario: string;
   /** `sueltas` viene de la base; al registrar no hace falta, sale de unidades. */
-  lineas: { productoCodigo: string; bultos: number; sueltas?: number; unidades: number }[];
+  lineas: {
+    /** uuid de la linea: hace falta para completarle el costo despues. */
+    id?: string;
+    productoCodigo: string;
+    bultos: number;
+    sueltas?: number;
+    unidades: number;
+    /** Lo que se le pago al proveedor POR UNIDAD. null = no se cargo (0020). */
+    costoUnitario?: number | null;
+  }[];
   /** Nombre de quien lo anulo (0019). Sin anular, undefined. */
   anuladoPor?: string;
   anuladoAt?: string;

@@ -1,16 +1,18 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useStore } from "@/lib/store";
-import { money, enBultos, fechaHora } from "@/lib/formato";
-import type { Movimiento, Producto } from "@/lib/types";
+import { money, enBultos, fecha, fechaHora } from "@/lib/formato";
+import type { Compra, Movimiento, Producto } from "@/lib/types";
 import { coincide, normalizar } from "@/lib/texto";
 import { Modal } from "@/components/Modal";
 
 export default function Productos() {
-  const { db, stock, agregarProducto, ajustarStock } = useStore();
+  const { db, stock, agregarProducto, ajustarStock, ultimoCosto } = useStore();
   const [busqueda, setBusqueda] = useState("");
   const [seccion, setSeccion] = useState("todas");
+  const [soloOferta, setSoloOferta] = useState(false);
   const [alta, setAlta] = useState(false);
   const [ajustando, setAjustando] = useState<Producto | null>(null);
   const [detalle, setDetalle] = useState<Producto | null>(null);
@@ -26,6 +28,7 @@ export default function Productos() {
     const q = normalizar(busqueda);
     return db.productos.filter((p) => {
       if (seccion !== "todas" && p.seccion !== seccion) return false;
+      if (soloOferta && !p.precioOferta) return false;
       if (!q) return true;
       return (
         coincide(p.nombre, q) ||
@@ -33,7 +36,12 @@ export default function Productos() {
         coincide(p.bodega, q)
       );
     });
-  }, [db.productos, busqueda, seccion]);
+  }, [db.productos, busqueda, seccion, soloOferta]);
+
+  const enOferta = useMemo(
+    () => db.productos.filter((p) => p.precioOferta).length,
+    [db.productos],
+  );
 
   // Pintar 4.300 filas son 53.000 nodos en el DOM: la pantalla tarda 3,5 s en
   // abrir y 5 s en reaccionar a cada letra del buscador. Se muestran las
@@ -53,12 +61,20 @@ export default function Productos() {
             movimientos, no se escribe a mano.
           </p>
         </div>
-        <button
-          onClick={() => setAlta((v) => !v)}
-          className="rounded-md bg-ink px-4 py-2.5 text-sm font-medium text-white transition hover:bg-ink-hover"
-        >
-          {alta ? "Cancelar" : "Nuevo producto"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/productos/precios"
+            className="rounded-md border border-line bg-surface px-4 py-2.5 text-sm transition hover:border-ink hover:text-acento-ink"
+          >
+            Actualizar precios
+          </Link>
+          <button
+            onClick={() => setAlta((v) => !v)}
+            className="rounded-md bg-ink px-4 py-2.5 text-sm font-medium text-white transition hover:bg-ink-hover"
+          >
+            {alta ? "Cancelar" : "Nuevo producto"}
+          </button>
+        </div>
       </div>
 
       {alta && (
@@ -88,19 +104,36 @@ export default function Productos() {
             </option>
           ))}
         </select>
+        <label className="flex items-center gap-2 rounded-md border border-line bg-surface px-3 py-2 text-sm text-muted">
+          <input
+            type="checkbox"
+            checked={soloOferta}
+            onChange={(e) => setSoloOferta(e.target.checked)}
+          />
+          Solo en oferta ({enOferta})
+        </label>
       </div>
 
       <div className="mt-4 overflow-x-auto rounded-lg border border-line bg-surface">
-        <table className="w-full min-w-[820px] text-sm">
+        <table className="w-full min-w-[980px] text-sm">
           <thead>
             <tr className="border-b border-line text-left text-[11px] tracking-wider text-faint uppercase">
               <th className="px-4 py-2.5 font-semibold">Código</th>
               <th className="px-4 py-2.5 font-semibold">Producto</th>
               <th className="px-4 py-2.5 text-right font-semibold">
-                Precio unidad
+                Oficial x u
               </th>
               <th className="px-4 py-2.5 text-right font-semibold">
-                Precio bulto
+                Oficial x bulto
+              </th>
+              <th className="px-4 py-2.5 text-right font-semibold">
+                Oferta x u
+              </th>
+              <th
+                className="px-4 py-2.5 text-right font-semibold"
+                title="Lo que se le pagó al proveedor por unidad en la última compra con costo cargado"
+              >
+                Últ. costo x u
               </th>
               <th className="px-4 py-2.5 text-right font-semibold">Stock</th>
               <th className="px-4 py-2.5"></th>
@@ -109,6 +142,7 @@ export default function Productos() {
           <tbody>
             {visibles.map((p) => {
               const s = stock(p.codigo);
+              const costo = ultimoCosto(p.codigo);
               return (
                 <tr
                   key={p.codigo}
@@ -137,6 +171,19 @@ export default function Productos() {
                       ? "—"
                       : money(p.precioLista * p.unidadesPorBulto)}
                   </td>
+                  <td className="tnum px-4 py-3 text-right">
+                    {p.precioOferta ? money(p.precioOferta) : (
+                      <span className="text-faint">—</span>
+                    )}
+                  </td>
+                  <td
+                    className="tnum px-4 py-3 text-right text-muted"
+                    title={costo ? `${costo.proveedor} · ${fecha(costo.fecha)}` : undefined}
+                  >
+                    {costo ? money(costo.costoUnitario) : (
+                      <span className="text-faint">—</span>
+                    )}
+                  </td>
                   <td
                     className={`tnum px-4 py-3 text-right ${
                       s <= 0 ? "font-semibold text-alerta" : ""
@@ -149,7 +196,7 @@ export default function Productos() {
                       onClick={() => setDetalle(p)}
                       className="rounded border border-line px-2 py-1 text-xs text-muted transition hover:border-ink hover:text-acento-ink"
                     >
-                      Movimientos
+                      Historial
                     </button>
                     <button
                       onClick={() => setAjustando(p)}
@@ -169,7 +216,7 @@ export default function Productos() {
             })}
             {filtrados.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-muted">
+                <td colSpan={8} className="px-4 py-10 text-center text-muted">
                   Ningún producto coincide con la búsqueda.
                 </td>
               </tr>
@@ -216,11 +263,109 @@ export default function Productos() {
 
       {detalle && (
         <Modal
-          titulo={`Movimientos · ${detalle.nombre}`}
+          titulo={`Historial · ${detalle.nombre}`}
           onCerrar={() => setDetalle(null)}
         >
+          <Compras
+            key={`c-${detalle.codigo}`}
+            codigo={detalle.codigo}
+            unidadesPorBulto={detalle.unidadesPorBulto}
+          />
+          <h3 className="titulo mt-6 mb-2 text-base font-semibold">Movimientos</h3>
           <Historial key={detalle.codigo} codigo={detalle.codigo} />
         </Modal>
+      )}
+    </div>
+  );
+}
+
+/**
+ * A cuánto entró cada cosa: «10 cajas a $70.000 / 5 cajas a $120.000», con la
+ * primera y la última vez y a quién. Lo pidió Federico para tener el costo real
+ * adelante al negociar. Solo cuenta ingresos sin anular y con costo cargado.
+ */
+function Compras({
+  codigo,
+  unidadesPorBulto,
+}: {
+  codigo: string;
+  unidadesPorBulto: number;
+}) {
+  const { comprasDe } = useStore();
+  const [compras, setCompras] = useState<Compra[] | null>(null);
+
+  useEffect(() => {
+    let vivo = true;
+    comprasDe(codigo).then((c) => {
+      if (vivo) setCompras(c);
+    });
+    return () => {
+      vivo = false;
+    };
+  }, [codigo, comprasDe]);
+
+  if (compras === null) {
+    return <p className="py-4 text-center text-muted">Buscando las compras...</p>;
+  }
+
+  // Agrupadas por costo (redondeado a la caja, que es como se carga).
+  const grupos = new Map<
+    number,
+    { unidades: number; primera: string; ultima: string; proveedores: Set<string> }
+  >();
+  for (const c of compras) {
+    const clave = Math.round(c.costoUnitario * unidadesPorBulto);
+    const g = grupos.get(clave) ?? {
+      unidades: 0,
+      primera: c.fecha,
+      ultima: c.fecha,
+      proveedores: new Set<string>(),
+    };
+    g.unidades += c.unidades;
+    if (c.fecha < g.primera) g.primera = c.fecha;
+    if (c.fecha > g.ultima) g.ultima = c.fecha;
+    if (c.proveedor) g.proveedores.add(c.proveedor);
+    grupos.set(clave, g);
+  }
+  const filas = [...grupos.entries()].sort((a, b) =>
+    b[1].ultima.localeCompare(a[1].ultima),
+  );
+
+  return (
+    <div>
+      <h3 className="titulo mb-2 text-base font-semibold">Compras</h3>
+      {filas.length === 0 ? (
+        <p className="text-sm text-muted">
+          Todavía no entró con costo cargado. Se carga en Ingresos, al recibir
+          la mercadería o después con «Corregir».
+        </p>
+      ) : (
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-line text-left text-[11px] tracking-wider text-faint uppercase">
+              <th className="py-2 font-semibold">Entraron</th>
+              <th className="py-2 text-right font-semibold">
+                Costo {unidadesPorBulto > 1 ? "x caja" : "x u"}
+              </th>
+              <th className="py-2 pl-4 font-semibold">Cuándo</th>
+              <th className="py-2 font-semibold">Proveedor</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filas.map(([costo, g]) => (
+              <tr key={costo} className="border-b border-line last:border-0">
+                <td className="tnum py-2">{enBultos(g.unidades, unidadesPorBulto)}</td>
+                <td className="tnum py-2 text-right font-medium">{money(costo)}</td>
+                <td className="py-2 pl-4 whitespace-nowrap text-muted">
+                  {fecha(g.primera) === fecha(g.ultima)
+                    ? fecha(g.ultima)
+                    : `${fecha(g.primera)} al ${fecha(g.ultima)}`}
+                </td>
+                <td className="py-2 text-muted">{[...g.proveedores].join(", ")}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </div>
   );
@@ -477,6 +622,7 @@ function FormEditarProducto({
     presentacion: producto.presentacion,
     unidadesPorBulto: producto.unidadesPorBulto,
     precioLista: producto.precioLista,
+    precioOferta: producto.precioOferta ?? 0,
     seVendeSuelto: producto.seVendeSuelto ?? false,
     enListaActual: producto.enListaActual,
     proveedorId: producto.proveedorId ?? "",
@@ -592,6 +738,28 @@ function FormEditarProducto({
           <p className="mt-1 text-xs text-faint">
             El bulto sale {money(f.precioLista * f.unidadesPorBulto)}.
           </p>
+        </div>
+      </div>
+
+      <div className="mb-4 grid gap-4 sm:grid-cols-2">
+        <div className="sm:col-start-2">
+          <label className={etiqueta}>Precio de oferta por unidad</label>
+          <input
+            type="number"
+            step="0.01"
+            min={0}
+            value={f.precioOferta || ""}
+            onChange={(e) =>
+              setF({ ...f, precioOferta: Math.max(0, Number(e.target.value) || 0) })
+            }
+            placeholder="Vacío = no está en oferta"
+            className={`${campo} tnum`}
+          />
+          {f.precioOferta > 0 && (
+            <p className="mt-1 text-xs text-faint">
+              El bulto sale {money(f.precioOferta * f.unidadesPorBulto)}.
+            </p>
+          )}
         </div>
       </div>
 

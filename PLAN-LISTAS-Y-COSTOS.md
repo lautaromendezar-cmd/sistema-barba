@@ -109,17 +109,27 @@ Todo se lee en el navegador con SheetJS (`xlsx`), sin subir el archivo a ningún
 v2.0 en `lib/version.ts` con novedades en castellano simple: «Ahora hay dos
 listas…», «Actualizar precios desde Excel», «Costo en los ingresos».
 
-## Decisiones abiertas (de Lautaro, no hace falta preguntarle a Fede)
-- **¿Las chicas ven el costo?** En 0006 Federico pidió que las empleadas no
-  vean la plata del negocio. El costo es justamente eso. Propuesta: el costo
-  (columna, ficha y aviso en el remito) solo lo ve `es_admin`; Claudia lo
-  CARGA en el ingreso pero no ve el historial. Misma salvedad que 0006: es
-  pantalla, no candado. Si eso no alcanza, le preguntamos a Fede.
-- **¿Quién puede actualizar precios?** Propuesta: todos (lo van a hacer «ellos»
-  y Claudia es la que carga). Queda en el historial quién lo hizo.
-- Subir ya la oficial de octubre o esperar a la del lunes.
+## Decisiones de Lautaro (28-oct, a la noche)
+- **Claudia y Roxana SÍ ven el costo**: ellas cargan el stock, Fede no. Así
+  que el costo se ve igual para los tres (columna, ficha y aviso en el remito).
+  Nunca en el papel.
+- **Todos pueden actualizar precios.** Queda en `precios_historial` quién lo
+  hizo (trigger de 0020, también para las ediciones a mano).
+- **La oficial de octubre NO se sube todavía**: se le preguntó a Fede y no
+  contestó. Ojo que mientras tanto siguen remitando con precios viejos en ~691.
 
 ## Orden de trabajo
+
+**Estado al 28-oct, 21 h (MSI):** pasos 1, 2, 3, 4 y 6 hechos en código, sin
+publicar y **sin aplicar la 0020**. Falta el 5 (necesita las listas) y el 7.
+La 0020 se probó contra producción dentro de una transacción con rollback
+(15 pruebas en verde). `scripts/probar_listas.ts` prueba la lectura de Excel
+con un libro armado como el de Fede (21 pruebas); con un archivo real como
+argumento da el resumen contra el catálogo de producción, solo leyendo.
+**Orden para publicar: primero aplicar la 0020 (es aditiva, la app vieja
+sigue andando con ella), después el push.** Al revés, emitir un remito falla
+(la app manda la columna `lista`) y la carga se cae (lee la vista `ultimo_costo`).
+
 1. 0020 + prueba DO/rollback → Lautaro la pega.
 2. Store/tipos + Nuevo remito (lista por línea + costo en pantalla).
 3. Ingresos con costo + Corregir.

@@ -16,6 +16,17 @@ export type Novedad = {
 
 export const NOVEDADES: Novedad[] = [
   {
+    version: "2.0",
+    fecha: "2026-10-28",
+    cambios: [
+      "Ahora hay dos listas: oficial y oferta. En el remito, cada producto que está en oferta muestra los dos precios y se elige en cada línea. Para vender una parte a oficial y otra a oferta (5 cajas y 5 cajas), «+ parte en oferta» agrega otra línea del mismo producto.",
+      "Costo en los ingresos: al cargar un ingreso hay una columna «Costo x caja» con lo que se le pagó al proveedor. Es opcional, y si el remito del proveedor llegó sin precio se completa después con «Corregir».",
+      "El último costo aparece en gris debajo del precio cuando se arma un remito, para saber hasta dónde se puede negociar. No sale impreso: el remito en papel no lo muestra nunca.",
+      "Productos: columnas de precio oficial, oferta y último costo, y el filtro «Solo en oferta». En «Historial» de cada producto está la tabla de compras: cuántas cajas entraron a cada costo, cuándo y de quién.",
+      "Actualizar precios desde Excel (botón en Productos): la lista oficial se sube tal cual llega; la oferta, con una planilla que se baja del sistema. Antes de guardar se ve qué sube, qué baja y qué no se encontró.",
+    ],
+  },
+  {
     version: "1.9",
     fecha: "2026-10-23",
     cambios: [

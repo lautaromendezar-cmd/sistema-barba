@@ -5,10 +5,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useStore } from "@/lib/store";
 import { BuscadorCliente } from "@/components/BuscadorCliente";
-import { money, enBultos, pct, totalRemito } from "@/lib/formato";
+import { money, enBultos, pct, totalRemito, fecha } from "@/lib/formato";
 import { BuscadorProducto } from "@/components/BuscadorProducto";
 import { RemitoDoc } from "@/components/RemitoDoc";
-import type { Remito, RemitoLinea } from "@/lib/types";
+import type { Lista, Producto, Remito, RemitoLinea } from "@/lib/types";
 
 /**
  * Una fila del remito en armado. Las libres no son del catálogo (una botella
@@ -16,6 +16,8 @@ import type { Remito, RemitoLinea } from "@/lib/types";
  * mano, salen impresas y suman al total, pero no tocan el stock.
  */
 type Fila = {
+  /** Clave de la fila: el mismo producto puede ir en dos, una por lista. */
+  id: number;
   /** Código del producto, o una clave propia en las libres. */
   codigo: string;
   libre?: boolean;
@@ -26,8 +28,14 @@ type Fila = {
   /** Solo en las libres: en las demás sale de bultos × unidades por bulto + sueltas. */
   unidades?: number;
   precioUnitario: number;
+  /** De qué lista salió el precio. Las libres van siempre en la oficial. */
+  lista: Lista;
   entregado: boolean;
 };
+
+/** El precio de un producto en una lista. Sin oferta, la oficial. */
+const precioEn = (p: Producto | undefined, lista: Lista) =>
+  lista === "oferta" && p?.precioOferta ? p.precioOferta : (p?.precioLista ?? 0);
 
 /** La nota que deja una corrección. Al corregir una corrección no se acumula. */
 const NOTA_REEMPLAZO = /^Reemplaza al remito R-\d+\.\s*/;
@@ -59,6 +67,7 @@ function NuevoRemito({ corrigeId }: { corrigeId: string | null }) {
     anularRemito,
     agregarCliente,
     traerRemito,
+    ultimoCosto,
   } = useStore();
   const router = useRouter();
 
@@ -73,6 +82,7 @@ function NuevoRemito({ corrigeId }: { corrigeId: string | null }) {
   /** El remito que se está corrigiendo: se anula solo cuando sale el nuevo. */
   const [original, setOriginal] = useState<Remito | null>(null);
   const proximaLibre = useRef(1);
+  const proximaFila = useRef(1);
   const precargado = useRef<string | null>(null);
 
   // Corregir = armar uno nuevo con lo mismo. El emitido no se toca hasta que
@@ -99,21 +109,25 @@ function NuevoRemito({ corrigeId }: { corrigeId: string | null }) {
         r.lineas.map((l) =>
           l.productoCodigo
             ? {
+                id: proximaFila.current++,
                 codigo: l.productoCodigo,
                 bultos: l.bultos,
                 sueltas:
                   l.unidades -
                   l.bultos * (producto(l.productoCodigo)?.unidadesPorBulto ?? 1),
                 precioUnitario: l.precioUnitario,
+                lista: l.lista ?? "oficial",
                 entregado: l.entregado,
               }
             : {
+                id: proximaFila.current++,
                 codigo: `libre-${proximaLibre.current++}`,
                 libre: true,
                 descripcion: l.descripcion ?? "",
                 bultos: 0,
                 unidades: l.unidades,
                 precioUnitario: l.precioUnitario,
+                lista: "oficial",
                 entregado: true,
               },
         ),
@@ -151,6 +165,7 @@ function NuevoRemito({ corrigeId }: { corrigeId: string | null }) {
           bultos: f.bultos,
           unidades: unidadesDe(f),
           precioUnitario: f.precioUnitario,
+          lista: f.lista,
           entregado: f.entregado,
         },
   );
@@ -165,6 +180,30 @@ function NuevoRemito({ corrigeId }: { corrigeId: string | null }) {
 
   const cambiar = (i: number, cambios: Partial<Fila>) =>
     setFilas((prev) => prev.map((x, j) => (j === i ? { ...x, ...cambios } : x)));
+
+  /** Cambiar de lista pone el precio de esa lista (lo escrito a mano se pierde). */
+  const elegirLista = (i: number, lista: Lista) =>
+    cambiar(i, { lista, precioUnitario: precioEn(producto(filas[i].codigo), lista) });
+
+  /**
+   * «A un cliente le vendí 10 cajas, 5 a oficial y 5 a oferta»: una línea más
+   * del mismo producto, justo abajo, con la otra lista.
+   */
+  const partirEnOtraLista = (i: number) =>
+    setFilas((prev) => {
+      const f = prev[i];
+      const otra: Lista = f.lista === "oferta" ? "oficial" : "oferta";
+      const nueva: Fila = {
+        id: proximaFila.current++,
+        codigo: f.codigo,
+        bultos: 1,
+        sueltas: 0,
+        precioUnitario: precioEn(producto(f.codigo), otra),
+        lista: otra,
+        entregado: f.entregado,
+      };
+      return [...prev.slice(0, i + 1), nueva, ...prev.slice(i + 1)];
+    });
 
   async function emitir() {
     if (!puedeEmitir || emitiendo) return;
@@ -310,10 +349,12 @@ function NuevoRemito({ corrigeId }: { corrigeId: string | null }) {
                 setFilas((prev) => [
                   ...prev,
                   {
+                    id: proximaFila.current++,
                     codigo: p.codigo,
                     bultos: 1,
                     sueltas: 0,
                     precioUnitario: p.precioLista,
+                    lista: "oficial",
                     entregado: true,
                   },
                 ])
@@ -325,12 +366,14 @@ function NuevoRemito({ corrigeId }: { corrigeId: string | null }) {
               setFilas((prev) => [
                 ...prev,
                 {
+                  id: proximaFila.current++,
                   codigo: `libre-${proximaLibre.current++}`,
                   libre: true,
                   descripcion: "",
                   bultos: 0,
                   unidades: 1,
                   precioUnitario: 0,
+                  lista: "oficial",
                   entregado: true,
                 },
               ])
@@ -390,7 +433,7 @@ function NuevoRemito({ corrigeId }: { corrigeId: string | null }) {
 
                   if (f.libre)
                     return (
-                      <tr key={f.codigo} className="border-b border-line last:border-0">
+                      <tr key={f.id} className="border-b border-line last:border-0">
                         <td className="py-2.5 pr-2">
                           <input
                             value={f.descripcion ?? ""}
@@ -435,8 +478,14 @@ function NuevoRemito({ corrigeId }: { corrigeId: string | null }) {
                   const p = producto(f.codigo);
                   const disponible = disponibleDe(f.codigo);
                   const faltan = f.entregado && u > disponible;
+                  const costo = ultimoCosto(f.codigo);
+                  const precioDeLista = precioEn(p, f.lista);
+                  // El mismo producto ya está en otra línea: no se ofrece partir de nuevo.
+                  const yaPartido = filas.some(
+                    (x) => x.id !== f.id && x.codigo === f.codigo,
+                  );
                   return (
-                    <tr key={f.codigo} className="border-b border-line last:border-0">
+                    <tr key={f.id} className="border-b border-line last:border-0">
                       <td className="py-2.5 pr-2">
                         <div className="font-medium">{p?.nombre}</div>
                         <div className="text-xs text-faint">
@@ -449,6 +498,36 @@ function NuevoRemito({ corrigeId }: { corrigeId: string | null }) {
                             igual: el stock queda en negativo.
                           </div>
                         )}
+                        {p?.precioOferta ? (
+                          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
+                            {(["oficial", "oferta"] as const).map((l) => (
+                              <button
+                                key={l}
+                                type="button"
+                                onClick={() => elegirLista(i, l)}
+                                aria-pressed={f.lista === l}
+                                className={`rounded-full border px-2 py-0.5 transition ${
+                                  f.lista === l
+                                    ? "border-ink bg-acento-soft font-medium text-acento-ink"
+                                    : "border-line text-muted hover:border-ink"
+                                }`}
+                              >
+                                {l === "oficial" ? "Oficial" : "Oferta"}{" "}
+                                {money(precioEn(p, l))}
+                              </button>
+                            ))}
+                            {!yaPartido && (
+                              <button
+                                type="button"
+                                onClick={() => partirEnOtraLista(i)}
+                                title="Otra línea del mismo producto con la otra lista, ej.: 5 cajas a oficial y 5 a oferta"
+                                className="px-1 text-muted underline-offset-2 hover:text-acento-ink hover:underline"
+                              >
+                                + parte en {f.lista === "oferta" ? "oficial" : "oferta"}
+                              </button>
+                            )}
+                          </div>
+                        ) : null}
                       </td>
                       <td className="py-2.5 text-right">
                         <input
@@ -491,11 +570,21 @@ function NuevoRemito({ corrigeId }: { corrigeId: string | null }) {
                           </div>
                         ) : (
                           p &&
-                          f.precioUnitario !== p.precioLista && (
+                          f.precioUnitario !== precioDeLista && (
                             <div className="text-acento-ink mt-0.5 text-[11px]">
-                              lista {money(p.precioLista)}
+                              {f.lista === "oferta" ? "oferta" : "lista"}{" "}
+                              {money(precioDeLista)}
                             </div>
                           )
+                        )}
+                        {/* Solo en pantalla, para negociar: RemitoDoc no lo imprime nunca. */}
+                        {costo && (
+                          <div
+                            className="mt-0.5 text-[11px] text-faint"
+                            title={`Última compra: ${costo.proveedor || "sin proveedor"}`}
+                          >
+                            costo {money(costo.costoUnitario)} · {fecha(costo.fecha)}
+                          </div>
                         )}
                       </td>
                       <td className="tnum py-2.5 text-right">
