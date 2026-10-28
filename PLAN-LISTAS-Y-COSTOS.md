@@ -120,15 +120,22 @@ listas…», «Actualizar precios desde Excel», «Costo en los ingresos».
 
 ## Orden de trabajo
 
-**Estado al 28-oct, 21 h (MSI):** pasos 1, 2, 3, 4 y 6 hechos en código, sin
-publicar y **sin aplicar la 0020**. Falta el 5 (necesita las listas) y el 7.
-La 0020 se probó contra producción dentro de una transacción con rollback
-(15 pruebas en verde). `scripts/probar_listas.ts` prueba la lectura de Excel
-con un libro armado como el de Fede (21 pruebas); con un archivo real como
-argumento da el resumen contra el catálogo de producción, solo leyendo.
-**Orden para publicar: primero aplicar la 0020 (es aditiva, la app vieja
-sigue andando con ella), después el push.** Al revés, emitir un remito falla
-(la app manda la columna `lista`) y la carga se cae (lee la vista `ultimo_costo`).
+**Estado al 28-oct, 20:30 (MSI): PUBLICADO (v2.0) y 0020 APLICADA.** Pasos
+1, 2, 3, 4 y 6 hechos. Falta el 5 (la oferta inicial, necesita las listas del
+WhatsApp) y que Fede diga si se sube la oficial de octubre.
+
+Cómo se probó, sin dejar nada en la base:
+- 0020 contra producción con rollback antes de aplicarla (15 casos).
+- Un día de trabajo como Claudia (rol authenticated, con RLS) dentro de una
+  transacción con rollback: la app VIEJA (remito, anular, ingreso, corregir,
+  anular ingreso, editar precio, ajustar) y la NUEVA (oferta, 5+5 en dos
+  listas, costo, Corregir costo, cantidad bloqueada). Secuencias restauradas.
+  `probar_app.ts` NO se usó: emite y carga de verdad.
+- `scripts/probar_listas.ts`: lectura de Excel (21 casos).
+- `scripts/probar_listas_navegador.mjs [url]`: las pantallas nuevas como
+  Claudia, inyectando una oferta y un costo de mentira en el navegador, y
+  abortando cualquier escritura (19 casos). En esta PC: `npm i --no-save
+  puppeteer-core@24` antes.
 
 1. 0020 + prueba DO/rollback → Lautaro la pega.
 2. Store/tipos + Nuevo remito (lista por línea + costo en pantalla).

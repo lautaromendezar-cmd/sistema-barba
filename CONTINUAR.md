@@ -2,8 +2,9 @@
 
 Última actualización: **13 de octubre de 2026**.
 
-> **28-oct-2026 — EN CURSO:** lista oficial + oferta por línea, actualizar
-> precios por Excel y costo en ingresos. Todo en **PLAN-LISTAS-Y-COSTOS.md**.
+> **28-oct-2026 — v2.0 PUBLICADA (0020 aplicada):** lista oficial + oferta por
+> línea, actualizar precios por Excel y costo en ingresos. Falta la oferta
+> inicial y la oficial de octubre (espera a Fede). Todo en **PLAN-LISTAS-Y-COSTOS.md**.
 > Las listas de Fede van en `datos/listas 28-oct/` (fuera de git: bajarlas del
 > WhatsApp). Trabajar cuando ellos no cargan.
 
