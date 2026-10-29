@@ -13,7 +13,11 @@
 **El equipo ya carga todo en el sistema. No se tocan datos de producción sin
 OK explícito de Lautaro.** Lautaro cobra mantenimiento ($50.000/mes).
 
-- **Plan pago (agendado para el sáb 24-oct):** pasar el proyecto de Supabase
+- **Copia a mano mientras siga en el plan gratis** (que no tiene copias
+  diarias): `python scripts/respaldar.py` deja todas las tablas + usuarios en
+  `datos/backups/<fecha-hora>/` (fuera de git), con `RESTAURAR.txt`. Solo lee.
+  Primera: 28-oct 21:00, probada restaurándola en tablas temporales (idéntica).
+- **Plan pago (NO hecho al 28-oct; estaba agendado para el sáb 24-oct):** pasar el proyecto de Supabase
   `grupo-barba-stock` a la organización paga (Settings → General → Transfer
   project) para tener copias de seguridad diarias y que no se pause, y el
   proyecto `barba-remitos` de Vercel a Pro si está en Hobby (uso comercial).
