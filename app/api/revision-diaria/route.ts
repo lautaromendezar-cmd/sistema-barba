@@ -79,7 +79,11 @@ export async function GET(request: Request) {
       text: cuerpo,
     }),
   });
-  if (!enviado.ok)
-    return new Response(`No se pudo mandar el mail: ${await enviado.text()}`, { status: 502 });
+  if (!enviado.ok) {
+    // Va a los registros de Vercel: la respuesta solo la ve quien llamó (el cron).
+    const motivo = `No se pudo mandar el mail (${enviado.status}): ${await enviado.text()}`;
+    console.error(motivo, "· asunto:", asunto);
+    return new Response(motivo, { status: 502 });
+  }
   return new Response(asunto);
 }
