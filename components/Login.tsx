@@ -93,12 +93,7 @@ export function Login() {
           </button>
         </form>
 
-        <p className="text-faint mt-5 text-center text-[13px] leading-relaxed">
-          Las cuentas las crea el administrador.
-          <br />
-          No hay registro público.
-        </p>
-        <p className="text-faint mt-3 text-center text-xs">
+        <p className="text-faint mt-5 text-center text-xs">
           <Novedades />
         </p>
       </div>
