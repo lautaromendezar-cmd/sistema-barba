@@ -17,11 +17,12 @@ OK explícito de Lautaro.** Lautaro cobra mantenimiento ($50.000/mes).
   diarias): `python scripts/respaldar.py` deja todas las tablas + usuarios en
   `datos/backups/<fecha-hora>/` (fuera de git), con `RESTAURAR.txt`. Solo lee.
   Primera: 28-oct 21:00, probada restaurándola en tablas temporales (idéntica).
-- **Plan pago (NO hecho al 28-oct; estaba agendado para el sáb 24-oct):** pasar el proyecto de Supabase
-  `grupo-barba-stock` a la organización paga (Settings → General → Transfer
-  project) para tener copias de seguridad diarias y que no se pause, y el
-  proyecto `barba-remitos` de Vercel a Pro si está en Hobby (uso comercial).
-  Después, confirmar en Database → Backups que hay copias.
+- **Supabase en plan pago desde el 28-oct-2026 (21:15):** `grupo-barba-stock`
+  pasó de la organización «Barba» (Free) a la de Lautaro (Pro), y de Nano a
+  Micro (mismo precio: USD ~10/mes que Lautaro le traslada a Fede). Copias
+  diarias automáticas: confirmar el 29-oct en Database → Backups que aparece
+  la primera. El reinicio a Micro tardó 100 s. **Vercel: falta ver si
+  `barba-remitos` está en Hobby** (uso comercial) y pasarlo a Pro.
 - **Revisión semanal automática:** el cron de Vercel (`vercel.json`) llama a
   `/api/revision-semanal` los **sábados 9:00** (12:00 UTC), cuando no trabajan,
   y el resultado le llega por mail a Lautaro (Resend). Variables en Vercel,
