@@ -1,7 +1,9 @@
 /**
- * La revisión de coherencia que corre sola: el cron de Vercel (vercel.json) la
- * llama los sábados a la mañana, cuando el equipo no trabaja, y el resultado
- * le llega a Lautaro por mail. SOLO LEE (lib/revision.ts).
+ * La revisión que corre sola todas las noches: el cron de Vercel (vercel.json)
+ * la llama a las 22:00 de Argentina, cuando el equipo ya no trabaja, y a
+ * Lautaro le llega un mail con la coherencia de la base, la actividad del día
+ * y el estado del sistema. SOLO LEE (lib/revision.ts). Hasta el 28-oct-2026
+ * era semanal (/api/revision-semanal, los sábados).
  *
  * Variables de Vercel (solo Production):
  *   CRON_SECRET       Vercel la manda sola como «Bearer» en cada llamada del
@@ -38,16 +40,23 @@ export async function GET(request: Request) {
     // Recién emitido, la base a veces lo rechaza con «JWT issued at future».
     await new Promise((r) => setTimeout(r, 3000));
 
-    const r = await revisar(sb);
+    const r = await revisar(sb, 1);
     await sb.auth.signOut();
+    const a = r.actividad;
+    const dia = r.fecha.toLocaleDateString("es-AR", {
+      timeZone: "America/Argentina/Buenos_Aires",
+      day: "numeric",
+      month: "numeric",
+    });
+    const hoy = `${a.emitidos} remito(s), ${a.ingresos} ingreso(s)`;
     asunto =
       r.duros > 0
-        ? `⚠ Barba: ${r.duros} problema(s) en la base, no tocar datos`
-        : `Barba: base coherente${r.blandos ? ` · ${r.blandos} punto(s) para revisar` : ""}`;
+        ? `⚠ Barba ${dia}: ${r.duros} problema(s) en la base, no tocar datos`
+        : `Barba ${dia}: base coherente · ${hoy}${r.blandos ? ` · ${r.blandos} para revisar` : ""}`;
     cuerpo = `${resumen(r)}\n\n${comoTexto(r)}`;
   } catch (e) {
-    asunto = "⚠ Barba: la revisión semanal no pudo correr";
-    cuerpo = `${e instanceof Error ? e.message : String(e)}\n\nCorrerla a mano: npx tsx scripts/revisar_datos.ts`;
+    asunto = "⚠ Barba: la revisión diaria no pudo correr";
+    cuerpo = `${e instanceof Error ? e.message : String(e)}\n\nCorrerla a mano: npx tsx scripts/revisar_datos.ts --dias 1`;
   }
 
   const enviado = await fetch("https://api.resend.com/emails", {

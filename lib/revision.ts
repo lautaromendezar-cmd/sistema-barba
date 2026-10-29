@@ -3,7 +3,9 @@
  *
  * SOLO LEE. Controla que el stock cuadre con los papeles que lo mueven y marca
  * lo que conviene mirar con el equipo. La usan scripts/revisar_datos.ts (a mano)
- * y /api/revision-semanal (el cron de Vercel de los sábados, que manda el mail).
+ * y /api/revision-diaria (el cron de Vercel de todas las noches, que manda el
+ * mail). Desde el 28-oct-2026 trae además la actividad del período y el estado
+ * del sistema (versión, tamaño de la base, catálogo).
  *
  * Duros (⚠ = algo está mal en la base, mirarlo antes de tocar nada):
  *   1. Cada remito emitido descontó exactamente sus líneas entregadas.
@@ -19,17 +21,49 @@
  *  10. Ajustes manuales de stock en el período (quién, qué, cuánto).
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { NOVEDADES } from "./version";
 
 type Fila = Record<string, unknown>;
 
 export type Chequeo = { titulo: string; duro: boolean; problemas: string[] };
 
+/** Lo que pasó en el período: para saber si el sistema se está usando. */
+export type Actividad = {
+  emitidos: number;
+  importe: number;
+  /** Remitos emitidos por persona. */
+  porPersona: [string, number][];
+  lineasOferta: number;
+  anulados: number;
+  ingresos: number;
+  ingresosLineas: number;
+  ingresosConCosto: number;
+  ingresosAnulados: number;
+  preciosCambiados: { excel: number; manual: number };
+};
+
+export type Estado = {
+  version: string;
+  commit: string;
+  /** null si la función estado_base (0021) no respondió. */
+  base: { bytes: number; ultimaMigracion: string; migraciones: number } | null;
+  productos: number;
+  enOferta: number;
+  conCosto: number;
+  aConsultar: number;
+  clientes: number;
+  segundos: number;
+};
+
 export type Revision = {
   fecha: Date;
+  dias: number;
   totales: { remitos: number; ingresos: number; movimientos: number };
   chequeos: Chequeo[];
   duros: number;
   blandos: number;
+  actividad: Actividad;
+  estado: Estado;
 };
 
 const DIA = 864e5;
@@ -42,6 +76,9 @@ export const fechaCorta = (iso: unknown) =>
   });
 
 const nroRemito = (n: unknown) => `R-${String(n).padStart(4, "0")}`;
+
+const pesos = (n: number) =>
+  n.toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 
 /** Supabase corta en 1.000 filas sin avisar: se trae todo de a páginas. */
 async function todo(
@@ -97,18 +134,22 @@ function porProducto(filas: Fila[], cantidad: (f: Fila) => number) {
 
 /** Revisa la base con la sesión que ya tenga `sb` (tiene que poder leer todo). */
 export async function revisar(sb: SupabaseClient, dias = 7): Promise<Revision> {
+  const inicio = Date.now();
   const desde = Date.now() - dias * DIA;
 
-  const [prods, perfiles, remitos, rLineas, ingresos, iLineas, movs, stock] =
+  const [prods, perfiles, remitos, rLineas, ingresos, iLineas, movs, stock, historial, clientes, costos] =
     await Promise.all([
-      todo(sb, "productos", "id, codigo, nombre"),
+      todo(sb, "productos", "id, codigo, nombre, precio_oferta, precio_a_consultar"),
       todo(sb, "perfiles", "id, nombre"),
-      todo(sb, "remitos", "id, numero, estado, creado_at, emitido_at"),
-      todo(sb, "remito_lineas", "id, remito_id, producto_id, unidades_totales, entregado"),
+      todo(sb, "remitos", "id, numero, estado, creado_at, emitido_at, anulado_at, ajuste_pct, usuario_id"),
+      todo(sb, "remito_lineas", "id, remito_id, producto_id, unidades_totales, entregado, precio_unitario, lista"),
       todo(sb, "ingresos", "id, bodega, nro_remito_proveedor, creado_at, anulado_at"),
-      todo(sb, "ingreso_lineas", "id, ingreso_id, producto_id, unidades_totales"),
+      todo(sb, "ingreso_lineas", "id, ingreso_id, producto_id, unidades_totales, costo_unitario"),
       todo(sb, "movimientos", "id, producto_id, tipo, unidades, fecha, usuario_id, nota, remito_id, ingreso_id"),
       todo(sb, "stock_fisico", "producto_id, unidades", "producto_id"),
+      todo(sb, "precios_historial", "id, fecha, origen"),
+      todo(sb, "clientes", "id, activo"),
+      todo(sb, "ultimo_costo", "producto_id", "producto_id"),
     ]);
 
   const productos = new Map(prods.map((p) => [String(p.id), p]));
@@ -238,16 +279,125 @@ export async function revisar(sb: SupabaseClient, dias = 7): Promise<Revision> {
     { titulo: "Remitos en borrador de más de un día", duro: false, problemas: borradores },
     { titulo: "Pendientes de entregar con más de 7 días", duro: false, problemas: pendientes },
     { titulo: "Saltos en la numeración de remitos (un emitir que falló a la mitad)", duro: false, problemas: saltos },
-    { titulo: `Ajustes manuales de stock en los últimos ${dias} días`, duro: false, problemas: ajustes },
+    { titulo: `Ajustes manuales de stock ${dias === 1 ? "en el día" : `en los últimos ${dias} días`}`, duro: false, problemas: ajustes },
   ];
+
+  // Actividad del período
+  const enPeriodo = (iso: unknown) => Boolean(iso) && Date.parse(String(iso)) >= desde;
+  const emitidosPeriodo = remitos.filter((r) => enPeriodo(r.emitido_at));
+  const idsPeriodo = new Set(emitidosPeriodo.map((r) => String(r.id)));
+  const lineasPeriodo = rLineas.filter((l) => idsPeriodo.has(String(l.remito_id)));
+  // El importe cuenta solo los que siguen emitidos: un corregido se anula y su
+  // reemplazo ya suma.
+  const importe = emitidosPeriodo
+    .filter((r) => r.estado === "emitido")
+    .reduce((total, r) => {
+      const sub = (lineasRemito.get(String(r.id)) ?? []).reduce(
+        (a, l) => a + Number(l.unidades_totales) * Number(l.precio_unitario),
+        0,
+      );
+      return total + sub * (1 + Number(r.ajuste_pct ?? 0) / 100);
+    }, 0);
+  const cuantos = new Map<string, number>();
+  for (const r of emitidosPeriodo) {
+    const quien = persona.get(String(r.usuario_id)) ?? "?";
+    cuantos.set(quien, (cuantos.get(quien) ?? 0) + 1);
+  }
+  const ingresosPeriodo = ingresos.filter((g) => enPeriodo(g.creado_at));
+  const idsIngresos = new Set(ingresosPeriodo.map((g) => String(g.id)));
+  const iLineasPeriodo = iLineas.filter((l) => idsIngresos.has(String(l.ingreso_id)));
+  const historialPeriodo = historial.filter((h) => enPeriodo(h.fecha));
+
+  const actividad: Actividad = {
+    emitidos: emitidosPeriodo.length,
+    importe,
+    porPersona: [...cuantos.entries()].sort((a, b) => b[1] - a[1]),
+    lineasOferta: lineasPeriodo.filter((l) => l.lista === "oferta").length,
+    anulados: remitos.filter((r) => enPeriodo(r.anulado_at)).length,
+    ingresos: ingresosPeriodo.length,
+    ingresosLineas: iLineasPeriodo.length,
+    ingresosConCosto: iLineasPeriodo.filter((l) => l.costo_unitario != null).length,
+    ingresosAnulados: ingresos.filter((g) => enPeriodo(g.anulado_at)).length,
+    preciosCambiados: {
+      excel: historialPeriodo.filter((h) => h.origen === "excel").length,
+      manual: historialPeriodo.filter((h) => h.origen !== "excel").length,
+    },
+  };
+
+  // Estado del sistema
+  const { data: base } = await sb.rpc("estado_base");
+  const estado: Estado = {
+    version: NOVEDADES[0]?.version ?? "?",
+    commit: (process.env.VERCEL_GIT_COMMIT_SHA ?? "").slice(0, 7),
+    base: base
+      ? {
+          bytes: Number(base.bytes),
+          ultimaMigracion: String(base.ultima_migracion ?? ""),
+          migraciones: Number(base.migraciones ?? 0),
+        }
+      : null,
+    productos: prods.length,
+    enOferta: prods.filter((p) => p.precio_oferta != null).length,
+    conCosto: costos.length,
+    aConsultar: prods.filter((p) => p.precio_a_consultar).length,
+    clientes: clientes.filter((c) => c.activo !== false).length,
+    segundos: Math.round((Date.now() - inicio) / 1000),
+  };
 
   return {
     fecha: new Date(),
+    dias,
     totales: { remitos: remitos.length, ingresos: ingresos.length, movimientos: movs.length },
     chequeos,
     duros: chequeos.filter((c) => c.duro && c.problemas.length > 0).length,
     blandos: chequeos.filter((c) => !c.duro && c.problemas.length > 0).length,
+    actividad,
+    estado,
   };
+}
+
+/** «hoy» para la revisión diaria; «los últimos N días» para el resto. */
+const periodo = (dias: number) => (dias === 1 ? "en el día" : `en los últimos ${dias} días`);
+
+function actividadComoTexto(r: Revision): string[] {
+  const a = r.actividad;
+  const lineas = [`ACTIVIDAD ${periodo(r.dias).toUpperCase()}`];
+  if (a.emitidos === 0 && a.ingresos === 0 && a.anulados === 0) {
+    lineas.push("  Nada: ni remitos ni ingresos. (¿Feriado, o no están usando el sistema?)");
+  } else {
+    lineas.push(
+      `  Remitos emitidos: ${a.emitidos}` +
+        (a.emitidos ? ` · ${pesos(a.importe)}` : "") +
+        (a.porPersona.length ? ` · ${a.porPersona.map(([q, n]) => `${q} ${n}`).join(", ")}` : ""),
+    );
+    if (a.lineasOferta) lineas.push(`  Líneas a precio de oferta: ${a.lineasOferta}`);
+    if (a.anulados) lineas.push(`  Remitos anulados: ${a.anulados}`);
+    lineas.push(
+      `  Ingresos: ${a.ingresos}` +
+        (a.ingresos ? ` · ${a.ingresosLineas} líneas, ${a.ingresosConCosto} con costo cargado` : ""),
+    );
+    if (a.ingresosAnulados) lineas.push(`  Ingresos anulados: ${a.ingresosAnulados}`);
+  }
+  const { excel, manual } = a.preciosCambiados;
+  if (excel || manual)
+    lineas.push(`  Precios cambiados: ${excel} desde Excel, ${manual} a mano`);
+  return lineas;
+}
+
+function estadoComoTexto(r: Revision): string[] {
+  const e = r.estado;
+  const mb = e.base ? e.base.bytes / 1024 / 1024 : null;
+  return [
+    "ESTADO DEL SISTEMA",
+    `  App: v${e.version}${e.commit ? ` (${e.commit})` : ""} · https://barba-remitos.vercel.app`,
+    mb === null
+      ? "  Base: no respondió estado_base()"
+      : `  Base: ${mb.toFixed(0)} MB de 8 GB de disco · ${e.base!.migraciones} migraciones, la última ${e.base!.ultimaMigracion}`,
+    `  Catálogo: ${e.productos} productos · ${e.enOferta} en oferta · ${e.conCosto} con costo · ${e.aConsultar} a consultar`,
+    `  Clientes activos: ${e.clientes}`,
+    "  Copias: Supabase Pro, diarias, 7 días (Database → Backups)",
+    `  La revisión tardó ${e.segundos} s`,
+  ];
 }
 
 /** La misma revisión en texto plano: la consola y el cuerpo del mail. */
@@ -255,6 +405,9 @@ export function comoTexto(r: Revision, maxPorChequeo = 30): string {
   const lineas = [
     `Revisión ${fechaCorta(r.fecha)} · ${r.totales.remitos} remitos, ${r.totales.ingresos} ingresos, ${r.totales.movimientos} movimientos`,
     "",
+    ...actividadComoTexto(r),
+    "",
+    "COHERENCIA",
   ];
   r.chequeos.forEach((c, i) => {
     if (i > 0 && c.duro !== r.chequeos[i - 1].duro) lineas.push("");
@@ -267,7 +420,7 @@ export function comoTexto(r: Revision, maxPorChequeo = 30): string {
     if (c.problemas.length > maxPorChequeo)
       lineas.push(`      … y ${c.problemas.length - maxPorChequeo} más`);
   });
-  lineas.push("", resumen(r));
+  lineas.push("", ...estadoComoTexto(r), "", resumen(r));
   return lineas.join("\n");
 }
 

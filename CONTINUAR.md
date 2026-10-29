@@ -23,9 +23,11 @@ OK explícito de Lautaro.** Lautaro cobra mantenimiento ($50.000/mes).
   diarias automáticas CONFIRMADAS en Database → Backups (7 días; ahí se ven
   hasta las del 22-oct, que el plan gratis hacía pero no dejaba restaurar). El reinicio a Micro tardó 100 s. **Vercel: falta ver si
   `barba-remitos` está en Hobby** (uso comercial) y pasarlo a Pro.
-- **Revisión semanal automática:** el cron de Vercel (`vercel.json`) llama a
-  `/api/revision-semanal` los **sábados 9:00** (12:00 UTC), cuando no trabajan,
-  y el resultado le llega por mail a Lautaro (Resend). Variables en Vercel,
+- **Revisión DIARIA automática (desde el 28-oct; antes semanal):** el cron de
+  Vercel (`vercel.json`) llama a `/api/revision-diaria` **todas las noches a las
+  22:00** (01:00 UTC), cuando no trabajan, y a Lautaro le llega un mail (Resend)
+  con la coherencia, la actividad del día y el estado del sistema (versión,
+  tamaño de la base vía `estado_base()` de 0021, catálogo). Variables en Vercel,
   solo Production: `CRON_SECRET`, `REVISION_CLAVE` (= la clave de federico:
   **si se le cambia, actualizarla**), `REVISION_MAIL`, `RESEND_API_KEY`.
   La lógica está en `lib/revision.ts`. A mano, la misma revisión:

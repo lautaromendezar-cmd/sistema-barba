@@ -25,8 +25,8 @@
   ],
   "crons": [
     {
-      "path": "/api/revision-semanal",
-      "schedule": "0 12 * * 6"
+      "path": "/api/revision-diaria",
+      "schedule": "0 1 * * *"
     }
   ]
 }
