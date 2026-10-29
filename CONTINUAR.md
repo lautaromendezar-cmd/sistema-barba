@@ -21,13 +21,16 @@ OK explícito de Lautaro.** Lautaro cobra mantenimiento ($50.000/mes).
   pasó de la organización «Barba» (Free) a la de Lautaro (Pro), y de Nano a
   Micro (mismo precio: USD ~10/mes que Lautaro le traslada a Fede). Copias
   diarias automáticas CONFIRMADAS en Database → Backups (7 días; ahí se ven
-  hasta las del 22-oct, que el plan gratis hacía pero no dejaba restaurar). El reinicio a Micro tardó 100 s. **Vercel: falta ver si
-  `barba-remitos` está en Hobby** (uso comercial) y pasarlo a Pro.
+  hasta las del 22-oct, que el plan gratis hacía pero no dejaba restaurar). El reinicio a Micro tardó 100 s. Vercel: el equipo de Lautaro ya es Pro.
 - **Revisión DIARIA automática (desde el 28-oct; antes semanal):** el cron de
   Vercel (`vercel.json`) llama a `/api/revision-diaria` **todas las noches a las
   22:00** (01:00 UTC), cuando no trabajan, y a Lautaro le llega un mail (Resend)
   con la coherencia, la actividad del día y el estado del sistema (versión,
-  tamaño de la base vía `estado_base()` de 0021, catálogo). Variables en Vercel,
+  tamaño de la base vía `estado_base()` de 0021, catálogo). Probado el
+  28-oct con «Run» en Vercel → Cron Jobs: llega. **REVISION_CLAVE = la clave de
+  federico, que él cambió el 28-oct**: si la vuelve a cambiar llega «no pudo
+  correr» (o se pasa a otra cuenta con REVISION_USUARIO). Si Resend rechaza el
+  mail, el motivo queda en los registros (`npx vercel logs ... --json`). Variables en Vercel,
   solo Production: `CRON_SECRET`, `REVISION_CLAVE` (= la clave de federico:
   **si se le cambia, actualizarla**), `REVISION_MAIL`, `RESEND_API_KEY`.
   La lógica está en `lib/revision.ts`. A mano, la misma revisión:
