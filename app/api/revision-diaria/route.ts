@@ -8,8 +8,11 @@
  * Variables de Vercel (solo Production):
  *   CRON_SECRET       Vercel la manda sola como «Bearer» en cada llamada del
  *                     cron; sin ella cualquiera podría dispararla.
- *   REVISION_CLAVE    la clave de federico (la cuenta con la que lee). Si se le
- *                     cambia la clave a federico, hay que cambiarla acá también.
+ *   REVISION_USUARIO  con qué cuenta del equipo lee (federico, claudia o roxana;
+ *                     todas ven lo mismo). Sin definir, federico.
+ *   REVISION_CLAVE    la clave de esa cuenta. Si se le cambia la clave a esa
+ *                     persona, hay que cambiarla acá también (28-oct: la de
+ *                     federico estaba vieja y el mail llegó «no pudo correr»).
  *   RESEND_API_KEY    para mandar el mail (https://resend.com).
  *   REVISION_MAIL     a quién le llega.
  */
@@ -32,11 +35,15 @@ export async function GET(request: Request) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       { auth: { persistSession: false } },
     );
+    const usuario = (process.env.REVISION_USUARIO || "federico").trim().toLowerCase();
     const { error } = await sb.auth.signInWithPassword({
-      email: "federico@barba.local",
+      email: `${usuario}@barba.local`,
       password: process.env.REVISION_CLAVE ?? "",
     });
-    if (error) throw new Error(`No pude entrar como federico: ${error.message}`);
+    if (error)
+      throw new Error(
+        `No pude entrar como ${usuario}: ${error.message}. Revisar REVISION_USUARIO y REVISION_CLAVE en Vercel (Settings → Environment Variables).`,
+      );
     // Recién emitido, la base a veces lo rechaza con «JWT issued at future».
     await new Promise((r) => setTimeout(r, 3000));
 
