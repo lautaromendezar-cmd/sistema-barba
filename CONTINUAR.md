@@ -20,8 +20,8 @@ OK explícito de Lautaro.** Lautaro cobra mantenimiento ($50.000/mes).
 - **Supabase en plan pago desde el 28-oct-2026 (21:15):** `grupo-barba-stock`
   pasó de la organización «Barba» (Free) a la de Lautaro (Pro), y de Nano a
   Micro (mismo precio: USD ~10/mes que Lautaro le traslada a Fede). Copias
-  diarias automáticas: confirmar el 29-oct en Database → Backups que aparece
-  la primera. El reinicio a Micro tardó 100 s. **Vercel: falta ver si
+  diarias automáticas CONFIRMADAS en Database → Backups (7 días; ahí se ven
+  hasta las del 22-oct, que el plan gratis hacía pero no dejaba restaurar). El reinicio a Micro tardó 100 s. **Vercel: falta ver si
   `barba-remitos` está en Hobby** (uso comercial) y pasarlo a Pro.
 - **Revisión semanal automática:** el cron de Vercel (`vercel.json`) llama a
   `/api/revision-semanal` los **sábados 9:00** (12:00 UTC), cuando no trabajan,
