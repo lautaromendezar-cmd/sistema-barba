@@ -10,8 +10,8 @@
 > remito, con código secreto por remito (migración nueva, la pega Lautaro) y
 > descarga en PDF. RemitoDoc hoy depende del store con sesión: la página pública
 > necesita otra forma de leer los datos, solo de ese remito. Publicar cuando no
-> cargan. Sin confirmar: que Fede quiera mandarlo con precios y qué leyenda
-> reemplaza a «Documento interno de entrega»; precio sugerido $120.000 aparte del
+> cargan. Decidido (30-oct): el remito sale tal cual lo hacen, con precios y la
+> misma leyenda; no pidieron modificaciones. Precio sugerido $120.000 aparte del
 > mantenimiento (Lautaro no confirmó si lo cerró). Solo 43 de 655 clientes tienen
 > teléfono (30-oct): sin teléfono, WhatsApp abre sin destinatario. Costo extra de
 > Vercel: menos de USD 0,05/mes con 1.000 remitos/mes.
