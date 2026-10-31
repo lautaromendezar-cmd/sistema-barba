@@ -130,6 +130,11 @@ async function main() {
 
   console.log("\n5. Sin sesión, ¿puede ejecutar las funciones de stock?");
   const falso = "00000000-0000-0000-0000-000000000000";
+  // Es la única función abierta a propósito (0022): sin el código, nada.
+  const publico = await intruso.rpc("remito_publico", { p_codigo: falso });
+  if (!publico.error && publico.data === null)
+    bien("remito_publico: con un código inventado no devuelve nada");
+  else mal("remito_publico: devolvió algo", publico.error?.message ?? "con datos");
   for (const fn of ["emitir_remito", "anular_remito"]) {
     const { error } = await intruso.rpc(fn, {
       p_remito_id: falso,

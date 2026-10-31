@@ -26,6 +26,7 @@ import type {
   Usuario,
 } from "./types";
 import { emailDe, supabase } from "./supabase";
+import { numeroRemito } from "./formato";
 
 /**
  * La capa de datos del sistema. Las pantallas siguen viendo la misma forma que
@@ -170,9 +171,6 @@ type FilaProveedor = {
 
 const num = (v: string | number | null | undefined) => Number(v ?? 0);
 
-const numeroRemito = (n: number | null | undefined) =>
-  n ? `R-${String(n).padStart(4, "0")}` : "Borrador";
-
 /** Fila de `remitos` con sus lineas, como la devuelve Postgres, a la forma de la app. */
 function filaARemito(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -185,6 +183,7 @@ function filaARemito(
     numero: numeroRemito(r.numero),
     clienteId: r.cliente_id,
     clienteDatos: r.cliente_datos ?? undefined,
+    codigoPublico: r.codigo_publico ?? undefined,
     fecha: r.emitido_at ?? r.creado_at,
     ajustePct: num(r.ajuste_pct),
     descuentoPct: num(r.descuento_pct),
@@ -1277,11 +1276,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
         await cargar(["remitos", "stock"]);
 
-        const numero = (emitido as { numero: number }).numero;
+        const { numero, codigo_publico } = emitido as {
+          numero: number;
+          codigo_publico?: string;
+        };
         notificar("ok", `Remito ${numeroRemito(numero)} emitido.`);
         return {
           ...datos,
           id: remito.id,
+          codigoPublico: codigo_publico,
           numero: numeroRemito(numero),
           fecha: new Date().toISOString(),
           estado: "emitido",

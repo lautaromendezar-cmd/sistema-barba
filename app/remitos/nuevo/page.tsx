@@ -8,6 +8,7 @@ import { BuscadorCliente } from "@/components/BuscadorCliente";
 import { money, enBultos, pct, totalRemito, fecha } from "@/lib/formato";
 import { BuscadorProducto } from "@/components/BuscadorProducto";
 import { RemitoDoc } from "@/components/RemitoDoc";
+import { BotonWhatsApp } from "@/components/BotonWhatsApp";
 import type { Lista, Producto, Remito, RemitoLinea } from "@/lib/types";
 
 /**
@@ -265,6 +266,10 @@ function NuevoRemito({ corrigeId }: { corrigeId: string | null }) {
             >
               Imprimir
             </button>
+            <BotonWhatsApp
+              remito={emitido}
+              className="rounded-md border border-line bg-surface px-4 py-2.5 text-sm transition hover:border-ink hover:text-acento-ink"
+            />
             <button
               onClick={empezarOtro}
               className="rounded-md border border-line bg-surface px-4 py-2.5 text-sm transition hover:border-ink hover:text-acento-ink"

@@ -19,12 +19,17 @@ export function pct(n: number) {
   return `${n.toLocaleString("es-AR", { maximumFractionDigits: 2 })}%`;
 }
 
+export const numeroRemito = (n: number | null | undefined) =>
+  n ? `R-${String(n).padStart(4, "0")}` : "Borrador";
+
 export function fecha(iso: string) {
   const d = new Date(iso);
   return d.toLocaleDateString("es-AR", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
+    // El link del cliente se arma en el servidor, que no está en Argentina.
+    timeZone: "America/Argentina/Buenos_Aires",
   });
 }
 

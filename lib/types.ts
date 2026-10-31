@@ -139,6 +139,8 @@ export type Remito = {
   clienteId: string;
   /** Copia del cliente tomada al emitir. Si se edita la ficha, el remito no cambia. */
   clienteDatos?: ClienteEnRemito;
+  /** Lo que lleva el link que recibe el cliente, /r/<codigo>. */
+  codigoPublico?: string;
   fecha: string;
   /** Positivo recarga (ej. 10.5 por transferencia), negativo descuenta. */
   ajustePct: number;

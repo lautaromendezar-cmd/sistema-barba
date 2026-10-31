@@ -2,19 +2,15 @@
 
 Última actualización: **13 de octubre de 2026**.
 
-> **PENDIENTE para el finde del 31-oct/1-nov (desde la PC de casa): botón «Enviar
-> por WhatsApp» en los remitos.** Lautaro ya acordó hacerlo el finde para probar.
-> Opción elegida: mensaje con link (no PDF adjunto ni API oficial). El botón va
-> al lado de Imprimir, al emitir y en «Ver / imprimir»; abre `wa.me` con el
-> teléfono del cliente y el texto listo. El link lleva a una página pública del
-> remito, con código secreto por remito (migración nueva, la pega Lautaro) y
-> descarga en PDF. RemitoDoc hoy depende del store con sesión: la página pública
-> necesita otra forma de leer los datos, solo de ese remito. Publicar cuando no
-> cargan. Decidido (30-oct): el remito sale tal cual lo hacen, con precios y la
-> misma leyenda; no pidieron modificaciones. Precio sugerido $120.000 aparte del
-> mantenimiento (Lautaro no confirmó si lo cerró). Solo 43 de 655 clientes tienen
-> teléfono (30-oct): sin teléfono, WhatsApp abre sin destinatario. Costo extra de
-> Vercel: menos de USD 0,05/mes con 1.000 remitos/mes.
+> **30-oct-2026 — v2.1, remito por WhatsApp (migración 0022).** Botón «Enviar por
+> WhatsApp» en la fila de Remitos, en «Ver / imprimir» y al emitir: abre `wa.me` con
+> el mensaje y el link `/r/<codigo>`. Esa página es pública, sin login ni store
+> (`components/Marco.tsx` la saca del Shell): `remito_publico(codigo)` devuelve solo
+> ese remito y solo lo que sale en el papel; un borrador no existe y un anulado se ve
+> anulado. `/r/<codigo>/pdf` lo baja en PDF (`components/RemitoPdf.tsx`, @react-pdf).
+> **El papel está en dos lados:** `RemitoPapel` (pantalla e impresión) y `RemitoPdf`:
+> si cambia uno, cambia el otro. Solo 43 de 655 clientes tienen teléfono: sin teléfono
+> WhatsApp abre sin destinatario. Precio sugerido $120.000 aparte del mantenimiento.
 
 > **28-oct-2026 — v2.0 PUBLICADA (0020 aplicada):** lista oficial + oferta por
 > línea, actualizar precios por Excel y costo en ingresos. Falta la oferta

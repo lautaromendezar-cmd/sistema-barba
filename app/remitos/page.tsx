@@ -7,6 +7,7 @@ import { nombreCliente, textoBuscableCliente } from "@/lib/clientes";
 import { money, fecha, fechaHora, totalRemito } from "@/lib/formato";
 import { coincide, normalizar } from "@/lib/texto";
 import { RemitoDoc } from "@/components/RemitoDoc";
+import { BotonWhatsApp } from "@/components/BotonWhatsApp";
 import type { Remito } from "@/lib/types";
 
 /** "2026-10-13" en la hora de acá, que es como lo devuelve un <input type="date">. */
@@ -240,7 +241,7 @@ export default function Remitos() {
         )}
 
         <div className="mt-4 overflow-x-auto rounded-lg border border-line bg-surface">
-          <table className="w-full min-w-[860px] text-sm">
+          <table className="w-full min-w-[1000px] text-sm">
             <thead>
               <tr className="border-b border-line text-left text-[11px] tracking-wider text-faint uppercase">
                 <th className="px-4 py-2.5 font-semibold">Número</th>
@@ -312,6 +313,10 @@ export default function Remitos() {
                       >
                         Ver / imprimir
                       </button>
+                      <BotonWhatsApp
+                        remito={r}
+                        className="ml-1.5 rounded border border-line px-2 py-1 text-xs text-muted transition hover:border-ink hover:text-acento-ink"
+                      />
                       {r.estado === "emitido" && (
                         <Link
                           href={`/remitos/nuevo?corrige=${r.id}`}
@@ -399,6 +404,10 @@ export default function Remitos() {
               >
                 Imprimir
               </button>
+              <BotonWhatsApp
+                remito={ver}
+                className="rounded-md border border-line bg-surface px-4 py-2 text-sm transition hover:border-ink hover:text-acento-ink"
+              />
               <button
                 onClick={() => setVerId(null)}
                 className="rounded-md border border-line bg-surface px-4 py-2 text-sm transition hover:border-ink hover:text-acento-ink"

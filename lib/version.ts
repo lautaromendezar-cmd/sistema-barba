@@ -16,6 +16,15 @@ export type Novedad = {
 
 export const NOVEDADES: Novedad[] = [
   {
+    version: "2.1",
+    fecha: "2026-10-30",
+    cambios: [
+      "Enviar por WhatsApp: en cada remito, en la lista y al terminar de emitirlo, hay un botón que abre WhatsApp con el mensaje listo y un link. El cliente abre el link sin usuario ni clave, ve el remito igual que en papel y lo puede bajar en PDF.",
+      "Si el cliente tiene teléfono cargado, el mensaje va directo a su chat. Si no, se elige el contacto en WhatsApp: conviene ir cargando los teléfonos en Clientes.",
+      "Si un remito se anula, el link que ya tiene el cliente lo muestra como anulado.",
+    ],
+  },
+  {
     version: "2.0",
     fecha: "2026-10-28",
     cambios: [
