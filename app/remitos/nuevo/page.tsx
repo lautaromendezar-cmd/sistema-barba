@@ -268,7 +268,7 @@ function NuevoRemito({ corrigeId }: { corrigeId: string | null }) {
             </button>
             <BotonWhatsApp
               remito={emitido}
-              className="rounded-md border border-line bg-surface px-4 py-2.5 text-sm transition hover:border-ink hover:text-acento-ink"
+              className="rounded-md px-4 py-2.5 text-sm"
             />
             <button
               onClick={empezarOtro}

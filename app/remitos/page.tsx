@@ -241,17 +241,17 @@ export default function Remitos() {
         )}
 
         <div className="mt-4 overflow-x-auto rounded-lg border border-line bg-surface">
-          <table className="w-full min-w-[1000px] text-sm">
+          <table className="w-full min-w-[860px] text-sm">
             <thead>
               <tr className="border-b border-line text-left text-[11px] tracking-wider text-faint uppercase">
-                <th className="px-4 py-2.5 font-semibold">Número</th>
-                <th className="px-4 py-2.5 font-semibold">Fecha</th>
-                <th className="px-4 py-2.5 font-semibold">Cliente</th>
-                <th className="px-4 py-2.5 font-semibold">Emitió</th>
-                <th className="px-4 py-2.5 text-right font-semibold">Bultos</th>
-                <th className="px-4 py-2.5 font-semibold">Entrega</th>
-                <th className="px-4 py-2.5 text-right font-semibold">Total</th>
-                <th className="no-print px-4 py-2.5"></th>
+                <th className="px-3 py-2.5 font-semibold">Número</th>
+                <th className="px-3 py-2.5 font-semibold">Fecha</th>
+                <th className="px-3 py-2.5 font-semibold">Cliente</th>
+                <th className="px-3 py-2.5 font-semibold">Emitió</th>
+                <th className="px-3 py-2.5 text-right font-semibold">Bultos</th>
+                <th className="px-3 py-2.5 font-semibold">Entrega</th>
+                <th className="px-3 py-2.5 text-right font-semibold">Total</th>
+                <th className="no-print px-3 py-2.5"></th>
               </tr>
             </thead>
             <tbody>
@@ -269,7 +269,7 @@ export default function Remitos() {
                     key={r.id}
                     className="border-b border-line last:border-0 hover:bg-canvas"
                   >
-                    <td className="tnum px-4 py-3 font-medium whitespace-nowrap">
+                    <td className="tnum px-3 py-3 font-medium whitespace-nowrap">
                       {r.numero}
                       {anulado && (
                         <span className="ml-2 rounded bg-acento-soft px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-acento-ink uppercase">
@@ -282,15 +282,15 @@ export default function Remitos() {
                         </div>
                       )}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-muted">
+                    <td className="px-3 py-3 whitespace-nowrap text-muted">
                       {rango ? fechaHora(r.fecha) : fecha(r.fecha)}
                     </td>
-                    <td className="px-4 py-3">{nombre}</td>
-                    <td className="px-4 py-3 text-muted">{r.usuario}</td>
-                    <td className="tnum px-4 py-3 text-right text-muted">
+                    <td className="px-3 py-3">{nombre}</td>
+                    <td className="px-3 py-3 text-muted">{r.usuario}</td>
+                    <td className="tnum px-3 py-3 text-right text-muted">
                       {anulado ? "—" : bultos}
                     </td>
-                    <td className="px-4 py-3 text-xs whitespace-nowrap">
+                    <td className="px-3 py-3 text-xs whitespace-nowrap">
                       {anulado ? (
                         <span className="text-faint">—</span>
                       ) : sinEntregar > 0 ? (
@@ -302,11 +302,12 @@ export default function Remitos() {
                       )}
                     </td>
                     <td
-                      className={`tnum px-4 py-3 text-right ${anulado ? "text-faint line-through" : ""}`}
+                      className={`tnum px-3 py-3 text-right ${anulado ? "text-faint line-through" : ""}`}
                     >
                       {money(total)}
                     </td>
-                    <td className="no-print px-4 py-3 text-right whitespace-nowrap">
+                    <td className="no-print px-3 py-3">
+                      <div className="flex min-w-[200px] flex-wrap justify-end gap-1.5 whitespace-nowrap">
                       <button
                         onClick={() => setVerId(r.id)}
                         className="rounded border border-line px-2 py-1 text-xs text-muted transition hover:border-ink hover:text-acento-ink"
@@ -315,12 +316,13 @@ export default function Remitos() {
                       </button>
                       <BotonWhatsApp
                         remito={r}
-                        className="ml-1.5 rounded border border-line px-2 py-1 text-xs text-muted transition hover:border-ink hover:text-acento-ink"
+                        texto="WhatsApp"
+                        className="rounded border border-transparent px-2 py-1 text-xs"
                       />
                       {r.estado === "emitido" && (
                         <Link
                           href={`/remitos/nuevo?corrige=${r.id}`}
-                          className="ml-1.5 inline-block rounded border border-line px-2 py-1 text-xs text-muted transition hover:border-ink hover:text-acento-ink"
+                          className="inline-block rounded border border-line px-2 py-1 text-xs text-muted transition hover:border-ink hover:text-acento-ink"
                         >
                           Corregir
                         </Link>
@@ -335,11 +337,12 @@ export default function Remitos() {
                             )
                               anularRemito(r.id);
                           }}
-                          className="ml-1.5 rounded border border-line px-2 py-1 text-xs text-muted transition hover:border-ink hover:text-acento-ink"
+                          className="rounded border border-line px-2 py-1 text-xs text-muted transition hover:border-ink hover:text-acento-ink"
                         >
                           Anular
                         </button>
                       )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -406,7 +409,7 @@ export default function Remitos() {
               </button>
               <BotonWhatsApp
                 remito={ver}
-                className="rounded-md border border-line bg-surface px-4 py-2 text-sm transition hover:border-ink hover:text-acento-ink"
+                className="rounded-md px-4 py-2 text-sm"
               />
               <button
                 onClick={() => setVerId(null)}
