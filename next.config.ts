@@ -6,13 +6,13 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_COMMIT: (process.env.VERCEL_GIT_COMMIT_SHA ?? "").slice(0, 7),
   },
-  // comprobantes.* es solo para los links de remitos que reciben los clientes:
-  // cualquier otra cosa va al sistema.
+  // comprobantes.* es solo para los links de remitos: cualquier otra dirección
+  // muestra el 404 con los WhatsApp, nunca el login del sistema.
   redirects: async () =>
     ["/", "/:ruta((?!r/|_next/|marca/|favicon).+)"].map((source) => ({
       source,
       has: [{ type: "host", value: "comprobantes.grupobarba.com.ar" }],
-      destination: "https://sistema.grupobarba.com.ar/:ruta*",
+      destination: "/r/no-encontrado",
       permanent: false,
     })),
 };

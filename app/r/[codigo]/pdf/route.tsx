@@ -5,8 +5,8 @@ import { traerRemitoPublico } from "@/lib/remitoPublico";
 export async function GET(req: Request, ctx: RouteContext<"/r/[codigo]/pdf">) {
   const { codigo } = await ctx.params;
   const remito = await traerRemitoPublico(codigo);
-  if (!remito)
-    return new Response("No encontramos este remito.", { status: 404 });
+  // La página da el 404 con los WhatsApp.
+  if (!remito) return Response.redirect(new URL(`/r/${codigo}`, req.url));
 
   const logo = await fetch(new URL("/marca/grupo-barba.png", req.url));
   const pdf = await renderToBuffer(
