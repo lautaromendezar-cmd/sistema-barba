@@ -307,18 +307,14 @@ export default function Remitos() {
                       {money(total)}
                     </td>
                     <td className="no-print px-3 py-3">
-                      <div className="flex min-w-[200px] flex-wrap justify-end gap-1.5 whitespace-nowrap">
+                      <div className="flex min-w-[200px] flex-wrap items-center justify-end gap-1 whitespace-nowrap min-[1340px]:flex-nowrap">
                       <button
                         onClick={() => setVerId(r.id)}
                         className="rounded border border-line px-2 py-1 text-xs text-muted transition hover:border-ink hover:text-acento-ink"
                       >
                         Ver / imprimir
                       </button>
-                      <BotonWhatsApp
-                        remito={r}
-                        texto="WhatsApp"
-                        className="rounded border border-transparent px-2 py-1 text-xs"
-                      />
+                      <BotonWhatsApp remito={r} compacto />
                       {r.estado === "emitido" && (
                         <Link
                           href={`/remitos/nuevo?corrige=${r.id}`}

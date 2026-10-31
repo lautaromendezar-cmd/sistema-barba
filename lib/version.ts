@@ -16,6 +16,13 @@ export type Novedad = {
 
 export const NOVEDADES: Novedad[] = [
   {
+    version: "2.2",
+    fecha: "2026-10-30",
+    cambios: [
+      "En la lista de remitos, WhatsApp y «Copiar link» ahora son dos íconos al lado de «Ver / imprimir». El link copiado se puede pegar en cualquier chat o mail.",
+    ],
+  },
+  {
     version: "2.1",
     fecha: "2026-10-30",
     cambios: [
