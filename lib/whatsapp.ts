@@ -14,15 +14,18 @@ export function telefonoWhatsApp(telefono?: string | null) {
   return n.length === 10 ? `549${n}` : "";
 }
 
+/** Lo que recibe el cliente. El sistema está en sistema.grupobarba.com.ar. */
+export const linkRemito = (codigoPublico: string) =>
+  `https://comprobantes.grupobarba.com.ar/r/${codigoPublico}`;
+
 /** El link que abre WhatsApp con el mensaje listo para mandar. */
 export function linkWhatsApp(
   numeroRemito: string,
   codigoPublico: string,
   telefono: string | null | undefined,
-  origen: string,
 ) {
   const texto =
     `Hola! Te enviamos el remito ${numeroRemito} de Grupo Barba: ` +
-    `${origen}/r/${codigoPublico}\n\nAvisanos si está todo bien. Gracias!`;
+    `${linkRemito(codigoPublico)}\n\nAvisanos si está todo bien. Gracias!`;
   return `https://wa.me/${telefonoWhatsApp(telefono)}?text=${encodeURIComponent(texto)}`;
 }

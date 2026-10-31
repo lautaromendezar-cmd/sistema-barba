@@ -9,7 +9,10 @@
 > ese remito y solo lo que sale en el papel; un borrador no existe y un anulado se ve
 > anulado. `/r/<codigo>/pdf` lo baja en PDF (`components/RemitoPdf.tsx`, @react-pdf).
 > **El papel está en dos lados:** `RemitoPapel` (pantalla e impresión) y `RemitoPdf`:
-> si cambia uno, cambia el otro. Solo 43 de 655 clientes tienen teléfono: sin teléfono
+> si cambia uno, cambia el otro. Dominios (30-oct, DNS en DonWeb, A a 76.76.21.21): el sistema en
+> `sistema.grupobarba.com.ar`, los links en `comprobantes.grupobarba.com.ar` (ahí
+> todo lo que no sea `/r/` redirige al sistema); `barba-remitos.vercel.app` sigue andando.
+> Solo 43 de 655 clientes tienen teléfono: sin teléfono
 > WhatsApp abre sin destinatario. Precio sugerido $120.000 aparte del mantenimiento.
 
 > **28-oct-2026 — v2.0 PUBLICADA (0020 aplicada):** lista oficial + oferta por

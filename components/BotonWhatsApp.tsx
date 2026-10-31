@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useStore } from "@/lib/store";
-import { linkWhatsApp, telefonoWhatsApp } from "@/lib/whatsapp";
+import { linkRemito, linkWhatsApp, telefonoWhatsApp } from "@/lib/whatsapp";
 import type { Remito } from "@/lib/types";
 
 const ICONO = "size-3.5 shrink-0";
@@ -49,12 +49,12 @@ export function BotonWhatsApp({
 
   const abrir = () =>
     window.open(
-      linkWhatsApp(remito.numero, codigo, telefono, window.location.origin),
+      linkWhatsApp(remito.numero, codigo, telefono),
       "_blank",
       "noopener",
     );
   const copiar = async () => {
-    const link = `${window.location.origin}/r/${codigo}`;
+    const link = linkRemito(codigo);
     try {
       await navigator.clipboard.writeText(link);
       setCopiado(true);
