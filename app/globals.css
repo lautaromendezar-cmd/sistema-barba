@@ -113,8 +113,33 @@ body {
 .aviso-entra {
   animation: aviso-entra 180ms ease-out;
 }
+
+/* Pantalla de carga: aparece con retardo para no parpadear si los datos llegan
+   enseguida. La barra va y viene porque no se sabe cuánto falta. */
+@keyframes cargando-entra {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes cargando-barra {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+.cargando {
+  animation: cargando-entra 200ms ease-out 150ms backwards;
+}
+.cargando-barra {
+  animation: cargando-barra 1.1s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .aviso-entra {
+  .aviso-entra,
+  .cargando,
+  .cargando-barra {
     animation: none;
   }
 }

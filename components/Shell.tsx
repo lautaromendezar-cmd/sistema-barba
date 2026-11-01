@@ -112,8 +112,22 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   if (cargando) {
     return (
-      <div className="text-muted flex min-h-screen items-center justify-center text-sm">
-        Cargando…
+      <div
+        role="status"
+        className="cargando text-muted flex min-h-screen flex-col items-center justify-center text-sm"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/marca/grupo-barba.png"
+          alt=""
+          width={834}
+          height={508}
+          className="h-24 w-auto"
+        />
+        <div className="bg-line mt-6 h-1 w-40 overflow-hidden rounded-full">
+          <div className="cargando-barra bg-acento h-full w-2/5 rounded-full" />
+        </div>
+        <p className="mt-3">Cargando…</p>
       </div>
     );
   }

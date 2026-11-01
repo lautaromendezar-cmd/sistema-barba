@@ -282,6 +282,8 @@ type Parte =
  * (con desempate unico), o dos paginas pueden repetir una fila y saltearse otra.
  */
 const PAGINA = 1000;
+/** Despues de la primera pagina, cuantas se piden a la vez. */
+const TANDA = 4;
 
 /** El navegador avisa cuando se corta y cuando vuelve internet. */
 function suscribirConexion(avisar: () => void) {
@@ -299,13 +301,24 @@ async function porPaginas<T>(
     hasta: number,
   ) => PromiseLike<{ data: T[] | null; error: unknown }>,
 ): Promise<{ data: T[] | null; error: unknown }> {
-  const filas: T[] = [];
-  for (let desde = 0; ; desde += PAGINA) {
-    const pagina = await consulta(desde, desde + PAGINA - 1);
-    if (pagina.error) return { data: null, error: pagina.error };
-    const lote = pagina.data ?? [];
-    filas.push(...lote);
-    if (lote.length < PAGINA) return { data: filas, error: null };
+  const primera = await consulta(0, PAGINA - 1);
+  if (primera.error) return { data: null, error: primera.error };
+  const filas: T[] = [...(primera.data ?? [])];
+  if (filas.length < PAGINA) return { data: filas, error: null };
+
+  // De a una, las 5 paginas del catalogo eran lo que demoraba la entrada.
+  for (let desde = PAGINA; ; desde += PAGINA * TANDA) {
+    const tanda = await Promise.all(
+      Array.from({ length: TANDA }, (_, i) =>
+        consulta(desde + i * PAGINA, desde + (i + 1) * PAGINA - 1),
+      ),
+    );
+    for (const pagina of tanda) {
+      if (pagina.error) return { data: null, error: pagina.error };
+      const lote = pagina.data ?? [];
+      filas.push(...lote);
+      if (lote.length < PAGINA) return { data: filas, error: null };
+    }
   }
 }
 
@@ -666,6 +679,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     })();
 
     const { data: sub } = supabase.auth.onAuthStateChange((evento, sesion) => {
+      // Esa carga ya la hace el bloque de arriba: atenderla aca bajaba todo dos
+      // veces cada vez que se abria el sistema.
+      if (evento === "INITIAL_SESSION") return;
       if (evento === "SIGNED_OUT") {
         setUsuario(null);
         setDb(DB_VACIA);
