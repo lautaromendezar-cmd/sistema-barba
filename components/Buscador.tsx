@@ -55,9 +55,10 @@ export function Buscador() {
     const productos: Resultado[] = db.productos
       .filter(
         (p) =>
-          normalizar(p.nombre).includes(busca) ||
+          p.activo !== false &&
+          (normalizar(p.nombre).includes(busca) ||
           normalizar(p.codigo).includes(busca) ||
-          normalizar(p.bodega).includes(busca),
+          normalizar(p.bodega).includes(busca)),
       )
       .slice(0, 5)
       .map((p) => ({

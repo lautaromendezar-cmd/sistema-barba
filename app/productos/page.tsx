@@ -17,16 +17,23 @@ export default function Productos() {
   const [ajustando, setAjustando] = useState<Producto | null>(null);
   const [detalle, setDetalle] = useState<Producto | null>(null);
 
-  const secciones = useMemo(
-    () => [...new Set(db.productos.map((p) => p.seccion))].sort(),
+  // Los dados de baja (un código duplicado, por ejemplo) no se listan: siguen
+  // en db.productos solo para que los remitos viejos muestren su línea.
+  const productos = useMemo(
+    () => db.productos.filter((p) => p.activo !== false),
     [db.productos],
+  );
+
+  const secciones = useMemo(
+    () => [...new Set(productos.map((p) => p.seccion))].sort(),
+    [productos],
   );
 
   const [editandoProd, setEditandoProd] = useState<Producto | null>(null);
 
   const filtrados = useMemo(() => {
     const q = normalizar(busqueda);
-    return db.productos.filter((p) => {
+    return productos.filter((p) => {
       if (seccion !== "todas" && p.seccion !== seccion) return false;
       if (soloOferta && !p.precioOferta) return false;
       if (!q) return true;
@@ -36,11 +43,11 @@ export default function Productos() {
         coincide(p.bodega, q)
       );
     });
-  }, [db.productos, busqueda, seccion, soloOferta]);
+  }, [productos, busqueda, seccion, soloOferta]);
 
   const enOferta = useMemo(
-    () => db.productos.filter((p) => p.precioOferta).length,
-    [db.productos],
+    () => productos.filter((p) => p.precioOferta).length,
+    [productos],
   );
 
   // Pintar 4.300 filas son 53.000 nodos en el DOM: la pantalla tarda 3,5 s en
@@ -57,7 +64,7 @@ export default function Productos() {
         <div>
           <h1 className="titulo text-3xl font-semibold">Productos y stock</h1>
           <p className="mt-1 text-muted">
-            {db.productos.length} productos · el stock se calcula sumando los
+            {productos.length} productos · el stock se calcula sumando los
             movimientos, no se escribe a mano.
           </p>
         </div>

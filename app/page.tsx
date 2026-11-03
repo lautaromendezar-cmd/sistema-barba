@@ -58,7 +58,8 @@ function Panel() {
     let bajo = 0;
     let sinStock = 0;
     let valorizado = 0;
-    for (const p of db.productos) {
+    const activos = db.productos.filter((p) => p.activo !== false);
+    for (const p of activos) {
       const u = stock(p.codigo);
       valorizado += Math.max(u, 0) * p.precioLista;
       if (u <= 0) sinStock++;
@@ -109,7 +110,7 @@ function Panel() {
       .sort((a, b) => b.unidades - a.unidades)
       .slice(0, 5);
 
-    const alertas = db.productos
+    const alertas = activos
       .map((p) => ({ p, u: stock(p.codigo), pedir: aPedir(p.codigo) }))
       .filter((x) => x.u <= 0 || estaBajo(x.u, x.p.unidadesPorBulto))
       .sort((a, b) => a.u - b.u)
@@ -187,7 +188,7 @@ function Panel() {
         <Kpi
           titulo="Stock valorizado"
           valor={money(datos.valorizado)}
-          pie={`${db.productos.length} productos en el catálogo`}
+          pie={`${db.productos.filter((p) => p.activo !== false).length} productos en el catálogo`}
         />
         <Kpi
           titulo="Falta entregar"
@@ -393,6 +394,7 @@ function Operativo() {
 
   const datos = useMemo(() => {
     const alertas = db.productos
+      .filter((p) => p.activo !== false)
       .map((p) => ({ p, u: stock(p.codigo), pedir: aPedir(p.codigo) }))
       .filter((x) => x.u <= 0 || estaBajo(x.u, x.p.unidadesPorBulto))
       .sort((a, b) => a.u - b.u);

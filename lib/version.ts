@@ -16,6 +16,14 @@ export type Novedad = {
 
 export const NOVEDADES: Novedad[] = [
   {
+    version: "2.4",
+    fecha: "2026-11-03",
+    cambios: [
+      "Un producto dado de baja (por ejemplo, un código repetido) ya no aparece en los buscadores, en la lista de Productos ni en las alertas de stock. Los remitos viejos que lo tienen se siguen viendo igual.",
+      "El W7460 (Starberg 5.0) se dio de baja: la cerveza queda solo con el código W4760.",
+    ],
+  },
+  {
     version: "2.3",
     fecha: "2026-10-31",
     cambios: [

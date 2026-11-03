@@ -38,7 +38,7 @@ export function BuscadorProducto({
       return 2;
     };
     return db.productos
-      .filter((p) => !excluir.includes(p.codigo))
+      .filter((p) => p.activo !== false && !excluir.includes(p.codigo))
       .filter(
         (p) =>
           coincide(p.codigo, t) ||
