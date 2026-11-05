@@ -45,7 +45,10 @@ export function RemitoPdf({ remito, logo }: { remito: RemitoPublico; logo: Buffe
   const entregadas = remito.lineas.filter((l) => l.entregado);
   const pendientes = remito.lineas.filter((l) => !l.entregado);
   const { subtotal, ajuste, total } = totalRemito(remito.lineas, remito.ajustePct);
-  const domicilio = [c?.direccion, c?.localidad].filter(Boolean).join(" · ");
+  const propio = [c?.direccion, c?.localidad].filter(Boolean).join(" · ");
+  const otras = otrasDirecciones(c?.otras, propio);
+  // Remito emitido sin dirección: la primera de las otras va arriba.
+  const domicilio = propio || otras.shift() || "";
 
   return (
     <Document title={`Remito ${remito.numero}`} author="Grupo Barba">
@@ -77,7 +80,7 @@ export function RemitoPdf({ remito, logo }: { remito: RemitoPublico; logo: Buffe
             {razon && <Text style={e.gris}>{c?.apodo}</Text>}
             {domicilio && <Text style={e.gris}>{domicilio}</Text>}
             {c?.telefono && <Text style={e.gris}>{c.telefono}</Text>}
-            {otrasDirecciones(c?.otras, domicilio).map((o, i) => (
+            {otras.map((o, i) => (
               <Text key={i} style={[e.gris, { marginTop: 2 }]}>
                 Otra dirección: {o}
               </Text>

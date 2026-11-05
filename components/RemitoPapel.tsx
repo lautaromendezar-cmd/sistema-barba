@@ -86,11 +86,13 @@ export function RemitoPapel({
             <div className="text-xs text-muted">{c.apodo}</div>
           )}
           <div className="text-xs leading-relaxed text-muted">
-            {c?.direccion}
-            {c?.localidad ? ` · ${c.localidad}` : ""}
+            {/* Remito emitido sin dirección: la primera de las otras va arriba. */}
+            {c?.direccion || c?.localidad
+              ? `${c.direccion}${c.localidad ? ` · ${c.localidad}` : ""}`
+              : c?.otras[0]}
             {c?.telefono ? <><br />{c.telefono}</> : null}
           </div>
-          {c?.otras.map((o, i) => (
+          {(c?.direccion || c?.localidad ? c.otras : (c?.otras ?? []).slice(1)).map((o, i) => (
             <div key={i} className="mt-1 text-xs leading-relaxed text-muted">
               <span className="font-semibold">Otra dirección:</span> {o}
             </div>

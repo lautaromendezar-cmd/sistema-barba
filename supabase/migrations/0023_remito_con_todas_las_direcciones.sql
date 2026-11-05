@@ -62,9 +62,15 @@ set cliente_datos = r.cliente_datos || jsonb_build_object('otras', (
 ))
 where r.cliente_datos is not null
   and not (r.cliente_datos ? 'otras')
+  and (select count(*) from cliente_direcciones o
+       where o.cliente_id = r.cliente_id) > 1
   and exists (
     select 1 from cliente_direcciones o
     where o.cliente_id = r.cliente_id
       and o.direccion is distinct from r.cliente_datos ->> 'direccion'
   );
+-- (Solo clientes que HOY tienen mas de una direccion. La primera version de
+-- este relleno, aplicada el 5/11, tambien tomo clientes con una sola a los que
+-- se la habian cambiado despues de emitir; se deshizo con
+-- datos/arreglo 0023 (5-nov).sql.)
 alter table remitos enable trigger remitos_copiar_cliente;
