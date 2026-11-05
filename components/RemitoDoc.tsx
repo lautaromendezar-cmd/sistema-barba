@@ -3,6 +3,7 @@
 import { useStore } from "@/lib/store";
 import type { Remito } from "@/lib/types";
 import { RemitoPapel } from "./RemitoPapel";
+import { otrasDirecciones } from "@/lib/clientes";
 
 /** El papel que viaja en la camioneta. Se imprime con Ctrl+P. */
 export function RemitoDoc({ remito }: { remito: Remito }) {
@@ -20,6 +21,10 @@ export function RemitoDoc({ remito }: { remito: Remito }) {
         localidad: copia.localidad ?? "",
         telefono: copia.telefono ?? "",
         notas: copia.notas ?? "",
+        otras: otrasDirecciones(
+          copia.otras,
+          [copia.direccion, copia.localidad].filter(Boolean).join(" · "),
+        ),
       }
     : ficha && {
         numero: ficha.numero,
@@ -29,6 +34,12 @@ export function RemitoDoc({ remito }: { remito: Remito }) {
         localidad: ficha.localidad,
         telefono: ficha.telefono,
         notas: ficha.notas,
+        otras: otrasDirecciones(
+          (ficha.direcciones ?? []).filter(
+            (d) => d.direccion !== ficha.direccion,
+          ),
+          [ficha.direccion, ficha.localidad].filter(Boolean).join(" · "),
+        ),
       };
   const conNombres = {
     ...remito,

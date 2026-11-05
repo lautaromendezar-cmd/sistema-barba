@@ -1,5 +1,5 @@
 import { Document, Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
-import { codigoCliente } from "@/lib/clientes";
+import { codigoCliente, otrasDirecciones } from "@/lib/clientes";
 import { fecha, money, pct, totalRemito } from "@/lib/formato";
 import type { RemitoPublico } from "@/lib/remitoPublico";
 
@@ -77,6 +77,11 @@ export function RemitoPdf({ remito, logo }: { remito: RemitoPublico; logo: Buffe
             {razon && <Text style={e.gris}>{c?.apodo}</Text>}
             {domicilio && <Text style={e.gris}>{domicilio}</Text>}
             {c?.telefono && <Text style={e.gris}>{c.telefono}</Text>}
+            {otrasDirecciones(c?.otras, domicilio).map((o, i) => (
+              <Text key={i} style={[e.gris, { marginTop: 2 }]}>
+                Otra dirección: {o}
+              </Text>
+            ))}
           </View>
           {c?.notas && (
             <View style={{ flex: 1 }}>

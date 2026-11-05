@@ -10,6 +10,8 @@ export type ClienteDelPapel = {
   localidad: string;
   telefono: string;
   notas: string;
+  /** Las demás direcciones, ya armadas como «dirección · localidad». */
+  otras: string[];
 };
 
 /**
@@ -88,6 +90,11 @@ export function RemitoPapel({
             {c?.localidad ? ` · ${c.localidad}` : ""}
             {c?.telefono ? <><br />{c.telefono}</> : null}
           </div>
+          {c?.otras.map((o, i) => (
+            <div key={i} className="mt-1 text-xs leading-relaxed text-muted">
+              <span className="font-semibold">Otra dirección:</span> {o}
+            </div>
+          ))}
         </div>
         {c?.notas && (
           <div>

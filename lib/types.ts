@@ -131,6 +131,8 @@ export type ClienteEnRemito = {
   direccion?: string | null;
   localidad?: string | null;
   notas?: string | null;
+  /** Las demás direcciones del cliente (0023): salen debajo, como «Otra dirección». */
+  otras?: { direccion: string | null; localidad: string | null }[];
 };
 
 export type Remito = {

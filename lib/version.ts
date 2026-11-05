@@ -16,6 +16,14 @@ export type Novedad = {
 
 export const NOVEDADES: Novedad[] = [
   {
+    version: "2.5",
+    fecha: "2026-11-05",
+    cambios: [
+      "Si el cliente tiene más de una dirección, el remito las imprime todas: la principal arriba y las demás debajo como «Otra dirección». También sale así en el link y en el PDF de WhatsApp, y en los remitos ya hechos de esos clientes.",
+      "La Asahi queda solo con el código W4759 (se dio de baja el W3963). Se unificaron los clientes repetidos de Mabel Flórez (queda el 365), Camila Ceal (queda el 648) y Eze Balbi (queda el 169, con sus dos direcciones).",
+    ],
+  },
+  {
     version: "2.4",
     fecha: "2026-11-03",
     cambios: [

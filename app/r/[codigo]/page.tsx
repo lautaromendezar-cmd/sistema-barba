@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { RemitoPapel } from "@/components/RemitoPapel";
+import { otrasDirecciones } from "@/lib/clientes";
 import { traerRemitoPublico } from "@/lib/remitoPublico";
 
 type Props = { params: Promise<{ codigo: string }> };
@@ -49,6 +50,10 @@ export default async function RemitoParaElCliente({ params }: Props) {
                 localidad: c.localidad ?? "",
                 telefono: c.telefono ?? "",
                 notas: c.notas ?? "",
+                otras: otrasDirecciones(
+                  c.otras,
+                  [c.direccion, c.localidad].filter(Boolean).join(" · "),
+                ),
               }
             }
           />

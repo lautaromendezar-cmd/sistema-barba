@@ -35,3 +35,22 @@ export function cuitValido(cuit: string) {
   if (v === 10) v = 9;
   return v === d[10];
 }
+
+/** «dirección · localidad» de cada otra dirección, sin vacías ni repetidas. */
+export function otrasDirecciones(
+  otras: { direccion?: string | null; localidad?: string | null }[] | undefined,
+  laDeArriba: string,
+): string[] {
+  const vistas = new Set([laDeArriba.trim().toLowerCase()]);
+  const lista: string[] = [];
+  for (const o of otras ?? []) {
+    const texto = [o.direccion?.trim(), o.localidad?.trim()]
+      .filter(Boolean)
+      .join(" · ");
+    const clave = texto.toLowerCase();
+    if (!texto || vistas.has(clave) || vistas.has((o.direccion ?? "").trim().toLowerCase())) continue;
+    vistas.add(clave);
+    lista.push(texto);
+  }
+  return lista;
+}
