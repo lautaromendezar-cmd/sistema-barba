@@ -16,6 +16,13 @@ export type Novedad = {
 
 export const NOVEDADES: Novedad[] = [
   {
+    version: "2.6",
+    fecha: "2026-11-13",
+    cambios: [
+      "Arreglado: un remito que mezclaba productos del catálogo con una línea escrita a mano no se podía emitir (salía el cartel con el código 23502). Ahora se emite normal.",
+    ],
+  },
+  {
     version: "2.5",
     fecha: "2026-11-05",
     cambios: [

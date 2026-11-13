@@ -1245,6 +1245,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           throw new Error(texto);
         }
 
+        // Todas las filas llevan las MISMAS columnas: en un insert de varias
+        // filas, la columna que falta en una va como NULL (no toma el default)
+        // y `lista` es not null → 23502 al mezclar linea libre con productos.
         const lineas = datos.lineas.map((l, i) => {
           // Linea libre: no apunta a ningun producto y no mueve stock (0017).
           if (!l.productoCodigo)
@@ -1256,6 +1259,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
               cantidad_unidades: l.unidades,
               unidades_por_bulto: 1,
               precio_unitario: l.precioUnitario,
+              lista: "oficial",
               entregado: true,
               orden: i,
             };
@@ -1263,6 +1267,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           return {
             remito_id: remito.id,
             producto_id: p?.id,
+            descripcion: null,
             cantidad_bultos: l.bultos,
             cantidad_unidades:
               l.unidades - l.bultos * (p?.unidadesPorBulto ?? 1),
