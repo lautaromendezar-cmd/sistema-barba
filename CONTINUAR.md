@@ -26,6 +26,14 @@
 **El equipo ya carga todo en el sistema. No se tocan datos de producción sin
 OK explícito de Lautaro.** Lautaro cobra mantenimiento ($50.000/mes).
 
+- **16-nov (v2.7):** remito «trabado como borrador» = producto con
+  `precio_a_consultar` a $0 (W3670 Beronia Gran Reserva, precio_lista 0):
+  `emitir_remito` lo rechaza, pero las líneas ya se habían grabado. Ahora
+  Nuevo remito apaga Emitir y dice qué producto no tiene precio. Limpieza de los
+  13 borradores colgados (23-oct, 13-nov, 16-nov) en
+  `datos/borrar borradores trabados (16-nov).sql`, lo pega Lautaro. Mejora
+  pendiente: que un fallo de `emitir_remito` borre su propio borrador.
+
 - **Copia a mano mientras siga en el plan gratis** (que no tiene copias
   diarias): `python scripts/respaldar.py` deja todas las tablas + usuarios en
   `datos/backups/<fecha-hora>/` (fuera de git), con `RESTAURAR.txt`. Solo lee.

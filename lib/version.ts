@@ -16,6 +16,13 @@ export type Novedad = {
 
 export const NOVEDADES: Novedad[] = [
   {
+    version: "2.7",
+    fecha: "2026-11-16",
+    cambios: [
+      "Si en el remito hay un producto «a consultar» que todavía no tiene precio, el botón Emitir queda apagado y abajo dice a qué producto le falta escribir el precio. Antes dejaba apretarlo y el remito quedaba trabado como borrador.",
+    ],
+  },
+  {
     version: "2.6",
     fecha: "2026-11-13",
     cambios: [

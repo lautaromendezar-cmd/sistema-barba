@@ -176,8 +176,22 @@ function NuevoRemito({ corrigeId }: { corrigeId: string | null }) {
     (f) => f.libre && !(f.descripcion ?? "").trim(),
   );
   const enCero = filas.some((f) => !f.libre && unidadesDe(f) === 0);
+  // La base no deja emitir un producto «a consultar» a $0 (0007): si se
+  // intenta igual, el remito queda grabado como borrador y no sale.
+  const sinPrecio = filas
+    .filter(
+      (f) =>
+        !f.libre &&
+        producto(f.codigo)?.precioAConsultar &&
+        !(f.precioUnitario > 0),
+    )
+    .map((f) => producto(f.codigo)?.nombre ?? f.codigo);
   const puedeEmitir =
-    clienteId !== "" && filas.length > 0 && !libreSinDescripcion && !enCero;
+    clienteId !== "" &&
+    filas.length > 0 &&
+    !libreSinDescripcion &&
+    !enCero &&
+    sinPrecio.length === 0;
 
   const cambiar = (i: number, cambios: Partial<Fila>) =>
     setFilas((prev) => prev.map((x, j) => (j === i ? { ...x, ...cambios } : x)));
@@ -710,7 +724,9 @@ function NuevoRemito({ corrigeId }: { corrigeId: string | null }) {
                 ? "Falta escribir qué es el producto fuera de lista."
                 : enCero
                   ? "Hay productos en 0 unidades: poné bultos o sueltas, o quitalos."
-                  : "Falta elegir cliente y cargar al menos un producto."}
+                  : sinPrecio.length > 0
+                    ? `Falta escribir el precio de: ${sinPrecio.join(", ")} (es «precio a consultar»).`
+                    : "Falta elegir cliente y cargar al menos un producto."}
             </p>
           )}
         </div>
